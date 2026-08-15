@@ -29,6 +29,7 @@
         {% if version %}
         <div><dt>{% trans "Amount" %}</dt><dd>{{ version.amount_vnd|intcomma }} VND</dd></div>
         <div><dt>{% trans "Contractor" %}</dt><dd>{{ version.contractor_name }}</dd></div>
+        <div><dt>{% trans "Expected schedule" %}</dt><dd>{{ version.expected_schedule }}</dd></div>
         {% if proposal.case_id %}<div><dt>{% trans "Maintenance case" %}</dt><dd><a href="{% url 'web:case-detail' proposal.case_id %}">{{ proposal.case.get_category_display }} · {% blocktrans with id=proposal.case_id %}Case #{{ id }}{% endblocktrans %}</a></dd></div>{% endif %}
         <div><dt>{% trans "Evidence" %}</dt><dd>
           {% with quotes=version.quotations.all %}

@@ -229,3 +229,61 @@ class ProposalVersionTests(TestCase):
             ProposalDocument.objects.filter(pk=link.pk).update(document_version_id=quotation.pk)
         with self.assertRaises(IntegrityError), transaction.atomic():
             ProposalDocument.objects.filter(pk=link.pk).delete()
+
+    def test_publish_proposal_version_with_start_and_end_dates(self):
+        import datetime
+        operator, case, quotation, account = self.make_signed_proposal_inputs()
+        proposal = create_proposal(case, operator)
+        version = publish_proposal_version(
+            proposal,
+            operator,
+            amount_vnd=10_000_000,
+            contractor_name="Company X",
+            purpose="Elevator repair",
+            proposed_action="Replace cables",
+            expected_start=datetime.date(2026, 8, 1),
+            expected_end=datetime.date(2026, 8, 15),
+            quotation_versions=[quotation],
+            event_id="0x" + "dd" * 32,
+        )
+        self.assertEqual(version.expected_start, datetime.date(2026, 8, 1))
+        self.assertEqual(version.expected_end, datetime.date(2026, 8, 15))
+        self.assertEqual(version.expected_schedule, "01/08/2026 \u2013 15/08/2026")
+        self.assertEqual(version.snapshot["expected_start"], "2026-08-01")
+        self.assertEqual(version.snapshot["expected_end"], "2026-08-15")
+        self.assertEqual(version.snapshot["expected_schedule"], "01/08/2026 \u2013 15/08/2026")
+
+    def test_publish_proposal_version_atomic_and_order_validation(self):
+        import datetime
+        operator, case, quotation, account = self.make_signed_proposal_inputs()
+        proposal = create_proposal(case, operator)
+
+        # Only start date
+        with self.assertRaises(ValidationError):
+            publish_proposal_version(
+                proposal,
+                operator,
+                amount_vnd=10_000_000,
+                contractor_name="Company X",
+                purpose="Elevator repair",
+                proposed_action="Replace cables",
+                expected_start=datetime.date(2026, 8, 1),
+                quotation_versions=[quotation],
+                event_id="0x" + "ee" * 32,
+            )
+
+        # End date before start date
+        with self.assertRaises(ValidationError):
+            publish_proposal_version(
+                proposal,
+                operator,
+                amount_vnd=10_000_000,
+                contractor_name="Company X",
+                purpose="Elevator repair",
+                proposed_action="Replace cables",
+                expected_start=datetime.date(2026, 8, 15),
+                expected_end=datetime.date(2026, 8, 1),
+                quotation_versions=[quotation],
+                event_id="0x" + "ef" * 32,
+            )
+

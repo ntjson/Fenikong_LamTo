@@ -328,7 +328,8 @@ def proposal_create(request, pk):
                     contractor_name=create_form.cleaned_data["contractor_name"],
                     purpose=create_form.cleaned_data.get("purpose") or case.get_category_display(),
                     proposed_action=create_form.cleaned_data.get("proposed_action") or "Perform proposed maintenance",
-                    expected_schedule=create_form.cleaned_data.get("expected_schedule") or "To be scheduled",
+                    expected_start=create_form.cleaned_data.get("expected_start"),
+                    expected_end=create_form.cleaned_data.get("expected_end"),
                     quotation_versions=[original], event_id=new_event_id(),
                 )
         except (ValidationError, PermissionDenied) as error:
@@ -377,7 +378,8 @@ def standalone_proposal_create(request):
                         contractor_name=form.cleaned_data["contractor_name"],
                         purpose=form.cleaned_data["purpose"],
                         proposed_action=form.cleaned_data["proposed_action"],
-                        expected_schedule=form.cleaned_data["expected_schedule"],
+                        expected_start=form.cleaned_data["expected_start"],
+                        expected_end=form.cleaned_data["expected_end"],
                         quotation_versions=[original], event_id=new_event_id(),
                     )
             except (ValidationError, PermissionDenied) as error:

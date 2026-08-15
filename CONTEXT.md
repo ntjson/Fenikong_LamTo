@@ -42,6 +42,11 @@ The single pool of money a building spends from. A building has exactly one,
 so spending is never attributed to a chosen fund — there is nothing to choose.
 _Avoid_: Fund code, funding source, general fund
 
+**Expected schedule**:
+The frozen resident-facing label derived from an expected start date and an
+expected end date.
+_Avoid_: Timeline, schedule range, planned dates
+
 **Settlement**:
 The record that a published proposal was paid, evidenced by the transfer proof
 the Management account files. Filing that proof is the whole of settling; there

@@ -218,6 +218,12 @@ msgstr "Hành động đề xuất"
 msgid "Expected schedule"
 msgstr "Lịch dự kiến"
 
+msgid "Expected start"
+msgstr "Ngày bắt đầu dự kiến"
+
+msgid "Expected end"
+msgstr "Ngày kết thúc dự kiến"
+
 msgid "Quotation"
 msgstr "Báo giá"
 
@@ -1932,6 +1938,18 @@ msgstr "Cần hành động đề xuất."
 
 msgid "Expected schedule is required."
 msgstr "Cần lịch trình dự kiến."
+
+msgid "Provide both start and end dates, or neither."
+msgstr "Cung cấp cả ngày bắt đầu và kết thúc, hoặc không điền ngày nào."
+
+msgid "End date cannot be before start date."
+msgstr "Ngày kết thúc không thể trước ngày bắt đầu."
+
+msgid "Expected start and end dates must be provided together."
+msgstr "Ngày bắt đầu và kết thúc dự kiến phải được cung cấp cùng nhau."
+
+msgid "Expected end date cannot precede expected start date."
+msgstr "Ngày kết thúc dự kiến không thể trước ngày bắt đầu dự kiến."
 
 msgid "Quotations must be clean, safe, and in the work-order building."
 msgstr "Báo giá phải sạch (đã quét an toàn) và thuộc tòa nhà của công việc."

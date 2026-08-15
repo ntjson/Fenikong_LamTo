@@ -293,6 +293,210 @@ class ProposalCreateTests(TestCase):
         self.assertEqual(case_item["next_action"], "Follow work on case")
         self.assertEqual(standalone_item["next_action"], "Publish progress or complete")
 
+    def test_proposal_form_renders_date_pickers_for_expected_schedule(self):
+        self._login_operator()
+        case_resp = self.client.get(reverse("web:proposal-create", kwargs={"pk": self.work.pk}))
+        self.assertEqual(case_resp.status_code, 200)
+        self.assertContains(case_resp, '<input type="date" name="expected_start"')
+        self.assertContains(case_resp, '<input type="date" name="expected_end"')
+        self.assertNotContains(case_resp, 'name="expected_schedule"')
+
+        standalone_resp = self.client.get(reverse("web:standalone-proposal-create"))
+        self.assertEqual(standalone_resp.status_code, 200)
+        self.assertContains(standalone_resp, '<input type="date" name="expected_start"')
+        self.assertContains(standalone_resp, '<input type="date" name="expected_end"')
+        self.assertNotContains(standalone_resp, 'name="expected_schedule"')
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_create_with_start_and_end_dates_stores_dates_and_derived_schedule(self):
+        self._login_operator()
+        response = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Elevator noise",
+                "proposed_action": "Replace bearings",
+                "expected_start": "2026-08-01",
+                "expected_end": "2026-08-15",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        proposal = Proposal.objects.get(case=self.work)
+        version = proposal.current_version
+        import datetime
+        self.assertEqual(version.expected_start, datetime.date(2026, 8, 1))
+        self.assertEqual(version.expected_end, datetime.date(2026, 8, 15))
+        self.assertEqual(version.expected_schedule, "01/08/2026 \u2013 15/08/2026")
+        self.assertEqual(version.snapshot["expected_start"], "2026-08-01")
+        self.assertEqual(version.snapshot["expected_end"], "2026-08-15")
+        self.assertEqual(version.snapshot["expected_schedule"], "01/08/2026 \u2013 15/08/2026")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_create_with_omitted_dates_falls_back_to_to_be_scheduled(self):
+        self._login_operator()
+        response = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Elevator noise",
+                "proposed_action": "Replace bearings",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        proposal = Proposal.objects.get(case=self.work)
+        version = proposal.current_version
+        self.assertIsNone(version.expected_start)
+        self.assertIsNone(version.expected_end)
+        self.assertEqual(version.expected_schedule, "To be scheduled")
+        self.assertIsNone(version.snapshot["expected_start"])
+        self.assertIsNone(version.snapshot["expected_end"])
+        self.assertEqual(version.snapshot["expected_schedule"], "To be scheduled")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_create_rejects_single_date_without_the_other(self):
+        self._login_operator()
+        # Start without end
+        resp1 = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Elevator noise",
+                "proposed_action": "Replace bearings",
+                "expected_start": "2026-08-01",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(resp1.status_code, 200)
+        self.assertFalse(Proposal.objects.filter(case=self.work).exists())
+
+        # End without start
+        resp2 = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Elevator noise",
+                "proposed_action": "Replace bearings",
+                "expected_end": "2026-08-15",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(resp2.status_code, 200)
+        self.assertFalse(Proposal.objects.filter(case=self.work).exists())
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_create_rejects_end_date_before_start_date(self):
+        self._login_operator()
+        response = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Elevator noise",
+                "proposed_action": "Replace bearings",
+                "expected_start": "2026-08-15",
+                "expected_end": "2026-08-01",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Proposal.objects.filter(case=self.work).exists())
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_create_accepts_past_dates(self):
+        self._login_operator()
+        response = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Elevator noise",
+                "proposed_action": "Replace bearings",
+                "expected_start": "2020-01-01",
+                "expected_end": "2020-01-10",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        proposal = Proposal.objects.get(case=self.work)
+        self.assertEqual(proposal.current_version.expected_schedule, "01/01/2020 \u2013 10/01/2020")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_standalone_proposal_requires_schedule_dates(self):
+        self._login_operator()
+        # Missing dates
+        response = self.client.post(
+            reverse("web:standalone-proposal-create"),
+            {
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Roof maintenance",
+                "proposed_action": "Reseal roof",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Proposal.objects.filter(building=self.seed.building, case__isnull=True).exists())
+
+        # Valid with dates
+        valid_resp = self.client.post(
+            reverse("web:standalone-proposal-create"),
+            {
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Roof maintenance",
+                "proposed_action": "Reseal roof",
+                "expected_start": "2026-09-01",
+                "expected_end": "2026-09-10",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(valid_resp.status_code, 302)
+        standalone = Proposal.objects.get(building=self.seed.building, case__isnull=True)
+        self.assertEqual(standalone.current_version.expected_schedule, "01/09/2026 \u2013 10/09/2026")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_detail_summary_shows_expected_schedule(self):
+        self._login_operator()
+        self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 5_000_000,
+                "contractor_name": "Acme Co",
+                "purpose": "Elevator noise",
+                "proposed_action": "Replace bearings",
+                "expected_start": "2026-08-01",
+                "expected_end": "2026-08-15",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        proposal = Proposal.objects.get(case=self.work)
+        response = self.client.get(reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Expected schedule")
+        self.assertContains(response, "01/08/2026 \u2013 15/08/2026")
+
 
 def test_decision_form_requires_explicit_choice_and_decline_note():
     from lamto.web.forms.staff import ProposalDecisionForm

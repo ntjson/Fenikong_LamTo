@@ -251,12 +251,32 @@ class CreateProposalForm(forms.Form):
     contractor_name = forms.CharField(max_length=255, label=_("Contractor name"), widget=forms.TextInput(attrs={"class": "input"}))
     purpose = forms.CharField(required=False, label=_("Purpose"), widget=forms.Textarea(attrs={"class": "input"}))
     proposed_action = forms.CharField(required=False, label=_("Proposed action"), widget=forms.Textarea(attrs={"class": "input"}))
-    expected_schedule = forms.CharField(max_length=200, required=False, label=_("Expected schedule"), widget=forms.TextInput(attrs={"class": "input"}))
+    expected_start = forms.DateField(
+        required=False,
+        label=_("Expected start"),
+        widget=forms.DateInput(attrs={"type": "date", "class": "input"}),
+    )
+    expected_end = forms.DateField(
+        required=False,
+        label=_("Expected end"),
+        widget=forms.DateInput(attrs={"type": "date", "class": "input"}),
+    )
     quotation = forms.FileField(label=_("Quotation"), widget=forms.ClearableFileInput(attrs={"class": "input"}))
     confirm = forms.BooleanField(
         required=True,
         label=_("I understand publication freezes this proposal and it cannot be edited."),
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get("expected_start")
+        end = cleaned_data.get("expected_end")
+        if bool(start) != bool(end):
+            self.add_error("expected_start", _("Provide both start and end dates, or neither."))
+            self.add_error("expected_end", _("Provide both start and end dates, or neither."))
+        elif start and end and end < start:
+            self.add_error("expected_end", _("End date cannot be before start date."))
+        return cleaned_data
 
 
 class PublishLedgerEntryForm(forms.Form):
@@ -269,7 +289,7 @@ class PublishLedgerEntryForm(forms.Form):
 class StandaloneProposalForm(CreateProposalForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in ("purpose", "proposed_action", "expected_schedule"):
+        for name in ("purpose", "proposed_action", "expected_start", "expected_end"):
             self.fields[name].required = True
 
 

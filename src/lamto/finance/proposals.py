@@ -1,3 +1,4 @@
+import datetime
 import secrets
 
 from django.core.exceptions import ValidationError
@@ -36,6 +37,32 @@ def spending_proposal_cases():
 ZERO_HASH = "0x" + "00" * 32
 
 
+def _resolve_schedule_and_dates(expected_start=None, expected_end=None, expected_schedule=None):
+    if isinstance(expected_start, str) and expected_start.strip():
+        expected_start = datetime.date.fromisoformat(expected_start.strip())
+    elif not expected_start:
+        expected_start = None
+
+    if isinstance(expected_end, str) and expected_end.strip():
+        expected_end = datetime.date.fromisoformat(expected_end.strip())
+    elif not expected_end:
+        expected_end = None
+
+    if bool(expected_start) != bool(expected_end):
+        raise ValidationError(_("Expected start and end dates must be provided together."))
+
+    if expected_start and expected_end:
+        if expected_end < expected_start:
+            raise ValidationError(_("Expected end date cannot precede expected start date."))
+        resolved_schedule = f"{expected_start.strftime('%d/%m/%Y')} \u2013 {expected_end.strftime('%d/%m/%Y')}"
+    elif expected_schedule and str(expected_schedule).strip():
+        resolved_schedule = str(expected_schedule).strip()
+    else:
+        resolved_schedule = "To be scheduled"
+
+    return expected_start, expected_end, resolved_schedule
+
+
 def _quotation_versions(building_id, quotation_versions, *, lock=False):
     supplied = list(quotation_versions or [])
     ids = [getattr(version, "pk", None) for version in supplied]
@@ -72,6 +99,8 @@ def _submission_snapshot(
     expected_schedule,
     versions,
     number,
+    expected_start=None,
+    expected_end=None,
 ):
     case = proposal.case
     quotation_snapshot = [
@@ -90,6 +119,8 @@ def _submission_snapshot(
         "contractor_name": contractor_name,
         "purpose": purpose,
         "proposed_action": proposed_action,
+        "expected_start": expected_start.isoformat() if hasattr(expected_start, "isoformat") else (expected_start or None),
+        "expected_end": expected_end.isoformat() if hasattr(expected_end, "isoformat") else (expected_end or None),
         "expected_schedule": expected_schedule,
         "quotation_versions": quotation_snapshot,
     }
@@ -124,6 +155,8 @@ def build_proposal_evidence_payload(
     quotation_versions,
     purpose=None,
     proposed_action="",
+    expected_start=None,
+    expected_end=None,
     expected_schedule="",
 ):
     """Build the exact signed payload callers must use before submission."""
@@ -135,6 +168,9 @@ def build_proposal_evidence_payload(
         proposal.case.get_category_display()
         if purpose is None and proposal.case_id
         else (purpose or "")
+    )
+    expected_start, expected_end, resolved_schedule = _resolve_schedule_and_dates(
+        expected_start, expected_end, expected_schedule
     )
     versions = _quotation_versions(
         proposal.building_id or proposal.case.building_id, quotation_versions
@@ -151,9 +187,11 @@ def build_proposal_evidence_payload(
         contractor_name.strip(),
         purpose,
         proposed_action,
-        expected_schedule,
+        resolved_schedule,
         versions,
         number,
+        expected_start=expected_start,
+        expected_end=expected_end,
     )
     return evidence_payload
 
@@ -266,7 +304,9 @@ def publish_proposal_version(
     contractor_name,
     purpose,
     proposed_action,
-    expected_schedule,
+    expected_start=None,
+    expected_end=None,
+    expected_schedule="",
     quotation_versions,
     event_id,
 ) -> ProposalVersion:
@@ -291,10 +331,13 @@ def publish_proposal_version(
     for value, message in (
         (purpose, _("Problem or need is required.")),
         (proposed_action, _("Proposed action is required.")),
-        (expected_schedule, _("Expected schedule is required.")),
     ):
         if not isinstance(value, str) or not value.strip():
             raise ValidationError(message)
+
+    expected_start, expected_end, resolved_schedule = _resolve_schedule_and_dates(
+        expected_start, expected_end, expected_schedule
+    )
 
     versions = _quotation_versions(
         locked_proposal.building_id, quotation_versions, lock=True
@@ -309,9 +352,11 @@ def publish_proposal_version(
         contractor_name.strip(),
         purpose.strip(),
         proposed_action.strip(),
-        expected_schedule.strip(),
+        resolved_schedule,
         versions,
         number,
+        expected_start=expected_start,
+        expected_end=expected_end,
     )
     previous_hash = "0x" + previous.outbox_event.payload_hash if previous else ZERO_HASH
     event = queue_platform_event(
@@ -328,7 +373,9 @@ def publish_proposal_version(
         contractor_name=contractor_name.strip(),
         purpose=purpose.strip(),
         proposed_action=proposed_action.strip(),
-        expected_schedule=expected_schedule.strip(),
+        expected_start=expected_start,
+        expected_end=expected_end,
+        expected_schedule=resolved_schedule,
         snapshot=snapshot,
         snapshot_hash=payload_hash(snapshot),
         creator_membership=membership,

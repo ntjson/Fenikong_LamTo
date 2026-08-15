@@ -84,6 +84,8 @@ class ProposalVersion(InsertOnlyModel):
     contractor_name = models.CharField(max_length=255)
     purpose = models.TextField()
     proposed_action = models.TextField()
+    expected_start = models.DateField(null=True, blank=True)
+    expected_end = models.DateField(null=True, blank=True)
     expected_schedule = models.CharField(max_length=200)
     snapshot = models.JSONField()
     snapshot_hash = models.CharField(max_length=64)
