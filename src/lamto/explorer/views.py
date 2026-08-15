@@ -35,10 +35,13 @@ def document_download(request, public_token, sha256):
     if proposal is None:
         raise Http404("Document not found.")
     settlement = getattr(proposal, "settlement", None)
-    if settlement is None or sha256 != settlement.transfer.sha256:
+    if settlement is None:
+        raise Http404("Document not found.")
+    transfer = settlement.transfer
+    if sha256 != transfer.sha256:
         raise Http404("Document not found.")
     try:
-        data = read_version_bytes(settlement.transfer)
+        data = read_version_bytes(transfer)
     except DocumentIntegrityError as error:
         logger.warning("Explorer document refused: %s", error)
         return HttpResponse(
@@ -46,10 +49,8 @@ def document_download(request, public_token, sha256):
         )
     response = HttpResponse(
         data,
-        content_type=settlement.transfer.content_type or "application/octet-stream",
+        content_type=transfer.content_type or "application/octet-stream",
     )
     response["Cache-Control"] = "no-store"
-    response["Content-Disposition"] = content_disposition_inline(
-        settlement.transfer.filename
-    )
+    response["Content-Disposition"] = content_disposition_inline(transfer.filename)
     return response
