@@ -8,10 +8,13 @@ import 'package:lamto/features/proposals/proposals_repository.dart';
 import 'package:lamto/l10n/app_localizations.dart';
 import 'package:lamto/theme.dart';
 import 'package:lamto_api/lamto_api.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 Proposal _proposal({
   bool canRate = true,
   bool includeSettlement = true,
+  String? explorerUrl,
 }) => Proposal(
   (b) => b
     ..id = 7
@@ -24,6 +27,7 @@ Proposal _proposal({
     ..contractorName = 'Acme Lift'
     ..expectedSchedule = 'Within 14 days'
     ..canRate = canRate
+    ..explorerUrl = explorerUrl
     ..versions = ListBuilder<ProposalVersion>([
       ProposalVersion(
         (v) => v
@@ -65,6 +69,20 @@ Proposal _proposal({
           ).toBuilder()
         : null,
 );
+
+class _MockUrlLauncher extends Fake
+    with MockPlatformInterfaceMixin
+    implements UrlLauncherPlatform {
+  String? launchedUrl;
+  LaunchOptions? launchOptions;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrl = url;
+    launchOptions = options;
+    return true;
+  }
+}
 
 class _FakeProposalsRepository implements ProposalsRepository {
   _FakeProposalsRepository({Proposal? proposal})
@@ -205,4 +223,78 @@ void main() {
 
     expect(find.text('Rate the result', skipOffstage: false), findsNothing);
   });
+
+  testWidgets(
+    'with explorer URL, link row renders and opens browser; per-version badges unchanged',
+    (tester) async {
+      final mockLauncher = _MockUrlLauncher();
+      UrlLauncherPlatform.instance = mockLauncher;
+
+      const explorerUrl = 'https://lamto.example/e/pub-token-123/';
+      final repository = _FakeProposalsRepository(
+        proposal: _proposal(explorerUrl: explorerUrl),
+      );
+      await tester.pumpWidget(
+        _host(const ProposalDetailScreen(proposalId: 7), repository),
+      );
+      await tester.pumpAndSettle();
+
+      // Per-version badges remain visible
+      await tester.scrollUntilVisible(
+        find.text('Version 1'),
+        150,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(
+        find.text('Anchored on the blockchain', skipOffstage: false),
+        findsOneWidget,
+      );
+
+      // Explorer link row is rendered
+      await tester.scrollUntilVisible(
+        find.text('Evidence explorer'),
+        150,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Evidence explorer'), findsOneWidget);
+      expect(find.byIcon(Icons.open_in_new), findsWidgets);
+
+      // Tapping launches the external browser with exact URL
+      await tester.tap(find.text('Evidence explorer'));
+      await tester.pumpAndSettle();
+
+      expect(mockLauncher.launchedUrl, explorerUrl);
+      expect(
+        mockLauncher.launchOptions?.mode,
+        PreferredLaunchMode.externalApplication,
+      );
+    },
+  );
+
+  testWidgets(
+    'without explorer URL, no link appears and per-version badges remain unchanged',
+    (tester) async {
+      final repository = _FakeProposalsRepository(
+        proposal: _proposal(explorerUrl: null),
+      );
+      await tester.pumpWidget(
+        _host(const ProposalDetailScreen(proposalId: 7), repository),
+      );
+      await tester.pumpAndSettle();
+
+      // Link row is NOT present
+      expect(find.text('Evidence explorer'), findsNothing);
+
+      // Per-version badges remain visible
+      await tester.scrollUntilVisible(
+        find.text('Version 1'),
+        150,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(
+        find.text('Anchored on the blockchain', skipOffstage: false),
+        findsOneWidget,
+      );
+    },
+  );
 }

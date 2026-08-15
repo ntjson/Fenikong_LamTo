@@ -11,6 +11,7 @@ import '../../core/format.dart';
 import '../../core/page_body.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme.dart';
+import '../ledger/evidence_explorer_tile.dart';
 import '../ledger/evidence_labels.dart';
 import 'proposals_list_screen.dart';
 import 'proposals_repository.dart';
@@ -113,6 +114,11 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
           Text(l10n.proposalSettlement, style: titleStyle),
           const SizedBox(height: 8),
           Text(l10n.proposalSettled),
+        ],
+        if (proposal.explorerUrl != null &&
+            proposal.explorerUrl!.isNotEmpty) ...[
+          const Divider(height: 32),
+          EvidenceExplorerTile(url: proposal.explorerUrl!),
         ],
         // Inline where the rate CTA sits (visible on iOS, unlike a SnackBar).
         if (_rated) ...[
