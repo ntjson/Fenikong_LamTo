@@ -1,3 +1,5 @@
+import secrets
+
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Max
@@ -14,6 +16,11 @@ from lamto.maintenance.models import CaseReport, IssueReport, MaintenanceCase
 from django.utils.translation import gettext_lazy as _
 
 from .models import Proposal, ProposalDocument, ProposalVersion
+
+
+def new_public_token() -> str:
+    """Opaque, unguessable identity of a proposal's Evidence explorer URL."""
+    return secrets.token_urlsafe(32)
 
 
 def spending_proposal_cases():
@@ -212,6 +219,8 @@ def publish_proposal_version(
     versions = _quotation_versions(locked_proposal.building_id, quotation_versions, lock=True)
     previous = locked_proposal.versions.order_by("-number").first()
     number = (previous.number if previous else 0) + 1
+    if previous is None:
+        locked_proposal.public_token = new_public_token()
     snapshot, evidence_payload = _submission_snapshot(
         locked_proposal, amount_vnd, contractor_name.strip(), fund_code.strip(), purpose.strip(),
          proposed_action.strip(), expected_schedule.strip(), versions, number
@@ -247,7 +256,7 @@ def publish_proposal_version(
     )
     locked_proposal.current_version = version
     locked_proposal.status = Proposal.Status.PUBLISHED
-    locked_proposal.save(update_fields=["current_version", "status"])
+    locked_proposal.save(update_fields=["current_version", "status", "public_token"])
     record_audit(
         membership.user,
         membership,

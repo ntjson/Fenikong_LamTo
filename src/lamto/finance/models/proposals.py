@@ -40,6 +40,9 @@ class Proposal(models.Model):
     decided_by = models.ForeignKey(ManagementMembership, null=True, blank=True, on_delete=models.PROTECT, related_name="decided_proposals")
     decided_at = models.DateTimeField(null=True, blank=True)
     decision_note = models.TextField(blank=True)
+    public_token = models.CharField(
+        max_length=64, unique=True, null=True, blank=True, editable=False
+    )
     completed_at = models.DateTimeField(null=True, blank=True)
     closed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

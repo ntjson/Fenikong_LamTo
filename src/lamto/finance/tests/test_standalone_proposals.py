@@ -80,6 +80,59 @@ class StandaloneProposalTests(TestCase):
         self.assertEqual(second.number, 2)
         self.assertEqual(second.outbox_event.previous_hash, "0x" + first.outbox_event.payload_hash)
 
+    def test_first_publish_mints_a_unique_opaque_public_token(self):
+        proposal = create_standalone_proposal(self.building, self.membership)
+        other = create_standalone_proposal(self.building, self.membership)
+
+        self.publish(proposal)
+        self.publish(other)
+        proposal.refresh_from_db()
+        other.refresh_from_db()
+
+        self.assertGreaterEqual(len(proposal.public_token), 32)
+        self.assertNotEqual(proposal.public_token, other.public_token)
+
+    def test_public_token_is_database_unique(self):
+        proposal = create_standalone_proposal(self.building, self.membership)
+        other = create_standalone_proposal(self.building, self.membership)
+        self.publish(proposal)
+        proposal.refresh_from_db()
+
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Proposal.objects.filter(pk=other.pk).update(
+                public_token=proposal.public_token
+            )
+
+    def test_republish_leaves_the_public_token_unchanged(self):
+        proposal = create_standalone_proposal(self.building, self.membership)
+        self.publish(proposal)
+        proposal.refresh_from_db()
+        token = proposal.public_token
+
+        self.publish(proposal, proposed_action="Replace roof")
+        proposal.refresh_from_db()
+
+        self.assertEqual(proposal.public_token, token)
+
+    def test_republishing_a_pre_feature_proposal_never_mints_a_token(self):
+        proposal = create_standalone_proposal(self.building, self.membership)
+        self.publish(proposal)
+        Proposal.objects.filter(pk=proposal.pk).update(public_token=None)
+
+        self.publish(proposal, proposed_action="Replace roof")
+        proposal.refresh_from_db()
+
+        self.assertIsNone(proposal.public_token)
+
+    def test_unpublished_and_pre_feature_proposals_have_no_public_token(self):
+        draft = create_standalone_proposal(self.building, self.membership)
+        self.assertIsNone(draft.public_token)
+
+        pre_feature = Proposal.objects.create(
+            building=self.building, creator_membership=self.membership
+        )
+        self.assertIsNone(pre_feature.public_token)
+
     def test_decision_transitions(self):
         proposal = create_standalone_proposal(self.building, self.membership)
         self.publish(proposal)
