@@ -7,8 +7,13 @@ void main() {
   // TODO add properties to the builder and call build()
 
   group(LedgerDocument, () {
-    // String label
-    test('to test the property `label`', () async {
+    // String kind
+    test('to test the property `kind`', () async {
+      // TODO
+    });
+
+    // String contentType
+    test('to test the property `contentType`', () async {
       // TODO
     });
 

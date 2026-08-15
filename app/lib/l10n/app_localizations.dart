@@ -1157,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @ledgerConclusionVerifiedBody.
   ///
   /// In en, this message translates to:
-  /// **'The payment evidence and record integrity were independently confirmed.'**
+  /// **'The transfer proof and record integrity were independently confirmed.'**
   String get ledgerConclusionVerifiedBody;
 
   /// No description provided for @ledgerConclusionUnverified.
@@ -1217,7 +1217,7 @@ abstract class AppLocalizations {
   /// No description provided for @ledgerChainPayment.
   ///
   /// In en, this message translates to:
-  /// **'Payment evidence'**
+  /// **'Transfer proof'**
   String get ledgerChainPayment;
 
   /// No description provided for @ledgerChainVerification.

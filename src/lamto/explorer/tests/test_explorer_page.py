@@ -131,7 +131,7 @@ class EvidenceExplorerPageTests(TestCase):
         response = self.client.get(self.explorer_url(proposal.public_token))
         self.assertEqual(response.status_code, 200)
         content = response.content.decode("utf-8")
-        expected_date = entry.published_at.strftime("%d/%m/%Y")
+        expected_date = timezone.localtime(entry.published_at).strftime("%d/%m/%Y")
         self.assertIn(
             f"Tòa nhà Sen Vàng · Đề xuất #{proposal.pk} · {expected_date}",
             content,
@@ -195,7 +195,7 @@ class EvidenceExplorerPageTests(TestCase):
         self.assertIn("Phiên bản đầu tiên", content)
         self.assertIn("Phiên bản điều chỉnh kinh phí", content)
 
-    def test_pre_settlement_proposal_shows_settlement_as_pending(self):
+    def test_unsettled_proposal_shows_pending_settlement_step(self):
         proposal = self.published_proposal()
         response = self.client.get(self.explorer_url(proposal.public_token))
         self.assertEqual(response.status_code, 200)
@@ -203,6 +203,7 @@ class EvidenceExplorerPageTests(TestCase):
         self.assertIn("Nghiệm thu và thanh toán", content)
         self.assertIn("Đang chờ neo blockchain", content)
         self.assertIn("chưa thực hiện thanh toán", content)
+        self.assertIn("ủy nhiệm chi", content)
 
     def test_settled_proposal_shows_settlement_step_and_document_link(self):
         proposal, proof = self.settled_proposal()
@@ -210,6 +211,8 @@ class EvidenceExplorerPageTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode("utf-8")
         self.assertIn("Nghiệm thu và thanh toán", content)
+        self.assertIn("Chứng từ thanh toán:", content)
+        self.assertNotIn("Chứng từ chuyển khoản", content)
         self.assertIn(proof.filename, content)
         expected_doc_url = reverse(
             "explorer:document-download",

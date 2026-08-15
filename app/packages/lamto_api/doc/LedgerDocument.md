@@ -8,7 +8,8 @@ import 'package:lamto_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**label** | **String** |  |
+**kind** | **String** |  |
+**contentType** | **String** |  |
 **filename** | **String** |  |
 **sha256** | **String** |  |
 **downloadUrl** | **String** |  |

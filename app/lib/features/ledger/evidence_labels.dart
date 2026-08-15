@@ -30,6 +30,12 @@ String approverLine(String role, String name, AppLocalizations l10n) =>
       _ => l10n.ledgerApproverGeneric(name),
     };
 
+String ledgerDocumentKindLabel(String kind, AppLocalizations l10n) =>
+    switch (kind) {
+      'PAYMENT_PROOF' => l10n.ledgerChainPayment,
+      _ => kind,
+    };
+
 (StatusTone, IconData) _styleFor(String level) => switch (level) {
   'CHAIN_CONFIRMED' => (StatusTone.success, Icons.verified_outlined),
   'MISMATCH' => (StatusTone.error, Icons.error_outline),

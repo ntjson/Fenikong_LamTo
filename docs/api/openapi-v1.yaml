@@ -1848,7 +1848,9 @@ components:
     LedgerDocument:
       type: object
       properties:
-        label:
+        kind:
+          type: string
+        content_type:
           type: string
         filename:
           type: string
@@ -1857,9 +1859,10 @@ components:
         download_url:
           type: string
       required:
+      - content_type
       - download_url
       - filename
-      - label
+      - kind
       - sha256
     LedgerEntryDetail:
       type: object

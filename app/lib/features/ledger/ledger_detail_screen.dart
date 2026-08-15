@@ -357,7 +357,7 @@ class _DocumentTileState extends ConsumerState<_DocumentTile> {
       minTileHeight: 56,
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.description_outlined),
-      title: Text(widget.document.label),
+      title: Text(ledgerDocumentKindLabel(widget.document.kind, l10n)),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

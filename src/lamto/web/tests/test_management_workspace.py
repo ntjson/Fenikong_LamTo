@@ -336,3 +336,32 @@ class ManagementWorkspaceTests(TestCase):
 
         self.assertIn('<span class="task-action">Review settlement</span>', html)
         self.assertIn("Settlement #7", html)
+
+    def test_settlement_page_uses_agreed_name_en_and_vi(self):
+        fake_settlement = SimpleNamespace(
+            pk=1,
+            proposal=SimpleNamespace(
+                current_version=SimpleNamespace(contractor_name="Acme", amount_vnd=1000000),
+                public_token=None,
+            ),
+            amount_vnd=1000000,
+            transfer_id=10,
+            transfer=SimpleNamespace(filename="proof.pdf"),
+            outbox_event=None,
+        )
+        with translation.override("en"):
+            html_en = render_to_string(
+                "web/staff/settlement_detail.html",
+                {"settlement": fake_settlement},
+            )
+            self.assertIn("<dt>Transfer proof</dt>", html_en)
+            self.assertNotIn("Transfer evidence", html_en)
+
+        with translation.override("vi"):
+            html_vi = render_to_string(
+                "web/staff/settlement_detail.html",
+                {"settlement": fake_settlement},
+            )
+            self.assertIn("<dt>Chứng từ thanh toán</dt>", html_vi)
+            self.assertNotIn("Bằng chứng chuyển khoản", html_vi)
+            self.assertNotIn("Chứng từ chuyển khoản", html_vi)

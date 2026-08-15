@@ -141,7 +141,8 @@ class VerificationSerializer(serializers.Serializer):
 
 
 class LedgerDocumentSerializer(serializers.Serializer):
-    label = serializers.CharField()
+    kind = serializers.CharField()
+    content_type = serializers.CharField()
     filename = serializers.CharField()
     sha256 = serializers.CharField()
     download_url = serializers.CharField()

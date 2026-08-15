@@ -53,6 +53,13 @@ the Management account files. Filing that proof is the whole of settling; there
 is no second confirming party.
 _Avoid_: Payee acknowledgement, acknowledgement, two-sided settlement
 
+**Transfer proof**:
+The document a Management account files to evidence that a published proposal
+was paid; filing it is what settles the proposal. Resident-facing Vietnamese:
+Chứng từ thanh toán.
+_Avoid_: Transfer evidence, payment voucher, Bằng chứng chuyển khoản,
+Chứng từ chuyển khoản
+
 **Evidence explorer**:
 The public, unauthenticated page, reached by an opaque token, that shows one
 proposal's anchored chain end to end — its published versions, its Settlement,

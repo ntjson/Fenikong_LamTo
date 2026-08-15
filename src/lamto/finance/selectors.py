@@ -79,7 +79,7 @@ def published_ledger_entry_for_proof(building_id, pk):
         .filter(pk=pk)
         .select_related(
             "case__decision__report",
-            "settlement__transfer",
+            "settlement__transfer__document",
             "settlement__outbox_event",
             "proposal__current_version",
         )
@@ -235,18 +235,17 @@ def ledger_entry_proof(entry):
     payload = entry.resident_payload or {}
     version = entry.proposal.current_version
     docs = []
-    for label, version_obj in (
-        ("Transfer evidence", entry.settlement.transfer),
-    ):
-        if version_obj is not None:
-            docs.append(
-                {
-                    "label": label,
-                    "filename": version_obj.filename,
-                    "sha256": version_obj.sha256,
-                    "version_id": version_obj.pk,
-                }
-            )
+    transfer = entry.settlement.transfer
+    if transfer is not None:
+        docs.append(
+            {
+                "kind": transfer.document.kind,
+                "content_type": transfer.content_type,
+                "filename": transfer.filename,
+                "sha256": transfer.sha256,
+                "version_id": transfer.pk,
+            }
+        )
     proposal_event = version.outbox_event if version else None
     settlement_event = entry.settlement.outbox_event
     events = [event for event in (proposal_event, settlement_event) if event]

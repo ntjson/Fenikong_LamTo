@@ -78,7 +78,8 @@ LedgerEntryDetail _detail({String? explorerUrl}) => LedgerEntryDetail(
     ..documents = ListBuilder<LedgerDocument>([
       LedgerDocument(
         (d) => d
-          ..label = 'Hóa đơn'
+          ..kind = 'PAYMENT_PROOF'
+          ..contentType = 'application/pdf'
           ..filename = 'hoa-don.pdf'
           ..sha256 = 'doc-hash'
           ..downloadUrl = '/api/v1/documents/test-token',
@@ -226,7 +227,11 @@ class _EmptyProposalsRepository implements ProposalsRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Widget _host(Widget child, _FakeRepo repo) => ProviderScope(
+Widget _host(
+  Widget child,
+  _FakeRepo repo, {
+  Locale locale = const Locale('vi'),
+}) => ProviderScope(
   overrides: [
     transparencyRepositoryProvider.overrideWithValue(repo),
     proposalsRepositoryProvider.overrideWithValue(_EmptyProposalsRepository()),
@@ -234,7 +239,7 @@ Widget _host(Widget child, _FakeRepo repo) => ProviderScope(
   child: MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    locale: const Locale('vi'),
+    locale: locale,
     home: child,
   ),
 );
@@ -477,14 +482,15 @@ void main() {
     await tester.tap(find.text('Chuỗi trách nhiệm'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-      find.text('Hóa đơn'),
+      find.text('hoa-don.pdf'),
       200,
       scrollable: find.byType(Scrollable).last,
     );
-    await tester.ensureVisible(find.text('Hóa đơn'));
+    await tester.ensureVisible(find.text('hoa-don.pdf'));
     await tester.pumpAndSettle();
+    expect(find.text('Chứng từ thanh toán'), findsNWidgets(2));
     expect(find.text('Xem hoặc tải xuống'), findsOneWidget);
-    await tester.tap(find.text('Hóa đơn'));
+    await tester.tap(find.text('hoa-don.pdf'));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
@@ -589,6 +595,31 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('ab12cd34'), findsOneWidget);
       expect(find.textContaining('0xfeed'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'English catalogue uses Transfer proof for chain step and document row',
+    (tester) async {
+      final repo = _FakeRepo();
+      await tester.pumpWidget(
+        _host(
+          const LedgerDetailScreen(entryId: 42),
+          repo,
+          locale: const Locale('en'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Transfer proof'), findsOneWidget); // Step 4
+      await tester.scrollUntilVisible(
+        find.text('hoa-don.pdf'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.ensureVisible(find.text('hoa-don.pdf'));
+      await tester.pumpAndSettle();
+      expect(find.text('Transfer proof'), findsNWidgets(2)); // Step 4 + Document row
     },
   );
 }

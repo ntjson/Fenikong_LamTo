@@ -7,7 +7,7 @@
   <div class="panel-header">
     <div>
       <h1 id="settlements-heading">{% trans "Settlements" %}</h1>
-      <p class="hint">{% trans "Payment evidence for completed proposals." %}</p>
+      <p class="hint">{% trans "Transfer proof for completed proposals." %}</p>
     </div>
   </div>
 
@@ -90,7 +90,7 @@
         <div><dt>{% trans "Status" %}</dt><dd>
           <span class="status status-verified"><span class="status-icon" aria-hidden="true">●</span> {% trans "Settled" %}</span>
         </dd></div>
-        <div><dt>{% trans "Transfer evidence" %}</dt><dd>{% if settlement.transfer_id %}<a href="{% url 'web:staff-document' settlement.transfer_id %}">{{ settlement.transfer.filename }}</a>{% else %}{% trans "Not recorded yet" %}{% endif %}</dd></div>
+        <div><dt>{% trans "Transfer proof" %}</dt><dd>{% if settlement.transfer_id %}<a href="{% url 'web:staff-document' settlement.transfer_id %}">{{ settlement.transfer.filename }}</a>{% else %}{% trans "Not recorded yet" %}{% endif %}</dd></div>
       </dl>
 
       {% if accountability_stages %}

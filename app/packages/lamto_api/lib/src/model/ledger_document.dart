@@ -11,14 +11,18 @@ part 'ledger_document.g.dart';
 /// LedgerDocument
 ///
 /// Properties:
-/// * [label]
+/// * [kind]
+/// * [contentType]
 /// * [filename]
 /// * [sha256]
 /// * [downloadUrl]
 @BuiltValue()
 abstract class LedgerDocument implements Built<LedgerDocument, LedgerDocumentBuilder> {
-  @BuiltValueField(wireName: r'label')
-  String get label;
+  @BuiltValueField(wireName: r'kind')
+  String get kind;
+
+  @BuiltValueField(wireName: r'content_type')
+  String get contentType;
 
   @BuiltValueField(wireName: r'filename')
   String get filename;
@@ -52,9 +56,14 @@ class _$LedgerDocumentSerializer implements PrimitiveSerializer<LedgerDocument> 
     LedgerDocument object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'label';
+    yield r'kind';
     yield serializers.serialize(
-      object.label,
+      object.kind,
+      specifiedType: const FullType(String),
+    );
+    yield r'content_type';
+    yield serializers.serialize(
+      object.contentType,
       specifiedType: const FullType(String),
     );
     yield r'filename';
@@ -95,12 +104,19 @@ class _$LedgerDocumentSerializer implements PrimitiveSerializer<LedgerDocument> 
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
-        case r'label':
+        case r'kind':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(String),
           ) as String;
-          result.label = valueDes;
+          result.kind = valueDes;
+          break;
+        case r'content_type':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.contentType = valueDes;
           break;
         case r'filename':
           final valueDes = serializers.deserialize(

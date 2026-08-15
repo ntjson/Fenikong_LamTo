@@ -194,17 +194,17 @@ msgstr "Kết quả"
 msgid "Amount (VND)"
 msgstr "Số tiền (VND)"
 
-msgid "Existing payment proof"
-msgstr "Bằng chứng thanh toán hiện có"
+msgid "Existing transfer proof"
+msgstr "Chứng từ thanh toán hiện có"
 
-msgid "Upload new payment proof"
-msgstr "Tải lên bằng chứng thanh toán mới"
+msgid "Upload new transfer proof"
+msgstr "Tải lên chứng từ thanh toán mới"
 
-msgid "Select evidence…"
-msgstr "Chọn bằng chứng…"
+msgid "Select transfer proof…"
+msgstr "Chọn chứng từ thanh toán…"
 
-msgid "Select existing evidence or upload a new payment proof."
-msgstr "Chọn bằng chứng hiện có hoặc tải lên bằng chứng thanh toán mới."
+msgid "Select existing transfer proof or upload a new one."
+msgstr "Chọn chứng từ thanh toán hiện có hoặc tải lên chứng từ mới."
 
 msgid "Contractor name"
 msgstr "Tên nhà thầu"
@@ -1263,8 +1263,8 @@ msgstr "Nguồn này đã được xác minh."
 msgid "Title"
 msgstr "Tiêu đề"
 
-msgid "Transfer evidence"
-msgstr "Bằng chứng chuyển khoản"
+msgid "Transfer proof"
+msgstr "Chứng từ thanh toán"
 
 msgid "Triage"
 msgstr "Phân loại"
@@ -2694,8 +2694,8 @@ msgid "Request is required."
 msgstr "Cần có yêu cầu."
 
 
-msgid "Payment evidence for completed proposals."
-msgstr "Bằng chứng thanh toán cho các đề xuất đã hoàn tất."
+msgid "Transfer proof for completed proposals."
+msgstr "Chứng từ thanh toán cho các đề xuất đã hoàn tất."
 
 msgid "Awaiting settlement"
 msgstr "Chờ thanh toán"

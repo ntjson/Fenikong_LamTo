@@ -583,7 +583,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ledgerConclusionVerifiedBody =>
-      'The payment evidence and record integrity were independently confirmed.';
+      'The transfer proof and record integrity were independently confirmed.';
 
   @override
   String get ledgerConclusionUnverified => 'This expense is not fully verified';
@@ -617,7 +617,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledgerChainApprovals => 'Approvals';
 
   @override
-  String get ledgerChainPayment => 'Payment evidence';
+  String get ledgerChainPayment => 'Transfer proof';
 
   @override
   String get ledgerChainVerification => 'Independent verification';

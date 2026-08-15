@@ -145,7 +145,10 @@ class LedgerApiTests(TestCase):
         assert body["verification"] is None
         assert body["documents"], "document hashes must be exposed"
         for doc in body["documents"]:
-            assert set(doc) == {"label", "filename", "sha256", "download_url"}
+            assert set(doc) == {"kind", "content_type", "filename", "sha256", "download_url"}
+            assert doc["kind"] == "PAYMENT_PROOF"
+            assert doc["content_type"] == "application/pdf"
+            assert "label" not in doc
             assert len(doc["sha256"]) == 64
             assert doc["download_url"]
         proof = body["proof"]

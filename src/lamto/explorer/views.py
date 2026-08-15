@@ -14,6 +14,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.http import require_GET
 
+from django.core.exceptions import ObjectDoesNotExist
 from lamto.api.downloads import content_disposition_inline
 from lamto.documents.access import DocumentIntegrityError, read_version_bytes
 from lamto.evidence.models import BlockchainOutboxEvent, EvidenceLevel, evidence_level
@@ -174,6 +175,7 @@ def explorer_page(request, public_token):
             "settlement__transfer",
             "settlement__settled_by__user",
             "settlement__outbox_event",
+            "settlement__ledger_entry",
             "published_ledger_entry",
         )
         .prefetch_related(
@@ -265,7 +267,16 @@ def explorer_page(request, public_token):
         )
 
     # 3. Resident-ledger parity fields
-    entry = getattr(proposal, "published_ledger_entry", None)
+    entry = None
+    try:
+        entry = proposal.published_ledger_entry
+    except (ObjectDoesNotExist, AttributeError):
+        pass
+    if entry is None:
+        try:
+            entry = proposal.settlement.ledger_entry
+        except (ObjectDoesNotExist, AttributeError):
+            pass
     if entry is not None:
         story = ledger_story_fields(entry)
         what_was_fixed = story["what_was_fixed"]
