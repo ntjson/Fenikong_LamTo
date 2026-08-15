@@ -57,6 +57,29 @@ def _proposal_publishable(proposal) -> bool:
     )
 
 
+def _resolve_proposal_action_panel(
+    proposal: Proposal,
+    *,
+    can_publish: bool,
+    publication_problem: str | None,
+    publication_pending: bool,
+) -> str | None:
+    """Resolve the single action panel to render for a Management account."""
+    if can_publish:
+        return "publish"
+    if publication_problem == BlockchainOutboxEvent.Status.FAILED:
+        return "failed"
+    if publication_problem == BlockchainOutboxEvent.Status.MISMATCH:
+        return "mismatch"
+    if proposal.status == Proposal.Status.PUBLISHED:
+        return "decide"
+    if proposal.status == Proposal.Status.IN_PROGRESS:
+        return "progress"
+    if publication_pending:
+        return "pending"
+    return None
+
+
 @login_required
 @require_GET
 def proposal_list(request):
@@ -221,6 +244,13 @@ def proposal_detail(request, pk):
         BlockchainOutboxEvent.Status.MISMATCH,
     } else None
 
+    action_panel = _resolve_proposal_action_panel(
+        proposal,
+        can_publish=can_publish,
+        publication_problem=publication_problem,
+        publication_pending=publication_pending,
+    )
+
     return render(
         request,
         "web/staff/proposal_detail.html",
@@ -233,6 +263,7 @@ def proposal_detail(request, pk):
             list_mode=False,
             proposal=proposal,
             version=version,
+            action_panel=action_panel,
             publish_form=publish_form if can_publish else None,
             can_publish=can_publish,
             publication_pending=publication_pending,

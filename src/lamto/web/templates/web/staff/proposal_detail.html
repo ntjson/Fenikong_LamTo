@@ -65,13 +65,13 @@
     </div>
 
     <div class="record-action">
-      {% if can_publish %}
+      {% if action_panel == "publish" %}
       <div class="workflow-section workflow-primary">
         <h2>{% trans "Publish settled expense" %}</h2>
         <p class="consequence-note">{% trans "Publishing adds this settled expense to the resident ledger. Verify the frozen proposal and settlement evidence before continuing." %}</p>
         <form method="post" class="stack-form" data-busy-on-submit>{% csrf_token %}<input type="hidden" name="action" value="publish">{{ publish_form.as_p }}<button type="submit" class="button button-primary">{% trans "Publish to resident ledger" %}</button></form>
       </div>
-      {% elif proposal.status == "PUBLISHED" %}
+      {% elif action_panel == "decide" %}
       <div class="workflow-section workflow-primary">
         <h2>{% trans "Decide whether to proceed" %}</h2>
         <p class="consequence-note">{% trans "“Do not proceed” closes this proposal permanently in your name; it cannot be reopened, and new spending needs a new proposal." %}</p>
@@ -95,13 +95,12 @@
           <button type="submit" class="button button-primary">{% trans "Record decision" %}</button>
         </form>
       </div>
-      {% elif proposal.status == "IN_PROGRESS" %}
+      {% elif action_panel == "progress" %}
       <div class="workflow-section workflow-primary">
         <h2>{% trans "Publish work progress" %}</h2>
         <form method="post" enctype="multipart/form-data" class="stack-form" data-busy-on-submit>{% csrf_token %}{{ progress_form.as_p }}<button name="action" value="progress" class="button button-primary">{% trans "Publish progress" %}</button><button name="action" value="complete" class="button button-secondary">{% trans "Complete work" %}</button></form>
       </div>
-      {% endif %}
-      {% if publication_pending %}
+      {% elif action_panel == "pending" %}
       <div class="workflow-section">
         <h2>{% trans "Publication awaiting confirmation" %}</h2>
         <p>
@@ -117,11 +116,11 @@
         </dl>
         {% endif %}
       </div>
-      {% elif publication_problem == "FAILED" %}
+      {% elif action_panel == "failed" %}
       <div class="workflow-section"><h2>{% trans "Evidence anchoring failed" %}</h2><p class="status status-mismatch"><span class="status-icon" aria-hidden="true">●</span> {% trans "The signed proposal is saved, but anchoring failed. Review Operations health before retrying any action." %}</p><a class="button button-secondary" href="{% url 'web:ops-health' %}">{% trans "Review Operations health" %}</a></div>
-      {% elif publication_problem == "MISMATCH" %}
+      {% elif action_panel == "mismatch" %}
       <div class="workflow-section"><h2>{% trans "Evidence mismatch detected" %}</h2><p class="status status-mismatch"><span class="status-icon" aria-hidden="true">●</span> {% trans "The saved proposal does not match independently observed evidence. Stop and review Operations health." %}</p><a class="button button-secondary" href="{% url 'web:ops-health' %}">{% trans "Review Operations health" %}</a></div>
-      {% elif not can_publish %}
+      {% else %}
       <p class="empty">{% trans "No action is assigned to this membership. Review the proposal summary and return to the action inbox." %}</p>
       {% endif %}
     </div>
