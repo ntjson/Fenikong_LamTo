@@ -3,9 +3,6 @@ from datetime import timedelta
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 
 from lamto.accounts.models import Building, ManagementMembership, Unit, User
 from lamto.maintenance.cases import start_case_work
@@ -56,9 +53,7 @@ class CaseProposalEligibilityTests(TestCase):
         self.assertEqual(candidate_ids, {eligible.pk})
 
         self.client.force_login(self.manager)
-        device = TOTPDevice.objects.create(user=self.manager, name="t", confirmed=True, key=random_hex())
         session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
         session["active_management_id"] = self.membership.pk
         session.save()
         for case, offered in ((eligible, True), (private, False), (no_spend, False)):

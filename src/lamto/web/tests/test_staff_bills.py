@@ -9,9 +9,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files.storage import storages
 from django.test import override_settings
 from django.urls import reverse
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 
 from lamto.accounts.models import (
     Building,
@@ -42,12 +39,6 @@ def setup_manager(client, name="Tower A"):
     manager = User.objects.create_user(email="manager@x.test", password="secret")
     ManagementMembership.objects.create(user=manager, building=building)
     client.force_login(manager)
-    device = TOTPDevice.objects.create(
-        user=manager, name="t", confirmed=True, key=random_hex()
-    )
-    session = client.session
-    session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-    session.save()
     return building, manager
 
 

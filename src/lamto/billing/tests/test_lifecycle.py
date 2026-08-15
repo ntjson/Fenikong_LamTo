@@ -3,9 +3,6 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, override_settings
 from django.urls import reverse
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 from knox.models import AuthToken
 
 from lamto.accounts.models import (
@@ -36,12 +33,6 @@ def test_full_bill_lifecycle():
 
     staff = Client()
     staff.force_login(manager)
-    device = TOTPDevice.objects.create(
-        user=manager, name="t", confirmed=True, key=random_hex()
-    )
-    session = staff.session
-    session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-    session.save()
 
     pdf = SimpleUploadedFile(
         "bill.pdf", b"%PDF-1.4\n" + b"0" * 32, content_type="application/pdf"
@@ -123,7 +114,8 @@ def test_full_bill_lifecycle():
     ]
     assert void_target.pk in ids
     assert staff.post(
-        reverse("web:staff-bill-void", args=[void_target.pk]), {"reason": "error"}
+        reverse("web:staff-bill-void", args=[void_target.pk]),
+        {"reason": "error", "confirm": "on"},
     ).status_code == 302
     ids = [
         item["id"]

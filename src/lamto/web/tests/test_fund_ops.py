@@ -6,9 +6,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 from lamto.documents.models import DocumentVersion
 from lamto.finance.models import MaintenanceFundEntry, PublishedLedgerEntry
 from lamto.finance.selectors import pending_reconciliation_proposals
@@ -117,11 +114,7 @@ class FundHomeTests(TestCase):
     def _login(self, seed, role_key):
         membership = seed.management_memberships[0]
         self.client.force_login(membership.user)
-        device = TOTPDevice.objects.create(
-            user=membership.user, name="t", confirmed=True, key=random_hex()
-        )
         session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
         session["active_management_id"] = membership.pk
         session.save()
         return membership
@@ -221,11 +214,7 @@ class FundRecordTests(TestCase):
     def _login(self, seed, role_key):
         membership = seed.management_memberships[0]
         self.client.force_login(membership.user)
-        device = TOTPDevice.objects.create(
-            user=membership.user, name="t", confirmed=True, key=random_hex()
-        )
         session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
         session["active_management_id"] = membership.pk
         session.save()
         return membership
@@ -267,11 +256,7 @@ class FundVerifyTests(TestCase):
     def _login(self, seed, role_key):
         membership = seed.management_memberships[0]
         self.client.force_login(membership.user)
-        device = TOTPDevice.objects.create(
-            user=membership.user, name="t", confirmed=True, key=random_hex()
-        )
         session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
         session["active_management_id"] = membership.pk
         session.save()
         return membership
@@ -323,11 +308,7 @@ class ActionInboxChartTests(TestCase):
     def _login(self, seed, role_key):
         membership = seed.management_memberships[0]
         self.client.force_login(membership.user)
-        device = TOTPDevice.objects.create(
-            user=membership.user, name="t", confirmed=True, key=random_hex()
-        )
         session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
         session["active_management_id"] = membership.pk
         session.save()
         return membership
