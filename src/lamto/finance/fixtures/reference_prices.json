@@ -1,0 +1,8 @@
+{
+  "ELEVATOR": {
+    "average": 450000000,
+    "minimum": 380000000,
+    "maximum": 520000000,
+    "sample_count": 12
+  }
+}

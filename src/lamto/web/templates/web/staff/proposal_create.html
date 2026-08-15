@@ -1,5 +1,5 @@
 {% extends "web/staff/shell.html" %}
-{% load i18n humanize %}
+{% load i18n humanize l10n %}
 {% block title %}{% trans "Create proposal" %} · LamTo{% endblock %}
 {% block content %}
 <section class="panel">
@@ -15,9 +15,53 @@
     {% csrf_token %}
     <input type="hidden" name="action" value="prepare">
     <p class="consequence-note">{% trans "Publishing freezes the amount, contractor, scope, schedule, and quotation evidence. The published proposal cannot be edited." %}</p>
-    {{ create_form.as_p }}
+    {{ create_form.non_field_errors }}
+    {% for field in create_form %}
+      <p>
+        {{ field.errors }}
+        {{ field.label_tag }}
+        {% if field.name == "amount_vnd" and case %}
+        <span class="input-with-button">
+          {{ field }}
+          <button type="button" class="button button-secondary" data-price-compare
+            data-has-reference-price="{% if reference_price %}true{% else %}false{% endif %}"
+            data-category-label="{{ case.get_category_display }}"
+            {% if reference_price %}
+            data-average="{{ reference_price.average|unlocalize }}"
+            data-min="{{ reference_price.minimum|unlocalize }}"
+            data-max="{{ reference_price.maximum|unlocalize }}"
+            data-sample-count="{{ reference_price.sample_count|unlocalize }}"
+            data-range-formatted="{{ reference_price.minimum|intcomma }} – {{ reference_price.maximum|intcomma }} VND"
+            data-samples-formatted="{% blocktrans with count=reference_price.sample_count %}{{ count }} synthetic samples{% endblocktrans %}"
+            {% endif %}
+          >{% trans "Compare" %}</button>
+        </span>
+        <span class="hint">{% trans "Reference prices are synthetic sample data, not real market prices." %}</span>
+        <span class="price-comparison-result" aria-live="polite" data-price-comparison-result></span>
+        {% else %}
+        {{ field }}
+        {% endif %}
+        {% if field.help_text %}
+        <span class="hint">{{ field.help_text|safe }}</span>
+        {% endif %}
+      </p>
+    {% endfor %}
     <p class="hint">{% trans "Upload the quotation (PDF). Amounts are integer VND." %}</p>
     <button type="submit" class="button button-primary">{% trans "Publish proposal" %}</button>
   </form>
 </section>
+{% endblock %}
+{% block extra_js %}
+{% if case %}
+<script>
+  Object.assign(window.lamtoI18n || {}, {
+    priceCompareEnterAmount: "{% filter escapejs %}{% trans 'Enter an amount to compare.' %}{% endfilter %}",
+    priceCompareNoReference: "{% filter escapejs %}{% blocktrans with category='{category}' %}No reference prices for {{ category }}. Reference prices are synthetic sample data and currently cover Elevator only.{% endblocktrans %}{% endfilter %}",
+    priceCompareWithinAbove: "{% filter escapejs %}{% blocktrans with range='{range}' samples='{samples}' pct='{pct}' %}Within the range of comparable jobs ({{ range }}, {{ samples }}). {{ pct }}% above the reference price.{% endblocktrans %}{% endfilter %}",
+    priceCompareWithinBelow: "{% filter escapejs %}{% blocktrans with range='{range}' samples='{samples}' pct='{pct}' %}Within the range of comparable jobs ({{ range }}, {{ samples }}). {{ pct }}% below the reference price.{% endblocktrans %}{% endfilter %}",
+    priceCompareAbove: "{% filter escapejs %}{% blocktrans with range='{range}' samples='{samples}' pct='{pct}' %}Above the range of comparable jobs ({{ range }}, {{ samples }}). {{ pct }}% above the reference price.{% endblocktrans %}{% endfilter %}",
+    priceCompareBelow: "{% filter escapejs %}{% blocktrans with range='{range}' samples='{samples}' pct='{pct}' %}Below the range of comparable jobs ({{ range }}, {{ samples }}). {{ pct }}% below the reference price.{% endblocktrans %}{% endfilter %}"
+  });
+</script>
+{% endif %}
 {% endblock %}

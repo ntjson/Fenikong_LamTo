@@ -531,6 +531,124 @@ class ProposalCreateTests(TestCase):
         self.assertContains(response, "Expected schedule")
         self.assertContains(response, "01/08/2026 \u2013 15/08/2026")
 
+    def test_case_proposal_create_renders_compare_button_and_synthetic_disclosure_for_elevator(self):
+        self._login_operator()
+        response = self.client.get(reverse("web:proposal-create", kwargs={"pk": self.work.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-price-compare")
+        self.assertContains(response, 'data-has-reference-price="true"')
+        self.assertContains(response, 'data-average="450000000"')
+        self.assertContains(response, 'data-min="380000000"')
+        self.assertContains(response, 'data-max="520000000"')
+        self.assertContains(response, 'data-sample-count="12"')
+        self.assertContains(response, 'data-range-formatted="380,000,000 \u2013 520,000,000 VND"')
+        self.assertContains(response, 'data-samples-formatted="12 synthetic samples"')
+        self.assertContains(response, "Reference prices are synthetic sample data, not real market prices.")
+        self.assertContains(response, "data-price-comparison-result")
+
+    def test_case_proposal_create_renders_compare_button_for_uncovered_category(self):
+        from lamto.maintenance.models import CaseCategory
+
+        self.work.category = CaseCategory.WATER_LEAK
+        self.work.save()
+        self._login_operator()
+        response = self.client.get(reverse("web:proposal-create", kwargs={"pk": self.work.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-price-compare")
+        self.assertContains(response, 'data-has-reference-price="false"')
+        self.assertContains(response, 'data-category-label="Water leak"')
+        self.assertContains(response, "Reference prices are synthetic sample data, not real market prices.")
+
+    def test_standalone_proposal_create_omits_compare_button_and_disclosure(self):
+        self._login_operator()
+        response = self.client.get(reverse("web:standalone-proposal-create"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "data-price-compare")
+        self.assertNotContains(response, "Reference prices are synthetic sample data, not real market prices.")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_publication_and_detail_do_not_store_or_show_price_comparison(self):
+        self._login_operator()
+        self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 460_000_000,
+                "contractor_name": "Elevator Pro",
+                "purpose": "Elevator overhaul",
+                "proposed_action": "Overhaul lift parts",
+                "expected_start": "2026-09-01",
+                "expected_end": "2026-09-15",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        proposal = Proposal.objects.get(case=self.work)
+        version = proposal.current_version
+        self.assertEqual(version.amount_vnd, 460_000_000)
+
+        # Assert no price comparison state is stored on the proposal or version
+        self.assertFalse(hasattr(proposal, "price_comparison"))
+        self.assertFalse(hasattr(version, "price_comparison"))
+
+        # Assert published detail page contains no comparison or reference price widgets
+        response = self.client.get(reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "data-price-compare")
+        self.assertNotContains(response, "reference price")
+        self.assertNotContains(response, "synthetic samples")
+
+    def test_case_proposal_create_renders_vietnamese_strings(self):
+        from django.template.loader import render_to_string
+        from django.utils import translation
+        from lamto.finance.reference_prices import get_reference_price
+        from lamto.web.forms.staff import CreateProposalForm
+
+        ref = get_reference_price(self.work.category)
+        form = CreateProposalForm()
+        with translation.override("vi"):
+            html_vi = render_to_string(
+                "web/staff/proposal_create.html",
+                {"case": self.work, "create_form": form, "reference_price": ref},
+            )
+            self.assertIn("So sánh", html_vi)
+            self.assertIn("Giá tham chiếu là dữ liệu mẫu mô phỏng, không phải giá thị trường thực tế.", html_vi)
+            self.assertIn('data-samples-formatted="12 mẫu mô phỏng"', html_vi)
+            self.assertIn('data-range-formatted="380.000.000 \u2013 520.000.000 VND"', html_vi)
+            self.assertIn("Nhập số tiền để so sánh.", html_vi)
+            self.assertIn("Không có giá tham chiếu cho", html_vi)
+            self.assertIn("Cao hơn giá tham chiếu", html_vi)
+
+    def test_no_avoid_terms_in_rendered_proposal_create_page(self):
+        self._login_operator()
+        response = self.client.get(reverse("web:proposal-create", kwargs={"pk": self.work.pk}))
+        self.assertEqual(response.status_code, 200)
+        content_lower = response.content.decode("utf-8").lower()
+
+        # Avoid terms from Reference price set: Benchmark data, market data, price database, historical prices
+        # Avoid terms from Reference price: Expected price, benchmark price, market rate, market average, fair price
+        # Avoid terms from Price comparison: Price check, price validation, price verdict, price approval
+        avoid_terms = [
+            "benchmark data",
+            "market data",
+            "price database",
+            "historical prices",
+            "expected price",
+            "benchmark price",
+            "market rate",
+            "market average",
+            "fair price",
+            "price check",
+            "price validation",
+            "price verdict",
+            "price approval",
+        ]
+        for term in avoid_terms:
+            self.assertNotIn(term, content_lower, f"Forbidden avoid term '{term}' found in rendered HTML")
+
+
+
+
 
 def test_decision_form_requires_explicit_choice_and_decline_note():
     from lamto.web.forms.staff import ProposalDecisionForm

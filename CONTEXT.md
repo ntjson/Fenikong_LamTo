@@ -47,6 +47,27 @@ The frozen resident-facing label derived from an expected start date and an
 expected end date.
 _Avoid_: Timeline, schedule range, planned dates
 
+**Reference price set**:
+The synthetic collection of past job prices a quotation can be compared
+against. It describes jobs outside this building, commits no one, and covers
+Elevator work only.
+_Avoid_: Benchmark data, market data, price database, historical prices
+
+**Reference price**:
+One category's figure within the Reference price set — an average, the observed
+range around it, and how many sample jobs it rests on. It is not the building's
+own estimate and never becomes one, so nothing about it is "expected" in the
+sense Expected schedule uses that word.
+_Avoid_: Expected price, benchmark price, market rate, market average, fair
+price
+
+**Price comparison**:
+The advisory reading a Management account asks for while entering a quotation:
+whether the amount falls within the range of comparable jobs, and how far it
+sits from the Reference price. Nothing is recorded, published, or anchored, so
+it informs the spend without entering the evidence chain.
+_Avoid_: Price check, price validation, price verdict, price approval
+
 **Settlement**:
 The record that a published proposal was paid, evidenced by the transfer proof
 the Management account files. Filing that proof is the whole of settling; there

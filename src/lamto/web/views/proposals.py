@@ -25,6 +25,7 @@ from lamto.finance.proposals import (
     publish_proposal_version,
     spending_proposal_cases,
 )
+from lamto.finance.reference_prices import get_reference_price
 from lamto.maintenance.models import IssueReport, MaintenanceCase
 from lamto.maintenance.cases import complete_proposal_work, publish_progress, start_case_work
 from lamto.web.forms.staff import (
@@ -347,6 +348,7 @@ def proposal_create(request, pk):
             finance_active="proposals",
             case=case,
             create_form=create_form,
+            reference_price=get_reference_price(case.category),
         ),
     )
 

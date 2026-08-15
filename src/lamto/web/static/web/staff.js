@@ -62,6 +62,58 @@
     el.setAttribute("aria-live", "polite");
   });
 
+  // Price comparison on proposal create form.
+  // Advisory reading calculated client-side so attached quotation PDF is never discarded.
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-price-compare]");
+    if (!button) return;
+    var strings = window.lamtoI18n || {};
+    var form = button.closest("form");
+    var amountInput = form ? form.querySelector('input[name="amount_vnd"]') : document.querySelector('input[name="amount_vnd"]');
+    var resultEl = form ? form.querySelector("[data-price-comparison-result]") : document.querySelector("[data-price-comparison-result]");
+    if (!resultEl) return;
+
+    var rawValue = amountInput ? amountInput.value.trim() : "";
+    var amount = parseInt(rawValue, 10);
+    if (!rawValue || isNaN(amount) || amount <= 0) {
+      resultEl.textContent = strings.priceCompareEnterAmount || "Enter an amount to compare.";
+      return;
+    }
+
+    var hasRef = button.getAttribute("data-has-reference-price") === "true";
+    if (!hasRef) {
+      var catLabel = button.getAttribute("data-category-label") || "";
+      var noRefTpl = strings.priceCompareNoReference || "No reference prices for {category}. Reference prices are synthetic sample data and currently cover Elevator only.";
+      resultEl.textContent = noRefTpl.replace("{category}", catLabel);
+      return;
+    }
+
+    var average = parseInt(button.getAttribute("data-average"), 10);
+    var min = parseInt(button.getAttribute("data-min"), 10);
+    var max = parseInt(button.getAttribute("data-max"), 10);
+    var rangeFormatted = button.getAttribute("data-range-formatted") || "";
+    var samplesFormatted = button.getAttribute("data-samples-formatted") || "";
+
+    var diff = amount - average;
+    var pct = Math.round(Math.abs(diff) / average * 100);
+
+    var template = "";
+    if (amount >= min && amount <= max) {
+      template = diff >= 0
+        ? (strings.priceCompareWithinAbove || "Within the range of comparable jobs ({range}, {samples}). {pct}% above the reference price.")
+        : (strings.priceCompareWithinBelow || "Within the range of comparable jobs ({range}, {samples}). {pct}% below the reference price.");
+    } else if (amount > max) {
+      template = strings.priceCompareAbove || "Above the range of comparable jobs ({range}, {samples}). {pct}% above the reference price.";
+    } else {
+      template = strings.priceCompareBelow || "Below the range of comparable jobs ({range}, {samples}). {pct}% below the reference price.";
+    }
+
+    resultEl.textContent = template
+      .replace("{range}", rangeFormatted)
+      .replace("{samples}", samplesFormatted)
+      .replace("{pct}", String(pct));
+  });
+
   // Every mutation is a full page navigation; nothing announces the outcome
   // unless focus lands on the flash region.
   var flash = document.querySelector(".flash-messages");
