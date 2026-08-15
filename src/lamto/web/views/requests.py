@@ -307,7 +307,7 @@ def case_detail(request, pk):
             form=None,
             work_form=work_form,
             legacy_items=[],
-            updates=case.updates.prefetch_related("evidence_links__version").order_by("-created_at"),
+            updates=case.updates.select_related("author").order_by("-created_at"),
             ratings=case.completion_ratings.select_related("resident").order_by("created_at"),
             report_photos=(
                 report.photos.select_related("version").all() if report is not None else []

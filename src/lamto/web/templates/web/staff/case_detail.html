@@ -82,13 +82,6 @@
           <li class="task-list-item">
             <strong>{{ update.cause }}</strong> — {{ update.result }}<br>
             <span class="hint">{% if update.author %}{{ update.author }}{% else %}—{% endif %} · {{ update.created_at|staff_datetime }}</span>
-            {% if update.evidence_links.all %}
-            <ul class="evidence-thumbs">
-              {% for link in update.evidence_links.all %}
-              <li><a href="{% url 'web:staff-document' link.version_id %}" class="evidence-thumb">{{ link.get_kind_display }}: {{ link.version.filename }}</a></li>
-              {% endfor %}
-            </ul>
-            {% endif %}
           </li>
           {% empty %}
           <li class="empty-state"><p>{% trans "No progress updates yet." %}</p></li>

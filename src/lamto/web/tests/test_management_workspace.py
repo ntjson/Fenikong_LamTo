@@ -8,7 +8,13 @@ from django.utils import timezone
 from django.utils import translation
 
 from lamto.accounts.models import Building, ManagementMembership, ResidentOccupancy, Unit
-from lamto.maintenance.models import BuildingLocation, IssueReport, MaintenanceCase, TriageDecision
+from lamto.maintenance.models import (
+    BuildingLocation,
+    IssueReport,
+    MaintenanceCase,
+    TriageDecision,
+    WorkUpdate,
+)
 from lamto.testing.factories import PilotDomainDriver, seed_pilot_world
 from lamto.web.forms.staff import ConfirmTriageForm
 from lamto.web.forms.staff import RecordSettlementForm
@@ -71,13 +77,12 @@ class ManagementWorkspaceTests(TestCase):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 403)
 
-    def test_case_detail_renders(self):
-        membership = self.login_management()
+    def _create_case(self, membership, reporter_email="reporter@example.test"):
         location = BuildingLocation.objects.create(
             building=membership.building, name="Lobby", active=True
         )
         resident = get_user_model().objects.create_user(
-            email="reporter@example.test", password="secret", display_name="Reporter"
+            email=reporter_email, password="secret", display_name="Reporter"
         )
         report = IssueReport.objects.create(
             reporter=resident,
@@ -96,7 +101,7 @@ class ManagementWorkspaceTests(TestCase):
             deadline_minutes=120,
             differences={},
         )
-        case = MaintenanceCase.objects.create(
+        return MaintenanceCase.objects.create(
             decision=decision,
             building=membership.building,
             category="Elevator",
@@ -107,10 +112,34 @@ class ManagementWorkspaceTests(TestCase):
             active=True,
         )
 
+    def test_case_detail_renders_empty_progress_state(self):
+        membership = self.login_management()
+        case = self._create_case(membership)
+
         response = self.client.get(reverse("web:case-detail", kwargs={"pk": case.pk}))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f"Case #{case.pk}")
+        self.assertContains(response, "No progress updates yet.")
+
+    def test_case_detail_renders_with_work_updates(self):
+        membership = self.login_management()
+        case = self._create_case(membership, reporter_email="reporter2@example.test")
+        update = WorkUpdate.objects.create(
+            case=case,
+            author=membership.user,
+            cause="Worn traction cable",
+            result="Replaced cable and tested brakes",
+        )
+
+        response = self.client.get(reverse("web:case-detail", kwargs={"pk": case.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"Case #{case.pk}")
+        self.assertContains(response, "Worn traction cable")
+        self.assertContains(response, "Replaced cable and tested brakes")
+        self.assertContains(response, membership.user.display_name)
+        self.assertNotContains(response, "No progress updates yet.")
 
     def test_report_info_and_decline_actions(self):
         membership = self.login_management()
