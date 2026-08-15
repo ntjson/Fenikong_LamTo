@@ -26,7 +26,6 @@ doc/GateDevice.md
 doc/GateRegistrations.md
 doc/InfoReplyRequest.md
 doc/InfoReplyResult.md
-doc/KindEnum.md
 doc/LedgerApi.md
 doc/LedgerDocument.md
 doc/LedgerEntryDetail.md
@@ -121,7 +120,6 @@ lib/src/model/gate_device.dart
 lib/src/model/gate_registrations.dart
 lib/src/model/info_reply_request.dart
 lib/src/model/info_reply_result.dart
-lib/src/model/kind_enum.dart
 lib/src/model/ledger_document.dart
 lib/src/model/ledger_entry_detail.dart
 lib/src/model/ledger_entry_list.dart
@@ -164,7 +162,6 @@ lib/src/model/report_detail.dart
 lib/src/model/report_photo.dart
 lib/src/model/report_summary.dart
 lib/src/model/report_work_update.dart
-lib/src/model/report_work_update_photo.dart
 lib/src/model/status_enum.dart
 lib/src/model/token_response.dart
 lib/src/model/vehicle_plate.dart
@@ -195,7 +192,6 @@ test/gate_device_test.dart
 test/gate_registrations_test.dart
 test/info_reply_request_test.dart
 test/info_reply_result_test.dart
-test/kind_enum_test.dart
 test/ledger_api_test.dart
 test/ledger_document_test.dart
 test/ledger_entry_detail_test.dart
@@ -243,7 +239,6 @@ test/report_create_request_test.dart
 test/report_detail_test.dart
 test/report_photo_test.dart
 test/report_summary_test.dart
-test/report_work_update_photo_test.dart
 test/report_work_update_test.dart
 test/reports_api_test.dart
 test/status_enum_test.dart

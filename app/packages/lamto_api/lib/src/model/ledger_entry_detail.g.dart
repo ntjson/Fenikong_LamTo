@@ -24,6 +24,8 @@ class _$LedgerEntryDetail extends LedgerEntryDetail {
   @override
   final String why;
   @override
+  final String? explorerUrl;
+  @override
   final JsonObject? payload;
   @override
   final Verification? verification;
@@ -49,6 +51,7 @@ class _$LedgerEntryDetail extends LedgerEntryDetail {
       required this.integrityStatus,
       required this.whatWasFixed,
       required this.why,
+      this.explorerUrl,
       this.payload,
       this.verification,
       required this.approvers,
@@ -76,6 +79,7 @@ class _$LedgerEntryDetail extends LedgerEntryDetail {
         integrityStatus == other.integrityStatus &&
         whatWasFixed == other.whatWasFixed &&
         why == other.why &&
+        explorerUrl == other.explorerUrl &&
         payload == other.payload &&
         verification == other.verification &&
         approvers == other.approvers &&
@@ -95,6 +99,7 @@ class _$LedgerEntryDetail extends LedgerEntryDetail {
     _$hash = $jc(_$hash, integrityStatus.hashCode);
     _$hash = $jc(_$hash, whatWasFixed.hashCode);
     _$hash = $jc(_$hash, why.hashCode);
+    _$hash = $jc(_$hash, explorerUrl.hashCode);
     _$hash = $jc(_$hash, payload.hashCode);
     _$hash = $jc(_$hash, verification.hashCode);
     _$hash = $jc(_$hash, approvers.hashCode);
@@ -116,6 +121,7 @@ class _$LedgerEntryDetail extends LedgerEntryDetail {
           ..add('integrityStatus', integrityStatus)
           ..add('whatWasFixed', whatWasFixed)
           ..add('why', why)
+          ..add('explorerUrl', explorerUrl)
           ..add('payload', payload)
           ..add('verification', verification)
           ..add('approvers', approvers)
@@ -166,6 +172,10 @@ class LedgerEntryDetailBuilder
   String? get why => _$this._why;
   set why(String? why) => _$this._why = why;
 
+  String? _explorerUrl;
+  String? get explorerUrl => _$this._explorerUrl;
+  set explorerUrl(String? explorerUrl) => _$this._explorerUrl = explorerUrl;
+
   JsonObject? _payload;
   JsonObject? get payload => _$this._payload;
   set payload(JsonObject? payload) => _$this._payload = payload;
@@ -213,6 +223,7 @@ class LedgerEntryDetailBuilder
       _integrityStatus = $v.integrityStatus;
       _whatWasFixed = $v.whatWasFixed;
       _why = $v.why;
+      _explorerUrl = $v.explorerUrl;
       _payload = $v.payload;
       _verification = $v.verification?.toBuilder();
       _approvers = $v.approvers.toBuilder();
@@ -257,6 +268,7 @@ class LedgerEntryDetailBuilder
                 whatWasFixed, r'LedgerEntryDetail', 'whatWasFixed'),
             why: BuiltValueNullFieldError.checkNotNull(
                 why, r'LedgerEntryDetail', 'why'),
+            explorerUrl: explorerUrl,
             payload: payload,
             verification: _verification?.build(),
             approvers: approvers.build(),

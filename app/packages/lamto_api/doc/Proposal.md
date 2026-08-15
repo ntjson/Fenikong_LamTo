@@ -19,6 +19,7 @@ Name | Type | Description | Notes
 **amountVnd** | **int** |  |
 **contractorName** | **String** |  |
 **expectedSchedule** | **String** |  |
+**explorerUrl** | **String** |  |
 **versions** | [**BuiltList&lt;ProposalVersion&gt;**](ProposalVersion.md) |  |
 **progress** | [**BuiltList&lt;ProposalProgress&gt;**](ProposalProgress.md) |  |
 **settlement** | [**ProposalSettlement**](ProposalSettlement.md) |  |

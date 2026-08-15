@@ -179,6 +179,10 @@ class LedgerEntryDetailSerializer(serializers.Serializer):
     why = serializers.CharField(
         help_text="Resident-visible rationale (cause or purpose)."
     )
+    explorer_url = serializers.CharField(
+        allow_null=True,
+        help_text="Absolute public Evidence explorer URL when anchored, null otherwise.",
+    )
     payload = serializers.JSONField()
     verification = VerificationSerializer(allow_null=True)
     # Compatibility-only fields retained for the shipped Flutter contract.
@@ -334,10 +338,18 @@ class ProposalSerializer(serializers.Serializer):
     amount_vnd = serializers.IntegerField(source="current_version.amount_vnd")
     contractor_name = serializers.CharField(source="current_version.contractor_name")
     expected_schedule = serializers.CharField(source="current_version.expected_schedule")
+    explorer_url = serializers.SerializerMethodField()
     versions = serializers.SerializerMethodField()
     progress = serializers.SerializerMethodField()
     settlement = serializers.SerializerMethodField()
     can_rate = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_explorer_url(self, proposal) -> str | None:
+        from lamto.explorer.urls import explorer_public_url
+
+        request = self.context.get("request") if self.context else None
+        return explorer_public_url(proposal.public_token, request=request)
 
     @extend_schema_field(ProposalVersionSerializer(many=True))
     def get_versions(self, proposal) -> list[dict]:

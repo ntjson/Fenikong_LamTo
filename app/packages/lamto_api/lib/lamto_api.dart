@@ -42,7 +42,6 @@ export 'package:lamto_api/src/model/gate_device.dart';
 export 'package:lamto_api/src/model/gate_registrations.dart';
 export 'package:lamto_api/src/model/info_reply_request.dart';
 export 'package:lamto_api/src/model/info_reply_result.dart';
-export 'package:lamto_api/src/model/kind_enum.dart';
 export 'package:lamto_api/src/model/ledger_document.dart';
 export 'package:lamto_api/src/model/ledger_entry_detail.dart';
 export 'package:lamto_api/src/model/ledger_entry_list.dart';

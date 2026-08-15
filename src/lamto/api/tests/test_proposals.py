@@ -73,7 +73,7 @@ class ProposalApiTests(TestCase):
 
     def test_list_is_cursor_paginated_and_uses_typed_proposal_rows(self):
         first = self._standalone("First proposal")
-        self._standalone("Second proposal")
+        second = self._standalone("Second proposal")
 
         with patch.object(ProposalCursorPagination, "page_size", 1):
             response = self.client.get(
@@ -86,13 +86,15 @@ class ProposalApiTests(TestCase):
         assert body["next"] and "cursor=" in body["next"]
         assert len(body["results"]) == 1
         row = body["results"][0]
-        assert row["id"] != first.pk
+        assert row["id"] == second.pk
         assert row["purpose"] == "Second proposal"
         assert row["amount_vnd"] == 2_500_000
+        assert row["explorer_url"] == f"http://testserver/e/{second.public_token}/"
         with patch.object(ProposalCursorPagination, "page_size", 1):
             second_page = self.client.get(body["next"], headers=self._auth())
         assert second_page.status_code == 200
         assert second_page.json()["results"][0]["id"] == first.pk
+        assert second_page.json()["results"][0]["explorer_url"] == f"http://testserver/e/{first.public_token}/"
 
     def test_case_backed_detail_has_versions_documents_and_case_progress(self):
         driver = PilotDomainDriver(self.seed)
@@ -101,6 +103,7 @@ class ProposalApiTests(TestCase):
         driver.publish_proposal()
         driver.complete_assigned_work()
         proposal = self.seed.proposal
+        proposal.refresh_from_db()
 
         response = self.client.get(
             reverse("api:proposal-detail", args=[proposal.pk]), headers=self._auth()
@@ -113,6 +116,10 @@ class ProposalApiTests(TestCase):
         assert body["amount_vnd"] > 0
         assert body["contractor_name"] == "Pilot Contractor Co"
         assert body["expected_schedule"] == "Within 14 days"
+        assert (
+            body["explorer_url"]
+            == f"http://testserver/e/{proposal.public_token}/"
+        )
         assert body["versions"][0]["number"] == 1
         assert body["versions"][0]["published_at"]
         assert body["versions"][0]["evidence_level"] in {
@@ -129,6 +136,25 @@ class ProposalApiTests(TestCase):
         assert body["progress"][0]["result"] == "Cable secured"
         assert body["settlement"] is None
         assert body["can_rate"] is False
+
+    def test_proposal_payloads_explorer_url_is_null_without_token(self):
+        proposal = self._standalone("Proposal without token")
+        proposal.public_token = None
+        proposal.save(update_fields=["public_token"])
+
+        detail = self.client.get(
+            reverse("api:proposal-detail", args=[proposal.pk]),
+            headers=self._auth(),
+        )
+        assert detail.status_code == 200
+        assert detail.json()["explorer_url"] is None
+
+        list_resp = self.client.get(
+            reverse("api:proposal-list"), headers=self._auth()
+        )
+        assert list_resp.status_code == 200
+        row = next(r for r in list_resp.json()["results"] if r["id"] == proposal.pk)
+        assert row["explorer_url"] is None
 
     def test_standalone_detail_distinguishes_absent_pending_and_settled_payment(self):
         proposal = self._standalone("Preventive lift maintenance")

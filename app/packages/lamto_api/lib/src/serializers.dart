@@ -31,7 +31,6 @@ import 'package:lamto_api/src/model/gate_device.dart';
 import 'package:lamto_api/src/model/gate_registrations.dart';
 import 'package:lamto_api/src/model/info_reply_request.dart';
 import 'package:lamto_api/src/model/info_reply_result.dart';
-import 'package:lamto_api/src/model/kind_enum.dart';
 import 'package:lamto_api/src/model/ledger_document.dart';
 import 'package:lamto_api/src/model/ledger_entry_detail.dart';
 import 'package:lamto_api/src/model/ledger_entry_list.dart';
@@ -99,7 +98,6 @@ part 'serializers.g.dart';
   GateRegistrations,
   InfoReplyRequest,
   InfoReplyResult,
-  KindEnum,
   LedgerDocument,
   LedgerEntryDetail,
   LedgerEntryList,

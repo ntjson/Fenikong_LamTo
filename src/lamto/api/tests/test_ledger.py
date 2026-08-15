@@ -113,9 +113,13 @@ class LedgerApiTests(TestCase):
         assert set(body) == {
             "id", "contractor_name", "actual_cost_vnd", "published_at",
             "proposed_amount_vnd", "integrity_status", "what_was_fixed", "why",
-            "payload", "verification", "approvers", "corrections",
+            "explorer_url", "payload", "verification", "approvers", "corrections",
             "documents", "proof",
         }
+        assert (
+            body["explorer_url"]
+            == f"http://testserver/e/{self.entry.proposal.public_token}/"
+        )
         assert body["approvers"] == []
         assert body["corrections"] == []
         assert body["id"] == self.entry.pk
@@ -162,6 +166,22 @@ class LedgerApiTests(TestCase):
         )
         assert response.status_code == 404
         assert problem(response)["code"] == "not_found"
+
+    def test_detail_explorer_url_is_null_when_proposal_has_no_token(self):
+        proposal = self.entry.proposal
+        original_token = proposal.public_token
+        proposal.public_token = None
+        proposal.save(update_fields=["public_token"])
+        try:
+            response = self.client.get(
+                reverse("api:ledger-detail", args=[self.entry.pk]),
+                headers=self._auth(),
+            )
+            assert response.status_code == 200
+            assert response.json()["explorer_url"] is None
+        finally:
+            proposal.public_token = original_token
+            proposal.save(update_fields=["public_token"])
 
     def test_both_anchors_must_be_settled(self):
         event_ids = (

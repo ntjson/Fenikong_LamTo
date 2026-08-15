@@ -16,6 +16,7 @@ Name | Type | Description | Notes
 **integrityStatus** | **String** |  |
 **whatWasFixed** | **String** | Resident-visible narrative of work completed. |
 **why** | **String** | Resident-visible rationale (cause or purpose). |
+**explorerUrl** | **String** | Absolute public Evidence explorer URL when anchored, null otherwise. |
 **payload** | [**JsonObject**](.md) |  |
 **verification** | [**Verification**](Verification.md) |  |
 **approvers** | [**BuiltList&lt;JsonObject&gt;**](JsonObject.md) |  |

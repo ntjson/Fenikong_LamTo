@@ -30,6 +30,8 @@ class _$Proposal extends Proposal {
   @override
   final String expectedSchedule;
   @override
+  final String? explorerUrl;
+  @override
   final BuiltList<ProposalVersion> versions;
   @override
   final BuiltList<ProposalProgress> progress;
@@ -53,6 +55,7 @@ class _$Proposal extends Proposal {
       required this.amountVnd,
       required this.contractorName,
       required this.expectedSchedule,
+      this.explorerUrl,
       required this.versions,
       required this.progress,
       this.settlement,
@@ -80,6 +83,7 @@ class _$Proposal extends Proposal {
         amountVnd == other.amountVnd &&
         contractorName == other.contractorName &&
         expectedSchedule == other.expectedSchedule &&
+        explorerUrl == other.explorerUrl &&
         versions == other.versions &&
         progress == other.progress &&
         settlement == other.settlement &&
@@ -100,6 +104,7 @@ class _$Proposal extends Proposal {
     _$hash = $jc(_$hash, amountVnd.hashCode);
     _$hash = $jc(_$hash, contractorName.hashCode);
     _$hash = $jc(_$hash, expectedSchedule.hashCode);
+    _$hash = $jc(_$hash, explorerUrl.hashCode);
     _$hash = $jc(_$hash, versions.hashCode);
     _$hash = $jc(_$hash, progress.hashCode);
     _$hash = $jc(_$hash, settlement.hashCode);
@@ -122,6 +127,7 @@ class _$Proposal extends Proposal {
           ..add('amountVnd', amountVnd)
           ..add('contractorName', contractorName)
           ..add('expectedSchedule', expectedSchedule)
+          ..add('explorerUrl', explorerUrl)
           ..add('versions', versions)
           ..add('progress', progress)
           ..add('settlement', settlement)
@@ -180,6 +186,10 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
   set expectedSchedule(String? expectedSchedule) =>
       _$this._expectedSchedule = expectedSchedule;
 
+  String? _explorerUrl;
+  String? get explorerUrl => _$this._explorerUrl;
+  set explorerUrl(String? explorerUrl) => _$this._explorerUrl = explorerUrl;
+
   ListBuilder<ProposalVersion>? _versions;
   ListBuilder<ProposalVersion> get versions =>
       _$this._versions ??= ListBuilder<ProposalVersion>();
@@ -220,6 +230,7 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
       _amountVnd = $v.amountVnd;
       _contractorName = $v.contractorName;
       _expectedSchedule = $v.expectedSchedule;
+      _explorerUrl = $v.explorerUrl;
       _versions = $v.versions.toBuilder();
       _progress = $v.progress.toBuilder();
       _settlement = $v.settlement?.toBuilder();
@@ -265,6 +276,7 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
                 contractorName, r'Proposal', 'contractorName'),
             expectedSchedule: BuiltValueNullFieldError.checkNotNull(
                 expectedSchedule, r'Proposal', 'expectedSchedule'),
+            explorerUrl: explorerUrl,
             versions: versions.build(),
             progress: progress.build(),
             settlement: _settlement?.build(),

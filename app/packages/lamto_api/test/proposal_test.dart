@@ -62,6 +62,11 @@ void main() {
       // TODO
     });
 
+    // String explorerUrl
+    test('to test the property `explorerUrl`', () async {
+      // TODO
+    });
+
     // BuiltList<ProposalVersion> versions
     test('to test the property `versions`', () async {
       // TODO

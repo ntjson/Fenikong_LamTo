@@ -24,6 +24,7 @@ part 'ledger_entry_detail.g.dart';
 /// * [integrityStatus]
 /// * [whatWasFixed] - Resident-visible narrative of work completed.
 /// * [why] - Resident-visible rationale (cause or purpose).
+/// * [explorerUrl] - Absolute public Evidence explorer URL when anchored, null otherwise.
 /// * [payload]
 /// * [verification]
 /// * [approvers]
@@ -57,6 +58,10 @@ abstract class LedgerEntryDetail implements Built<LedgerEntryDetail, LedgerEntry
   /// Resident-visible rationale (cause or purpose).
   @BuiltValueField(wireName: r'why')
   String get why;
+
+  /// Absolute public Evidence explorer URL when anchored, null otherwise.
+  @BuiltValueField(wireName: r'explorer_url')
+  String? get explorerUrl;
 
   @BuiltValueField(wireName: r'payload')
   JsonObject? get payload;
@@ -138,6 +143,11 @@ class _$LedgerEntryDetailSerializer implements PrimitiveSerializer<LedgerEntryDe
     yield serializers.serialize(
       object.why,
       specifiedType: const FullType(String),
+    );
+    yield r'explorer_url';
+    yield object.explorerUrl == null ? null : serializers.serialize(
+      object.explorerUrl,
+      specifiedType: const FullType.nullable(String),
     );
     yield r'payload';
     yield object.payload == null ? null : serializers.serialize(
@@ -248,6 +258,14 @@ class _$LedgerEntryDetailSerializer implements PrimitiveSerializer<LedgerEntryDe
             specifiedType: const FullType(String),
           ) as String;
           result.why = valueDes;
+          break;
+        case r'explorer_url':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.explorerUrl = valueDes;
           break;
         case r'payload':
           final valueDes = serializers.deserialize(

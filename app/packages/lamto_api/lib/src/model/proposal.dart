@@ -26,6 +26,7 @@ part 'proposal.g.dart';
 /// * [amountVnd]
 /// * [contractorName]
 /// * [expectedSchedule]
+/// * [explorerUrl]
 /// * [versions]
 /// * [progress]
 /// * [settlement]
@@ -64,6 +65,9 @@ abstract class Proposal implements Built<Proposal, ProposalBuilder> {
 
   @BuiltValueField(wireName: r'expected_schedule')
   String get expectedSchedule;
+
+  @BuiltValueField(wireName: r'explorer_url')
+  String? get explorerUrl;
 
   @BuiltValueField(wireName: r'versions')
   BuiltList<ProposalVersion> get versions;
@@ -154,6 +158,11 @@ class _$ProposalSerializer implements PrimitiveSerializer<Proposal> {
     yield serializers.serialize(
       object.expectedSchedule,
       specifiedType: const FullType(String),
+    );
+    yield r'explorer_url';
+    yield object.explorerUrl == null ? null : serializers.serialize(
+      object.explorerUrl,
+      specifiedType: const FullType.nullable(String),
     );
     yield r'versions';
     yield serializers.serialize(
@@ -277,6 +286,14 @@ class _$ProposalSerializer implements PrimitiveSerializer<Proposal> {
             specifiedType: const FullType(String),
           ) as String;
           result.expectedSchedule = valueDes;
+          break;
+        case r'explorer_url':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.explorerUrl = valueDes;
           break;
         case r'versions':
           final valueDes = serializers.deserialize(

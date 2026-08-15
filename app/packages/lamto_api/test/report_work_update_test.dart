@@ -27,9 +27,5 @@ void main() {
       // TODO
     });
 
-    test('to test the property `photos`', () async {
-      // TODO
-    });
-
   });
 }

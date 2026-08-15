@@ -49,6 +49,12 @@ void main() {
       // TODO
     });
 
+    // Absolute public Evidence explorer URL when anchored, null otherwise.
+    // String explorerUrl
+    test('to test the property `explorerUrl`', () async {
+      // TODO
+    });
+
     // JsonObject payload
     test('to test the property `payload`', () async {
       // TODO

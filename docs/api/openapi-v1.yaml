@@ -1884,6 +1884,10 @@ components:
         why:
           type: string
           description: Resident-visible rationale (cause or purpose).
+        explorer_url:
+          type: string
+          nullable: true
+          description: Absolute public Evidence explorer URL when anchored, null otherwise.
         payload: {}
         verification:
           allOf:
@@ -1907,6 +1911,7 @@ components:
       - contractor_name
       - corrections
       - documents
+      - explorer_url
       - id
       - integrity_status
       - payload
@@ -2314,6 +2319,10 @@ components:
           type: string
         expected_schedule:
           type: string
+        explorer_url:
+          type: string
+          nullable: true
+          readOnly: true
         versions:
           type: array
           items:
@@ -2341,6 +2350,7 @@ components:
       - completed_at
       - contractor_name
       - expected_schedule
+      - explorer_url
       - id
       - progress
       - proposed_action

@@ -96,6 +96,7 @@ from lamto.api.services import (
     revoke_tokens_if_no_active_occupancy,
 )
 from lamto.evidence.models import evidence_level
+from lamto.explorer.urls import explorer_public_url
 from lamto.finance.fund import fund_balance
 from lamto.finance.models import Proposal
 from lamto.finance.selectors import resident_proposals
@@ -372,6 +373,10 @@ class LedgerDetailView(APIView):
             "integrity_status": entry.effective_integrity_status,
             "what_was_fixed": detail["what_was_fixed"],
             "why": detail["why"],
+            "explorer_url": explorer_public_url(
+                entry.proposal.public_token if entry.proposal else None,
+                request=request,
+            ),
             "payload": detail["payload"],
             "verification": (
                 {

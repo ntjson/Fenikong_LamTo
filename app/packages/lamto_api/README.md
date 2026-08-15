@@ -124,7 +124,6 @@ Class | Method | HTTP request | Description
  - [GateRegistrations](doc/GateRegistrations.md)
  - [InfoReplyRequest](doc/InfoReplyRequest.md)
  - [InfoReplyResult](doc/InfoReplyResult.md)
- - [KindEnum](doc/KindEnum.md)
  - [LedgerDocument](doc/LedgerDocument.md)
  - [LedgerEntryDetail](doc/LedgerEntryDetail.md)
  - [LedgerEntryList](doc/LedgerEntryList.md)
