@@ -6,6 +6,7 @@ import hashlib
 import time
 from datetime import timedelta
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
@@ -30,8 +31,7 @@ _REAUTH_STASH_DROP = {"csrfmiddlewaretoken", "action", "confirm", "password", "t
 
 
 class RecentAuthRequired(PermissionDenied):
-    """Recent re-authentication required; StaffSecurityMiddleware redirects to reauth."""
-
+    """Recent re-authentication required; middleware redirects to reauth."""
 
 
 def throttle_digest(account: str, ip: str | None) -> str:
@@ -54,9 +54,7 @@ def _now():
 def assert_not_throttled(account: str, ip: str | None) -> None:
     digest = throttle_digest(account, ip)
     bucket = (
-        AuthThrottleBucket.objects.select_for_update()
-        .filter(key_digest=digest)
-        .first()
+        AuthThrottleBucket.objects.select_for_update().filter(key_digest=digest).first()
     )
     if bucket is None:
         return
@@ -72,7 +70,9 @@ def assert_not_throttled(account: str, ip: str | None) -> None:
 
 
 @transaction.atomic
-def record_auth_failure(account: str, ip: str | None, *, kind: str = "login") -> AuthThrottleBucket:
+def record_auth_failure(
+    account: str, ip: str | None, *, kind: str = "login"
+) -> AuthThrottleBucket:
     """Record a failed login/MFA attempt. Never stores password or OTP values."""
     digest = throttle_digest(account, ip)
     bucket, _ = AuthThrottleBucket.objects.select_for_update().get_or_create(
@@ -92,7 +92,12 @@ def record_auth_failure(account: str, ip: str | None, *, kind: str = "login") ->
     if bucket.failure_count >= THROTTLE_MAX_FAILURES:
         bucket.locked_until = now + timedelta(seconds=THROTTLE_WINDOW_SECONDS)
     bucket.save(
-        update_fields=["failure_count", "window_started_at", "locked_until", "updated_at"]
+        update_fields=[
+            "failure_count",
+            "window_started_at",
+            "locked_until",
+            "updated_at",
+        ]
     )
     return bucket
 
@@ -120,7 +125,12 @@ def record_registration_attempt(account: str, ip: str | None) -> AuthThrottleBuc
     if bucket.failure_count >= THROTTLE_MAX_FAILURES:
         bucket.locked_until = now + timedelta(seconds=THROTTLE_WINDOW_SECONDS)
     bucket.save(
-        update_fields=["failure_count", "window_started_at", "locked_until", "updated_at"]
+        update_fields=[
+            "failure_count",
+            "window_started_at",
+            "locked_until",
+            "updated_at",
+        ]
     )
     return bucket
 
@@ -129,9 +139,7 @@ def record_registration_attempt(account: str, ip: str | None) -> AuthThrottleBuc
 def reset_auth_throttle(account: str, ip: str | None) -> None:
     digest = throttle_digest(account, ip)
     bucket = (
-        AuthThrottleBucket.objects.select_for_update()
-        .filter(key_digest=digest)
-        .first()
+        AuthThrottleBucket.objects.select_for_update().filter(key_digest=digest).first()
     )
     if bucket is None:
         return
@@ -139,7 +147,12 @@ def reset_auth_throttle(account: str, ip: str | None) -> None:
     bucket.window_started_at = None
     bucket.locked_until = None
     bucket.save(
-        update_fields=["failure_count", "window_started_at", "locked_until", "updated_at"]
+        update_fields=[
+            "failure_count",
+            "window_started_at",
+            "locked_until",
+            "updated_at",
+        ]
     )
 
 
@@ -221,7 +234,9 @@ def require_recent_auth(request, max_age_seconds: int = DEFAULT_REAUTH_MAX_AGE) 
     require_otp_verified(request)
     age = recent_reauth_age_seconds(request)
     if age is None or age > max_age_seconds:
-        _deny_sensitive(request, "reauth_required", {"max_age_seconds": max_age_seconds})
+        _deny_sensitive(
+            request, "reauth_required", {"max_age_seconds": max_age_seconds}
+        )
         raise RecentAuthRequired("Recent re-authentication is required.")
 
 
@@ -273,6 +288,20 @@ def rotate_session(request) -> None:
     except Exception:
         # Empty session edge case in tests.
         request.session.create()
+
+
+def renew_management_session(request) -> None:
+    """Give the session the persistent rolling Management lifetime (ADR 0001).
+
+    Called when a password login first establishes a Management session and on
+    every authenticated Management workspace request. Marks the session modified
+    so Django saves it: the server-side expiry moves to 400 days from this
+    request and the response re-sends the persistent cookie with the same age.
+    """
+    request.session.set_expiry(
+        timedelta(days=settings.LAMTO_MANAGEMENT_SESSION_MAX_AGE_DAYS)
+    )
+    request.session.modified = True
 
 
 def revoke_session(request) -> None:

@@ -1,31 +1,27 @@
-"""Staff workspace security: MFA gate and reauth redirect."""
+"""Management workspace middleware: session renewal and reauth redirect."""
 
 from __future__ import annotations
 
 from urllib.parse import urlencode
 
-from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from django.urls import reverse
 
+from lamto.accounts.models import ManagementMembership
 from lamto.accounts.security import (
     RecentAuthRequired,
-    require_staff_mfa,
+    renew_management_session,
     stash_post_for_reauth,
 )
 
-# MFA enrollment/verify must remain reachable before OTP is confirmed.
-_MFA_EXEMPT_PREFIXES = (
-    "/s/security/mfa/setup/",
-    "/s/security/mfa/verify/",
-)
 
+class ManagementSessionMiddleware:
+    """Renew Management sessions on every authenticated /s/ request.
 
-class StaffSecurityMiddleware:
-    """Enforce staff MFA on every /s/ request.
-
-    - Confirmed TOTP + OTP-verified session required for all /s/ routes
-      except MFA setup/verify (so users can enroll and step up).
+    - An authenticated Management account requesting /s/ renews the session's
+      server-side expiry and persistent cookie to 400 days from that request,
+      so the session survives inactivity and browser restarts (ADR 0001).
+      Non-members are left to the views' membership checks.
     - RecentAuthRequired → redirect to reauth with next=.
     """
 
@@ -43,18 +39,15 @@ class StaffSecurityMiddleware:
         user = getattr(request, "user", None)
         if user is None or not getattr(user, "is_authenticated", False):
             return None
+        if not ManagementMembership.objects.filter(user=user, active=True).exists():
+            return None
 
-        exempt = any(path.startswith(prefix) for prefix in _MFA_EXEMPT_PREFIXES)
-        if not exempt:
-            require_staff_mfa(request)
-
+        renew_management_session(request)
         return None
 
     def process_exception(self, request, exception):
         if isinstance(exception, RecentAuthRequired):
             stash_post_for_reauth(request)
             next_url = request.get_full_path()
-            return redirect(
-                f"{reverse('web:reauth')}?{urlencode({'next': next_url})}"
-            )
+            return redirect(f"{reverse('web:reauth')}?{urlencode({'next': next_url})}")
         return None

@@ -16,7 +16,11 @@ from django_otp.oath import totp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.util import random_hex
 
-from lamto.accounts.mfa import begin_totp_enrollment, confirm_totp_enrollment, verify_totp_for_session
+from lamto.accounts.mfa import (
+    begin_totp_enrollment,
+    confirm_totp_enrollment,
+    verify_totp_for_session,
+)
 from lamto.accounts.models import (
     AuthThrottleBucket,
     Building,
@@ -101,7 +105,8 @@ class SecurityTests(TestCase):
         board = self.make_manager()
         self.client.force_login(board.user)
         response = self.client.post(
-            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}), self.valid_payment_payload()
+            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}),
+            self.valid_payment_payload(),
         )
         self.assertEqual(response.status_code, 403)
 
@@ -111,7 +116,8 @@ class SecurityTests(TestCase):
         self.enroll_and_bind(self.client, board.user)
         # Gate should not 403 for MFA/reauth; may 404/400 for missing settlement.
         response = self.client.post(
-            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}), self.valid_payment_payload()
+            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}),
+            self.valid_payment_payload(),
         )
         self.assertNotEqual(response.status_code, 403)
 
@@ -253,11 +259,11 @@ class SecurityTests(TestCase):
         same_path.session = request.session
         self.assertIsNone(pop_stashed_post(same_path))
 
-    def test_staff_workspace_requires_confirmed_totp(self):
+    def test_password_only_session_reaches_management_workspace(self):
         board = self.make_manager()
         self.client.force_login(board.user)
         response = self.client.get(reverse("web:action-inbox"))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
     def test_totp_enrollment_confirm_and_verify(self):
         board = self.make_manager()
@@ -281,8 +287,8 @@ class SecurityTests(TestCase):
         verify_totp_for_session(user, token2, request=request)
         self.assertTrue(request.session.get(DEVICE_ID_SESSION_KEY))
 
-    def test_staff_mfa_required_on_payment_list_audit_search_case_list(self):
-        """Password-only session denied on key staff workspaces (Finding 1)."""
+    def test_password_only_session_accepted_on_staff_workspaces(self):
+        """Password-only sessions reach key staff workspaces (ADR 0001)."""
         board = self.make_manager()
         auditor = self.make_membership("aud-mfa")
         maint = self.make_membership("maint-mfa")
@@ -298,8 +304,8 @@ class SecurityTests(TestCase):
                 response = client.get(reverse(url_name))
                 self.assertEqual(
                     response.status_code,
-                    403,
-                    msg=f"password-only session must be denied on {url_name}",
+                    200,
+                    msg=f"password-only session must reach {url_name}",
                 )
 
     def test_signed_financial_post_requires_recent_reauth(self):
@@ -313,7 +319,8 @@ class SecurityTests(TestCase):
         session.save()
 
         response = self.client.post(
-            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}), self.valid_payment_payload()
+            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}),
+            self.valid_payment_payload(),
         )
         self.assertEqual(response.status_code, 302)
         self.assertIn("/s/security/reauth/", response["Location"])

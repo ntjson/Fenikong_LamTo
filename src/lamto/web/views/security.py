@@ -35,10 +35,10 @@ from lamto.accounts.security import (
     assert_not_throttled,
     client_ip,
     record_auth_failure,
+    renew_management_session,
     reset_auth_throttle,
     revoke_session,
     rotate_session,
-    user_has_confirmed_totp,
     user_is_otp_verified,
 )
 from lamto.audit.services import record_audit
@@ -63,22 +63,39 @@ class PhoneOrEmailAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["username"].label = _("Email or phone")
-        self.fields["username"].widget.attrs.setdefault(
-            "autocomplete", "username"
-        )
+        self.fields["username"].widget.attrs.setdefault("autocomplete", "username")
 
 
 class SecureLoginView(LoginView):
     template_name = "web/login.html"
     authentication_form = PhoneOrEmailAuthenticationForm
 
+    def get_redirect_url(self):
+        """Send an active Management account to the workspace by default.
+
+        Honors a safe ``next`` destination first; without one, a Management
+        account lands on the workspace rather than the generic redirect target.
+        """
+        url = super().get_redirect_url()
+        if url:
+            return url
+        user = getattr(self.request, "user", None)
+        if user is not None and getattr(user, "is_authenticated", False):
+            if ManagementMembership.objects.filter(user=user, active=True).exists():
+                return reverse("web:staff-home")
+        return ""
+
     def form_valid(self, form):
-        username = form.cleaned_data.get("username") or form.cleaned_data.get("email") or ""
+        username = (
+            form.cleaned_data.get("username") or form.cleaned_data.get("email") or ""
+        )
         ip = client_ip(self.request)
         try:
             assert_not_throttled(username, ip)
         except PermissionDenied:
-            form.add_error(None, _("Too many authentication attempts. Try again later."))
+            form.add_error(
+                None, _("Too many authentication attempts. Try again later.")
+            )
             return self.form_invalid(form)
 
         user = form.get_user()
@@ -86,21 +103,25 @@ class SecureLoginView(LoginView):
         rotate_session(self.request)
         reset_auth_throttle(username, ip)
 
-        if user_has_confirmed_totp(user):
-            self.request.session["mfa_pending_user_id"] = user.pk
-            return redirect("web:mfa-verify")
         if ManagementMembership.objects.filter(user=user, active=True).exists():
-            return redirect("web:mfa-setup")
+            renew_management_session(self.request)
+
         return redirect(self.get_success_url())
 
     def form_invalid(self, form):
-        username = self.request.POST.get("username") or self.request.POST.get("email") or ""
+        username = (
+            self.request.POST.get("username") or self.request.POST.get("email") or ""
+        )
         ip = client_ip(self.request)
         record_auth_failure(username, ip, kind="login")
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
-        user = User.objects.filter(email__iexact=username.strip()).first() if username else None
+        user = (
+            User.objects.filter(email__iexact=username.strip()).first()
+            if username
+            else None
+        )
         if user is not None:
             membership = user.managementmembership_set.filter(active=True).first()
             if membership is not None:
@@ -139,10 +160,19 @@ def mfa_setup(request):
             try:
                 confirm_totp_enrollment(request.user, token, request=request)
             except ValidationError as error:
-                messages.error(request, _("; ").join(error.messages) if hasattr(error, "messages") else str(error))
+                messages.error(
+                    request,
+                    _("; ").join(error.messages)
+                    if hasattr(error, "messages")
+                    else str(error),
+                )
             else:
                 messages.success(request, _("Authenticator enrolled."))
-                next_url = request.POST.get("next") or request.GET.get("next") or reverse("web:staff-home")
+                next_url = (
+                    request.POST.get("next")
+                    or request.GET.get("next")
+                    or reverse("web:staff-home")
+                )
                 return redirect(next_url)
         device = pending_totp_device(request.user) or device
 
@@ -174,10 +204,19 @@ def mfa_verify(request):
         except PermissionDenied as error:
             messages.error(request, str(error))
         except ValidationError as error:
-            messages.error(request, _("; ").join(error.messages) if hasattr(error, "messages") else str(error))
+            messages.error(
+                request,
+                _("; ").join(error.messages)
+                if hasattr(error, "messages")
+                else str(error),
+            )
         else:
             messages.success(request, _("MFA verified."))
-            next_url = request.POST.get("next") or request.GET.get("next") or reverse("web:staff-home")
+            next_url = (
+                request.POST.get("next")
+                or request.GET.get("next")
+                or reverse("web:staff-home")
+            )
             return redirect(next_url)
 
     return render(request, "web/security/mfa_setup.html", {"verify_only": True})
@@ -186,7 +225,9 @@ def mfa_verify(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def reauth(request):
-    next_url = request.GET.get("next") or request.POST.get("next") or reverse("web:staff-home")
+    next_url = (
+        request.GET.get("next") or request.POST.get("next") or reverse("web:staff-home")
+    )
     if request.method == "POST":
         password = request.POST.get("password", "")
         token = request.POST.get("token", "")
@@ -196,14 +237,22 @@ def reauth(request):
         except PermissionDenied as error:
             messages.error(request, str(error))
         except ValidationError as error:
-            messages.error(request, _("; ").join(error.messages) if hasattr(error, "messages") else str(error))
+            messages.error(
+                request,
+                _("; ").join(error.messages)
+                if hasattr(error, "messages")
+                else str(error),
+            )
         else:
             messages.success(request, _("Re-authentication successful."))
             return redirect(next_url)
     return render(
         request,
         "web/security/reauth.html",
-        {"next": next_url, "stash_pending": bool(request.session.get(REAUTH_STASH_KEY))},
+        {
+            "next": next_url,
+            "stash_pending": bool(request.session.get(REAUTH_STASH_KEY)),
+        },
     )
 
 
@@ -241,5 +290,7 @@ def secure_logout(request):
     logout(request)
     revoke_session(request)
     # After the flush, so the confirmation rides the fresh anonymous session.
-    messages.success(request, _("Signed out. This computer no longer holds your session."))
+    messages.success(
+        request, _("Signed out. This computer no longer holds your session.")
+    )
     return redirect("login")

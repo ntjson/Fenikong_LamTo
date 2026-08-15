@@ -7,7 +7,6 @@ from django.shortcuts import redirect
 from django.utils.translation import gettext_lazy as _
 
 from lamto.accounts.models import ManagementMembership
-from lamto.accounts.security import require_staff_mfa
 
 SESSION_MANAGEMENT_KEY = "active_management_id"
 
@@ -47,7 +46,6 @@ def resolve_active_management(request, *, building_id=None):
 
 
 def require_management_context(request):
-    require_staff_mfa(request)
     return resolve_active_management(request)
 
 
@@ -56,17 +54,37 @@ def nav_items_for(membership) -> list[dict]:
     return [
         {"label": _("Inbox"), "url_name": "web:action-inbox", "active_key": "inbox"},
         {"label": _("Cases"), "url_name": "web:case-list", "active_key": "cases"},
-        {"label": _("Finance"), "url_name": "web:proposal-list", "active_key": "finance"},
-        {"label": _("Building"), "url_name": "web:gate-queue", "active_key": "building"},
+        {
+            "label": _("Finance"),
+            "url_name": "web:proposal-list",
+            "active_key": "finance",
+        },
+        {
+            "label": _("Building"),
+            "url_name": "web:gate-queue",
+            "active_key": "building",
+        },
         {"label": _("Ops"), "url_name": "web:ops-health", "active_key": "ops"},
     ]
 
 
 def finance_nav_items_for(membership) -> list[dict[str, str]]:
     return [
-        {"label": _("Proposals"), "url_name": "web:proposal-list", "active_key": "proposals"},
-        {"label": _("New proposal"), "url_name": "web:standalone-proposal-create", "active_key": "proposal-create"},
-        {"label": _("Settlements"), "url_name": "web:settlement-list", "active_key": "settlements"},
+        {
+            "label": _("Proposals"),
+            "url_name": "web:proposal-list",
+            "active_key": "proposals",
+        },
+        {
+            "label": _("New proposal"),
+            "url_name": "web:standalone-proposal-create",
+            "active_key": "proposal-create",
+        },
+        {
+            "label": _("Settlements"),
+            "url_name": "web:settlement-list",
+            "active_key": "settlements",
+        },
         {"label": _("Fund"), "url_name": "web:fund-home", "active_key": "fund"},
     ]
 
@@ -91,8 +109,16 @@ def building_nav_items_for(membership) -> list[dict[str, str]]:
 def gate_nav_items_for(membership) -> list[dict[str, str]]:
     return [
         {"label": _("Review"), "url_name": "web:gate-queue", "active_key": "review"},
-        {"label": _("Registrations"), "url_name": "web:gate-registrations", "active_key": "registrations"},
-        {"label": _("Readers"), "url_name": "web:gate-devices", "active_key": "devices"},
+        {
+            "label": _("Registrations"),
+            "url_name": "web:gate-registrations",
+            "active_key": "registrations",
+        },
+        {
+            "label": _("Readers"),
+            "url_name": "web:gate-devices",
+            "active_key": "devices",
+        },
         {"label": _("Activity"), "url_name": "web:gate-log", "active_key": "activity"},
     ]
 
@@ -100,8 +126,16 @@ def gate_nav_items_for(membership) -> list[dict[str, str]]:
 def ops_nav_items_for(membership) -> list[dict[str, str]]:
     return [
         {"label": _("Health"), "url_name": "web:ops-health", "active_key": "health"},
-        {"label": _("Exceptions"), "url_name": "web:exception-list", "active_key": "exceptions"},
-        {"label": _("Metrics"), "url_name": "web:pilot-metrics", "active_key": "metrics"},
+        {
+            "label": _("Exceptions"),
+            "url_name": "web:exception-list",
+            "active_key": "exceptions",
+        },
+        {
+            "label": _("Metrics"),
+            "url_name": "web:pilot-metrics",
+            "active_key": "metrics",
+        },
         {"label": _("Exports"), "url_name": "web:export-home", "active_key": "exports"},
     ]
 

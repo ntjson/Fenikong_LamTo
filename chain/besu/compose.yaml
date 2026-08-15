@@ -22,7 +22,7 @@ services:
       lamto.node: "1"
     networks:
       besu:
-        ipv4_address: 10.133.0.2
+        ipv4_address: 10.133.0.5
     volumes:
       - ./Node-1/genesis.json:/config/genesis.json:ro
       - ./Node-1/data:/data
@@ -50,7 +50,9 @@ services:
     labels:
       lamto.role: "property-management operator"
       lamto.node: "2"
-    networks: [besu]
+    networks:
+      besu:
+        ipv4_address: 10.133.0.6
     depends_on: [validator1]
     volumes:
       - ./Node-2/genesis.json:/config/genesis.json:ro
@@ -98,7 +100,9 @@ services:
     labels:
       lamto.role: "resident representative"
       lamto.node: "3"
-    networks: [besu]
+    networks:
+      besu:
+        ipv4_address: 10.133.0.3
     depends_on: [validator1]
     volumes:
       - ./Node-3/genesis.json:/config/genesis.json:ro
@@ -146,7 +150,9 @@ services:
     labels:
       lamto.role: "auditor"
       lamto.node: "4"
-    networks: [besu]
+    networks:
+      besu:
+        ipv4_address: 10.133.0.4
     depends_on: [validator1]
     volumes:
       - ./Node-4/genesis.json:/config/genesis.json:ro

@@ -29,77 +29,81 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "").lower() in {"1", "true", "yes"}
 
-ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",") if h]
+ALLOWED_HOSTS = [
+    h
+    for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
+    if h
+]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.humanize',
-    'django.contrib.postgres',
-    'django_otp',
-    'django_otp.plugins.otp_totp',
-    'lamto.accounts',
-    'lamto.audit',
-    'lamto.billing',
-    'lamto.documents',
-    'lamto.finance',
-    'lamto.gate',
-    'lamto.evidence',
-    'lamto.maintenance',
-    'lamto.web',
-    'lamto.notifications',
-    'lamto.config',
-    'rest_framework',
-    'knox',
-    'drf_spectacular',
-    'lamto.api',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
+    "django.contrib.postgres",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "lamto.accounts",
+    "lamto.audit",
+    "lamto.billing",
+    "lamto.documents",
+    "lamto.finance",
+    "lamto.gate",
+    "lamto.evidence",
+    "lamto.maintenance",
+    "lamto.web",
+    "lamto.notifications",
+    "lamto.config",
+    "rest_framework",
+    "knox",
+    "drf_spectacular",
+    "lamto.api",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django_otp.middleware.OTPMiddleware',
-    'lamto.accounts.middleware.StaffSecurityMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
+    "lamto.accounts.middleware.ManagementSessionMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'lamto.config.urls'
+ROOT_URLCONF = "lamto.config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'lamto.config.wsgi.application'
+WSGI_APPLICATION = "lamto.config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+    "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ["POSTGRES_DB"],
         "USER": os.environ["POSTGRES_USER"],
@@ -130,16 +134,16 @@ if os.environ.get("DJANGO_RESTORE_DB_NAME"):
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -184,27 +188,37 @@ SHORT_DATE_FORMAT = r"d/m/Y"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
 AUTHENTICATION_BACKENDS = ["lamto.accounts.backends.PhoneOrEmailBackend"]
 
-DOCUMENT_MAX_UPLOAD_BYTES = int(os.getenv("DOCUMENT_MAX_UPLOAD_BYTES", 20 * 1024 * 1024))
+DOCUMENT_MAX_UPLOAD_BYTES = int(
+    os.getenv("DOCUMENT_MAX_UPLOAD_BYTES", 20 * 1024 * 1024)
+)
 DOCUMENT_SPOOL_MAX_BYTES = int(os.getenv("DOCUMENT_SPOOL_MAX_BYTES", 1024 * 1024))
-DOCUMENT_QUARANTINE_RETENTION_DAYS = int(os.getenv("DOCUMENT_QUARANTINE_RETENTION_DAYS", 30))
+DOCUMENT_QUARANTINE_RETENTION_DAYS = int(
+    os.getenv("DOCUMENT_QUARANTINE_RETENTION_DAYS", 30)
+)
 CLAMAV_HOST = os.environ["CLAMAV_HOST"]
 CLAMAV_PORT = os.environ["CLAMAV_PORT"]
 AI_TRIAGE_URL = os.environ["AI_TRIAGE_URL"]
 AI_TRIAGE_TOKEN = os.environ["AI_TRIAGE_TOKEN"]
 AI_TRIAGE_MODEL = os.getenv("AI_TRIAGE_MODEL", "")
 AI_TRIAGE_TIMEOUT_SECONDS = float(os.getenv("AI_TRIAGE_TIMEOUT_SECONDS", "5"))
-AI_TRIAGE_ALLOW_HTTP = os.getenv("AI_TRIAGE_ALLOW_HTTP", "").lower() in {"1", "true", "yes"}
-BLOCKCHAIN_CHAIN_ID = int(os.getenv("BLOCKCHAIN_CHAIN_ID", os.getenv("CHAIN_ID", "1337")))
+AI_TRIAGE_ALLOW_HTTP = os.getenv("AI_TRIAGE_ALLOW_HTTP", "").lower() in {
+    "1",
+    "true",
+    "yes",
+}
+BLOCKCHAIN_CHAIN_ID = int(
+    os.getenv("BLOCKCHAIN_CHAIN_ID", os.getenv("CHAIN_ID", "1337"))
+)
 PLATFORM_SIGNER_PRIVATE_KEY = os.getenv("PLATFORM_SIGNER_PRIVATE_KEY", "")
 EVIDENCE_CONTRACT_ADDRESS = (
     os.getenv("EVIDENCE_CONTRACT_ADDRESS")
@@ -261,7 +275,7 @@ STORAGES = {
             "default_acl": None,
             "querystring_auth": True,
         },
-    }
+    },
 }
 
 
@@ -283,8 +297,8 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@lamto.local")
 # --- Push notifications (spec 7): FCM via firebase-admin ---
 # Path to a service-account JSON; never committed. Push is off unless both are set.
 FIREBASE_CREDENTIALS = os.getenv("FIREBASE_CREDENTIALS", "")
-PUSH_ENABLED = (
-    os.getenv("PUSH_ENABLED", "").lower() in {"1", "true", "yes"} and bool(FIREBASE_CREDENTIALS)
+PUSH_ENABLED = os.getenv("PUSH_ENABLED", "").lower() in {"1", "true", "yes"} and bool(
+    FIREBASE_CREDENTIALS
 )
 PUSH_DAILY_CAP_PER_CATEGORY = int(os.getenv("PUSH_DAILY_CAP_PER_CATEGORY", "10"))
 
@@ -308,17 +322,26 @@ CSRF_COOKIE_SECURE = not DEBUG
 # Required when the browser Origin is a reverse-proxy / Cloudflare tunnel host
 # (Django 4+ Origin check). Comma-separated full origins, e.g. https://xyz.trycloudflare.com
 CSRF_TRUSTED_ORIGINS = [
-    o.strip()
-    for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if o.strip()
+    o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
 ]
 
 # MFA / re-auth
 LAMTO_REAUTH_MAX_AGE_SECONDS = int(os.getenv("LAMTO_REAUTH_MAX_AGE_SECONDS", "300"))
-LAMTO_AUTH_THROTTLE_MAX_FAILURES = int(os.getenv("LAMTO_AUTH_THROTTLE_MAX_FAILURES", "5"))
+LAMTO_AUTH_THROTTLE_MAX_FAILURES = int(
+    os.getenv("LAMTO_AUTH_THROTTLE_MAX_FAILURES", "5")
+)
 LAMTO_AUTH_THROTTLE_WINDOW_SECONDS = int(
     os.getenv("LAMTO_AUTH_THROTTLE_WINDOW_SECONDS", str(15 * 60))
 )
+
+# Management sessions: persistent rolling lifetime (ADR 0001).
+# Password login establishes it; every authenticated /s/ request renews the
+# server-side expiry and the persistent cookie to 400 days from that request.
+# The cookie never expires at browser close; Logout is the normal way to end it.
+LAMTO_MANAGEMENT_SESSION_MAX_AGE_DAYS = int(
+    os.getenv("LAMTO_MANAGEMENT_SESSION_MAX_AGE_DAYS", "400")
+)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Backup / ops markers (private operations bucket may share private storage)
 BACKUP_OPS_PREFIX = os.getenv("BACKUP_OPS_PREFIX", "ops/backups")
@@ -348,13 +371,20 @@ GATE_FACE_MATCH_THRESHOLD = float(os.getenv("GATE_FACE_MATCH_THRESHOLD", "0.38")
 GATE_MAX_FACE_UPLOAD_BYTES = int(
     os.getenv("GATE_MAX_FACE_UPLOAD_BYTES", str(8 * 1024 * 1024))
 )
-GATE_RECOGNITION_THROTTLE_SECONDS = int(os.getenv("GATE_RECOGNITION_THROTTLE_SECONDS", "1"))
+GATE_RECOGNITION_THROTTLE_SECONDS = int(
+    os.getenv("GATE_RECOGNITION_THROTTLE_SECONDS", "1")
+)
 GATE_MIN_FACE_PIXELS = int(os.getenv("GATE_MIN_FACE_PIXELS", "80"))
 GATE_MIN_FACE_DET_SCORE = float(os.getenv("GATE_MIN_FACE_DET_SCORE", "0.6"))
 GATE_MIN_FACE_SHARPNESS = float(os.getenv("GATE_MIN_FACE_SHARPNESS", "40"))
-GATE_FACE_CALIBRATED = all(name in os.environ for name in (
-    "GATE_FACE_MATCH_THRESHOLD", "GATE_MIN_FACE_DET_SCORE", "GATE_MIN_FACE_SHARPNESS"
-))
+GATE_FACE_CALIBRATED = all(
+    name in os.environ
+    for name in (
+        "GATE_FACE_MATCH_THRESHOLD",
+        "GATE_MIN_FACE_DET_SCORE",
+        "GATE_MIN_FACE_SHARPNESS",
+    )
+)
 # Dotted path to the FaceEmbedder implementation. Empty until Task 13 lands the
 # production embedder; get_embedder() raises rather than guessing.
 GATE_FACE_EMBEDDER = os.getenv(
@@ -390,7 +420,16 @@ SPECTACULAR_SETTINGS = {
         "StatusEnum": "lamto.maintenance.models.IssueReport.Status",
         "RegistrationStatusEnum": "lamto.accounts.models.RegistrationRequest.Status",
     },
-    "APPEND_COMPONENTS": {"securitySchemes": {"GateDevice": {"type": "apiKey", "in": "header", "name": "Authorization", "description": "GateDevice <credential>"}}},
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "GateDevice": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "GateDevice <credential>",
+            }
+        }
+    },
 }
 
 # Access/error logs must never retain signed download tokens (spec 3.6).

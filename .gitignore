@@ -12,6 +12,11 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+AGENTS.md 
+GLOSSARY.md
+NOTES.md
+RESOURCES.md
+ops/
 .env.*
 *.local
 .playwright/
