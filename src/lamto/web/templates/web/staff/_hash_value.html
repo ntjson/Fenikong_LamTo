@@ -1,0 +1,8 @@
+{% load i18n %}
+{% translate "Hash" as default_label %}
+{% translate "hash" as default_label_lower %}
+<span class="hash-value">
+  <span class="sr-only">{{ label|default:default_label }}: </span>
+  <code class="hash" title="{{ label|default:default_label }}">{{ value }}</code>
+  <button type="button" class="button button-secondary button-compact" data-copy="{{ value }}" aria-label="{% blocktrans with l=label|default:default_label_lower %}Copy {{ l }}{% endblocktrans %}">{% trans "Copy" %}</button>
+</span>

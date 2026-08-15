@@ -1,0 +1,14 @@
+{% load i18n %}
+{% if accountability_stages %}
+<div class="accountability-chain" role="group" aria-label="{% trans 'Accountability chain' %}">
+  <ol class="accountability-stages">
+    {% for stage in accountability_stages %}
+    {# The live stage is exactly one of current/pending/blocked — "you are here" holds for all three. #}
+    <li class="accountability-stage accountability-stage-{{ stage.state }}"{% if stage.state == "current" or stage.state == "pending" or stage.state == "blocked" %} aria-current="step"{% endif %}>
+      <span class="accountability-stage-label">{{ stage.label }}</span>
+      <span class="accountability-stage-state">{{ stage.state_label|default:stage.state }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+</div>
+{% endif %}

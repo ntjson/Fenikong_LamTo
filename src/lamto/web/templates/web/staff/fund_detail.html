@@ -1,0 +1,147 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n humanize static staff_extras %}
+{% block title %}{% trans "Fund" %} · LamTo{% endblock %}
+{% block content %}
+{% if list_mode %}
+<section class="panel" aria-labelledby="fund-heading">
+  <div class="panel-header">
+    <h1 id="fund-heading">{% trans "Maintenance fund" %}</h1>
+    {% if can_record %}
+    <a class="button button-secondary" href="{% url 'web:fund-record' %}">{% trans "Record source" %}</a>
+    {% endif %}
+  </div>
+  <p class="balance-value">
+    <span class="amount">{{ balance_vnd|intcomma }}</span>
+    <span class="currency">VND</span>
+  </p>
+  <dl class="stat-grid">
+    <div>
+      <dt>{% trans "Inflows (30d)" %}</dt>
+      <dd>{{ period_inflows|intcomma }} VND</dd>
+    </div>
+    <div>
+      <dt>{% trans "Outflows (30d)" %}</dt>
+      <dd>{{ period_outflows|intcomma }} VND</dd>
+    </div>
+  </dl>
+
+  <div class="workflow-section" aria-labelledby="fund-chart-heading">
+    <div class="panel-header">
+      <h2 id="fund-chart-heading">{% trans "Balance over time" %}</h2>
+      <form method="get" class="queue-toolbar">
+        <label for="chart-range">{% trans "Chart range" %}
+          <select id="chart-range" name="range">
+            {% for key, label in chart_ranges %}
+            <option value="{{ key }}"{% if key == chart_range %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit" class="button button-secondary">{% trans "Apply" %}</button>
+      </form>
+    </div>
+    <dl class="stat-grid">
+      <div><dt>{% trans "Opening balance" %}</dt><dd>{{ window_opening_vnd|intcomma }} VND</dd></div>
+      <div><dt>{% trans "Closing balance" %}</dt><dd>{{ window_closing_vnd|intcomma }} VND</dd></div>
+      <div><dt>{% trans "Total inflows" %}</dt><dd>{{ window_inflows_vnd|intcomma }} VND</dd></div>
+      <div><dt>{% trans "Total outflows" %}</dt><dd>{{ window_outflows_vnd|intcomma }} VND</dd></div>
+    </dl>
+    <div class="chart-box">
+      <canvas id="fund-chart" role="img"
+              aria-label="{% trans 'Fund balance chart' %}"
+              data-label-balance="{% trans 'Balance' %}"
+              data-label-inflows="{% trans 'Inflows' %}"
+              data-label-outflows="{% trans 'Outflows' %}"></canvas>
+      {# Sibling, not canvas fallback: role="img" hides descendants from AT. #}
+      <table class="sr-only">
+        <caption>{% trans "Fund balance by period" %}</caption>
+        <thead><tr><th scope="col">{% trans "Period" %}</th><th scope="col">{% trans "Balance" %}</th><th scope="col">{% trans "Inflows" %}</th><th scope="col">{% trans "Outflows" %}</th></tr></thead>
+        <tbody>
+          {% for point in chart_points %}
+          <tr><td>{{ point.period_start }}</td><td>{{ point.balance_vnd|intcomma }} VND</td><td>{{ point.inflows_vnd|intcomma }} VND</td><td>{{ point.outflows_vnd|intcomma }} VND</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ chart_points|json_script:"fund-chart-data" }}
+  </div>
+
+  {% if pending_verification %}
+  <div class="workflow-section workflow-primary">
+    <h2>{% trans "Verify fund sources" %}</h2>
+    <p class="hint">{% trans "Source entries recorded but not yet verified — your primary job on this fund." %}</p>
+    <ul class="task-list">
+      {% for entry in pending_verification %}
+      <li>
+        {% if can_verify %}
+        <a class="task-row" href="{% url 'web:fund-verify' entry.pk %}">
+          <span class="task-action">{% trans "Verify source" %}</span>
+          <span class="task-subject">#{{ entry.pk }} · {{ entry.get_entry_type_display }}</span>
+          <span class="task-amount">{{ entry.amount_vnd|intcomma }} VND</span>
+          <span class="task-meta"><span>{% trans "Recorded" %} {{ entry.recorded_at|staff_datetime }}</span></span>
+        </a>
+        {% else %}
+        <div class="task-row task-row-simple">
+          <span class="task-subject">#{{ entry.pk }} · {{ entry.get_entry_type_display }}</span>
+          <span class="task-amount">{{ entry.amount_vnd|intcomma }} VND</span>
+          <span class="task-meta"><span>{% trans "Recorded" %} {{ entry.recorded_at|staff_datetime }}</span></span>
+        </div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if pending_verification_capped %}<p class="hint">{% blocktrans with shown=pending_verification|length total=pending_verification_total %}Showing the latest {{ shown }} of {{ total }} sources awaiting verification.{% endblocktrans %}</p>{% endif %}
+  </div>
+  {% endif %}
+  {% if pending %}
+  <div class="workflow-section workflow-primary">
+    <h2>{% trans "Publish settled expenses" %}</h2>
+    <p class="hint">{% trans "Publication-eligible payments waiting to appear on the resident ledger." %}</p>
+    <ul class="task-list">
+      {% for proposal in pending %}
+      <li>
+        <a class="task-row" href="{% url 'web:proposal-detail' proposal.pk %}">
+          <span class="task-action">{% trans "Prepare publication" %}</span>
+          <span class="task-subject">{% blocktrans with id=proposal.pk %}Proposal #{{ id }}{% endblocktrans %}</span>
+          <span class="task-amount">{% if proposal.current_version %}{{ proposal.current_version.amount_vnd|intcomma }} VND{% else %}<span class="sr-only">{% trans "No amount recorded" %}</span><span aria-hidden="true">—</span>{% endif %}</span>
+          <span class="task-meta"></span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if pending_capped %}<p class="hint">{% blocktrans with shown=pending|length total=pending_total %}Showing the latest {{ shown }} of {{ total }} proposals awaiting reconciliation.{% endblocktrans %}</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="workflow-section">
+    <h2>{% trans "Verified entries" %}</h2>
+    <p class="queue-count">{% staff_entry_count entries_list.page.paginator.count %}</p>
+    <ul class="task-list">
+      {% for entry in entries %}
+      <li>
+        <div class="task-row">
+          <span class="task-action">{% trans "Verified entry" %}</span>
+          <span class="task-subject">#{{ entry.pk }} · {{ entry.get_entry_type_display }}</span>
+          <span class="task-amount">{{ entry.amount_vnd|intcomma }} VND</span>
+          <span class="task-meta"><span>{% trans "Recorded" %} {{ entry.recorded_at|staff_datetime }}</span></span>
+        </div>
+      </li>
+      {% empty %}
+      <li class="empty-state"><p>{% trans "No verified entries." %}</p><p class="hint">{% trans "Add an opening balance or inflow with Record source." %}</p></li>
+      {% endfor %}
+    </ul>
+    {% translate "Verified entry pages" as pagination_label %}
+    {% include "web/staff/_pagination.html" with list_meta=entries_list pagination_label=pagination_label %}
+  </div>
+
+</section>
+{% else %}
+<section class="panel">
+  <h1>{% if mode == "verify" %}{% blocktrans with id=entry.pk %}Verify fund source #{{ id }}{% endblocktrans %}{% else %}{% trans "Record fund source" %}{% endif %}</h1>
+  {% include "web/staff/_fund_forms.html" %}
+</section>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'web/chart.umd.js' %}"></script>
+<script src="{% static 'web/fund-chart.js' %}"></script>
+{% endblock %}

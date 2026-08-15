@@ -1,0 +1,25 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n %}
+{% block title %}{% trans "Exports" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="exports-heading">
+  <h1 id="exports-heading">{% trans "Exports" %}</h1>
+  <p class="lede">{% trans "Download auditor CSVs for this building. Each file is formula-neutralized and hashed only — never raw document bytes." %}</p>
+  <ul class="task-list">
+    {% for kind in export_kinds %}
+    <li>
+      <a class="task-row task-row-simple" href="{% url 'web:audit-export' %}?kind={{ kind.key }}">
+        <span class="task-action">{% trans "Download CSV" %}</span>
+        <span class="task-subject">{{ kind.label }}</span>
+        <span class="task-meta"><span>{% blocktrans count counter=kind.count %}{{ counter }} row{% plural %}{{ counter }} rows{% endblocktrans %}</span></span>
+      </a>
+    </li>
+    {% empty %}
+    <li class="empty-state">
+      <p>{% trans "No export types are available yet." %}</p>
+      <p class="hint">{% trans "Exports appear once the building has records to audit." %}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n humanize static staff_extras %}
+{% block title %}{% trans "Action inbox" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="inbox-heading">
+  <div class="panel-header">
+    <div>
+      <h1 id="inbox-heading">{% trans "Action inbox" %}</h1>
+      <p class="hint">{% blocktrans with building=membership.building.name %}Work assigned to Management at {{ building }}.{% endblocktrans %}</p>
+    </div>
+    {% if action_page.paginator.count %}<p class="queue-count">{% staff_task_count action_page.paginator.count %}</p>{% endif %}
+  </div>
+
+  {% translate "Task group" as group_filter_label %}
+  {% include "web/staff/_list_toolbar.html" with filter_param="status" filter_label=group_filter_label %}
+
+  {% if action_groups %}
+  <div class="task-queue">
+    {% for group in action_groups %}
+    <section class="task-group" aria-labelledby="task-group-{{ forloop.counter }}">
+      <h2 id="task-group-{{ forloop.counter }}">{{ group.label }}</h2>
+      <ul class="task-list">
+        {% for item in group.items %}
+        <li>
+          <a class="task-row" href="{{ item.url }}">
+            <span class="task-action">{{ item.title }}</span>
+            <span class="task-subject">{{ item.summary }}</span>
+            <span class="task-amount">{% if item.amount_vnd != None %}{{ item.amount_vnd|intcomma }} VND{% else %}<span class="sr-only">{% trans "No amount recorded" %}</span><span aria-hidden="true">—</span>{% endif %}</span>
+            <span class="task-meta">
+              {% if item.deadline_at %}
+              <span class="deadline-badge deadline-{{ item.deadline_tone }}">{% trans "Deadline" %} {{ item.deadline_at|staff_datetime }}</span>
+              {% else %}
+              <span>{% trans "No deadline set" %}</span>
+              {% endif %}
+            </span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endfor %}
+  </div>
+
+  {% include "web/staff/_pagination.html" %}
+  {% else %}
+  <div class="empty-state">
+    <h2>{% if inbox_query or active_kind or active_status %}{% trans "No matching tasks" %}{% else %}{% trans "No open tasks" %}{% endif %}</h2>
+    <p>{% if inbox_query or active_kind or active_status %}{% trans "Clear the filters to see every open responsibility." %}{% else %}{% trans "There is nothing for this membership to act on now." %}{% endif %}</p>
+    {% if inbox_query or active_kind or active_status %}<a class="button button-secondary" href="{% url 'web:action-inbox' %}">{% trans "Clear filters" %}</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+
+<section class="panel" aria-labelledby="fund-chart-card-heading">
+  <div class="panel-header">
+    <div>
+      <h2 id="fund-chart-card-heading">{% trans "Maintenance fund" %}</h2>
+      <p class="balance-value">
+        <span class="amount">{{ fund_balance_vnd|intcomma }}</span>
+        <span class="currency">VND</span>
+      </p>
+    </div>
+    {% if fund_link_ok %}<a class="button button-secondary" href="{% url 'web:fund-home' %}">{% trans "View fund" %}</a>{% endif %}
+  </div>
+  <div class="chart-box chart-box-compact">
+    <canvas id="fund-chart" role="img" data-compact="1"
+            aria-label="{% trans 'Fund balance chart' %}"
+            data-label-balance="{% trans 'Balance' %}"></canvas>
+    {# Sibling, not canvas fallback: role="img" hides descendants from AT. #}
+    <table class="sr-only">
+      <caption>{% trans "Fund balance by period" %}</caption>
+      <thead><tr><th scope="col">{% trans "Period" %}</th><th scope="col">{% trans "Balance" %}</th><th scope="col">{% trans "Inflows" %}</th><th scope="col">{% trans "Outflows" %}</th></tr></thead>
+      <tbody>
+        {% for point in fund_chart_points %}
+        <tr><td>{{ point.period_start }}</td><td>{{ point.balance_vnd|intcomma }} VND</td><td>{{ point.inflows_vnd|intcomma }} VND</td><td>{{ point.outflows_vnd|intcomma }} VND</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ fund_chart_points|json_script:"fund-chart-data" }}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'web/chart.umd.js' %}"></script>
+<script src="{% static 'web/fund-chart.js' %}"></script>
+{% endblock %}

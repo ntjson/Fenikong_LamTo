@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lamto-accountability"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "Django~=5.2",
+  "psycopg[binary]>=3.2,<4",
+  "django-otp>=1.6,<2",
+  "django-storages[s3]>=1.14,<2",
+  "boto3>=1.35,<2",
+  "Pillow>=11,<13",
+  "numpy>=2,<3",
+  "argon2-cffi>=23,<26",
+  "web3>=7,<8",
+  "eth-account>=0.13,<1",
+  "djangorestframework>=3.16,<4",
+  "django-rest-knox>=5.0,<6",
+  "drf-spectacular>=0.28,<1",
+  "gunicorn>=23,<24",
+  "firebase-admin>=6,<8",
+  "onnxruntime>=1.20,<2",
+  "insightface>=0.7.3,<0.8",
+  "opencv-python-headless>=4.10,<5",
+  "qrcode>=7,<9",
+]
+
+[project.optional-dependencies]
+dev = [
+  "playwright>=1.50,<2",
+  "pytest-playwright>=0.6,<1",
+  "pytest>=8,<9",
+  "pytest-django>=4.9,<5",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "lamto.config.settings"
+pythonpath = ["src"]
+testpaths = ["tests"]
+filterwarnings = [
+  "ignore::DeprecationWarning",
+]
+markers = [
+  "insightface: exercises the real InsightFace model; needs model files, deselected by default",
+]

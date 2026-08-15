@@ -1,0 +1,39 @@
+name: Flutter resident app
+
+on:
+  push:
+    paths:
+      - 'app/**'
+      - 'docs/api/openapi-v1.yaml'
+      - '.github/workflows/flutter-app.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'docs/api/openapi-v1.yaml'
+      - '.github/workflows/flutter-app.yml'
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: flutter pub get
+      - name: Make API scripts executable
+        run: chmod +x tool/generate_api.sh tool/check_api_generated.sh
+      - name: API client drift gate
+        run: ./tool/check_api_generated.sh
+      - run: flutter analyze
+      - run: flutter test

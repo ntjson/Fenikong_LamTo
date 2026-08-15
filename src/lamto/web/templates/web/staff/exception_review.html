@@ -1,0 +1,118 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n humanize staff_extras %}
+{% block title %}{% if kind == "integrity_mismatch" %}{% trans "Integrity mismatch" %}{% elif kind == "failed_outbox" %}{% trans "Failed evidence anchor" %}{% else %}{% trans "Quarantined upload" %}{% endif %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel">
+  <p><a class="back-link" href="{% url 'web:exception-list' %}">{% trans "Back to exceptions" %}</a></p>
+
+  {% if kind == "integrity_mismatch" %}
+  <h1>{% blocktrans with id=entry.pk %}Integrity mismatch · Ledger entry #{{ id }}{% endblocktrans %}</h1>
+  {% elif kind == "failed_outbox" %}
+  <h1>{% blocktrans with id=event.event_id|truncatechars:18 %}Failed evidence anchor · Event {{ id }}{% endblocktrans %}</h1>
+  {% else %}
+  <h1>{% blocktrans with name=upload.filename %}Quarantined upload · {{ name }}{% endblocktrans %}</h1>
+  {% endif %}
+
+  <div class="record-layout">
+    <div class="record-summary">
+
+      {% if kind == "integrity_mismatch" %}
+      {% if cleared %}
+      <p class="status status-verified"><span class="status-icon" aria-hidden="true">●</span> {% trans "Cleared: the latest observation matches again" %}</p>
+      <p>{% trans "A newer verification no longer reports a mismatch. Review the history below and record what explained the earlier difference." %}</p>
+      {% else %}
+      <p class="status status-mismatch"><span class="status-icon" aria-hidden="true">●</span> {% trans "The latest observation still reports a mismatch" %}</p>
+      <p>{% trans "The published record does not match what was independently observed. Published records are never edited in place, so this difference will not fix itself: verify the record, find the cause, and record what you found. Corrections, when needed, are appended as new records." %}</p>
+      {% endif %}
+      <dl class="detail-list detail-list-wide">
+        <div><dt>{% trans "Amount" %}</dt><dd>{{ entry.actual_cost_vnd|intcomma }} VND</dd></div>
+        <div><dt>{% trans "Contractor" %}</dt><dd>{{ entry.contractor_name }}</dd></div>
+        <div><dt>{% trans "Proposal" %}</dt><dd><a href="{% url 'web:proposal-detail' entry.proposal_id %}">{% blocktrans with id=entry.proposal_id %}Proposal #{{ id }}{% endblocktrans %}</a></dd></div>
+        <div><dt>{% trans "Settlement" %}</dt><dd><a href="{% url 'web:settlement-detail' entry.settlement_id %}">{% blocktrans with id=entry.settlement_id %}Settlement #{{ id }}{% endblocktrans %}</a></dd></div>
+        {% if latest_observation %}
+        <div><dt>{% trans "Latest observation" %}</dt><dd>{{ latest_observation.get_result_display }} · {{ latest_observation.observed_at|staff_datetime }}</dd></div>
+        {% endif %}
+      </dl>
+      {% if latest_observation %}
+      <details class="technical-proof">
+        <summary>{% trans "Technical proof" %}</summary>
+        <dl class="detail-list">
+          <div><dt>{% trans "Observation details" %}</dt><dd><pre>{{ latest_observation.details }}</pre></dd></div>
+        </dl>
+      </details>
+      {% endif %}
+
+      {% elif kind == "failed_outbox" %}
+      {% if cleared %}
+      <p class="status status-verified"><span class="status-icon" aria-hidden="true">●</span> {% blocktrans with status=event.get_status_display %}No longer failing — current delivery state: {{ status }}{% endblocktrans %}</p>
+      <p>{% trans "Delivery has moved past the failure since this item was raised. Record what you checked so the episode is closed under a name." %}</p>
+      {% else %}
+      <p class="status status-mismatch"><span class="status-icon" aria-hidden="true">●</span> {% trans "Anchoring is still failing for this record" %}</p>
+      <p>{% trans "The record is signed and safe; only its blockchain anchor is failing. Delivery retries on its own. Check Operations health for the backend state, then record what you found." %}</p>
+      {% endif %}
+      <dl class="detail-list detail-list-wide">
+        <div><dt>{% trans "Last error" %}</dt><dd>{{ event.last_error|default:"—" }}</dd></div>
+        <div><dt>{% trans "Attempts" %}</dt><dd>{{ event.attempts }}</dd></div>
+        <div><dt>{% trans "Last attempt" %}</dt><dd>{% if event.last_attempt_at %}{{ event.last_attempt_at|staff_datetime }}{% else %}<span class="sr-only">{% trans "No attempt recorded" %}</span><span aria-hidden="true">—</span>{% endif %}</dd></div>
+        <div><dt>{% trans "Created" %}</dt><dd>{{ event.created_at|staff_datetime }}</dd></div>
+      </dl>
+      <p><a class="button button-secondary" href="{% url 'web:ops-health' %}">{% trans "Review Operations health" %}</a></p>
+      <details class="technical-proof">
+        <summary>{% trans "Technical proof" %}</summary>
+        <dl class="detail-list">
+          <div><dt>{% trans "Event ID" %}</dt><dd>{% include "web/staff/_hash_value.html" with value=event.event_id label=_("Event ID") %}</dd></div>
+          <div><dt>{% trans "Payload hash" %}</dt><dd>{% include "web/staff/_hash_value.html" with value=event.payload_hash label=_("Payload hash") %}</dd></div>
+        </dl>
+      </details>
+
+      {% else %}
+      {% if expired %}
+      <p class="status status-info"><span class="status-icon" aria-hidden="true">●</span> {% trans "Past its retention date — the sealed copy is deleted automatically" %}</p>
+      {% else %}
+      <p class="status status-warning"><span class="status-icon" aria-hidden="true">●</span> {% trans "The virus scan refused this file" %}</p>
+      {% endif %}
+      <p>{% trans "The file never entered the evidence store: the stored copy is sealed off and cannot be downloaded, and it is deleted at the retention date. If the evidence is still needed, ask the uploader for a clean file and upload it in the normal way." %}</p>
+      <dl class="detail-list detail-list-wide">
+        <div><dt>{% trans "Reason" %}</dt><dd>{{ upload.reason|staff_upload_reason }}</dd></div>
+        <div><dt>{% trans "Uploaded by" %}</dt><dd>{{ upload.uploader.display_name }}</dd></div>
+        <div><dt>{% trans "Uploaded at" %}</dt><dd>{{ upload.created_at|staff_datetime }}</dd></div>
+        <div><dt>{% trans "Size" %}</dt><dd>{{ upload.byte_size|filesizeformat }}</dd></div>
+        <div><dt>{% trans "Sealed copy deleted on" %}</dt><dd>{{ upload.retention_expires_at|staff_datetime }}</dd></div>
+      </dl>
+      {% endif %}
+
+    </div>
+
+    <div class="record-action">
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Record your response" %}</h2>
+        <p class="consequence-note">{% trans "The response is appended to the audit log under your name with a timestamp. It cannot be edited or deleted, and auditors see it in the export." %}</p>
+        <form method="post" class="stack-form" data-busy-on-submit>
+          {% csrf_token %}
+          <div class="field">
+            <label for="response-note">{% trans "What you checked and what happens next" %}</label>
+            <textarea id="response-note" name="note" class="input" rows="4" required>{{ note }}</textarea>
+          </div>
+          <button type="submit" class="button button-primary">{% trans "Record response" %}</button>
+        </form>
+      </div>
+
+      <div class="workflow-section">
+        <h2>{% trans "Recorded responses" %}</h2>
+        {% if responses %}
+        <ul class="response-list">
+          {% for response in responses %}
+          <li class="response-item">
+            <p class="response-meta">{{ response.actor.display_name }} · {{ response.created_at|staff_datetime }}</p>
+            <p class="response-note">{{ response.metadata.note }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty">{% trans "No response has been recorded yet. This item is unowned until someone records one." %}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

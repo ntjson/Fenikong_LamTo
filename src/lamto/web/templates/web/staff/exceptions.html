@@ -1,0 +1,79 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n humanize staff_extras %}
+{% block title %}{% trans "Exceptions" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="exceptions-heading">
+  <div class="panel-header">
+    <div>
+      <h1 id="exceptions-heading">{% trans "Exceptions" %}</h1>
+      <p class="hint">{% trans "Trust-critical failures for this building. Open an item, inspect the record, and file a response under your name. An item leaves this list only when its cause clears." %}</p>
+    </div>
+  </div>
+
+  {% if not mismatch_items and not outbox_items and not quarantine_items %}
+  <div class="empty-state">
+    <h2>{% trans "No open exceptions" %}</h2>
+    <p>{% trans "Every published record matches its independent observation, every anchor is delivering, and no upload is quarantined." %}</p>
+    <a class="button button-secondary" href="{% url 'web:action-inbox' %}">{% trans "Back to Action inbox" %}</a>
+  </div>
+  {% else %}
+
+  <section class="workflow-section" id="integrity">
+    <h2>{% trans "Integrity mismatches" %}</h2>
+    <p class="hint">{% trans "A published record no longer matches what was independently observed. This is the most serious state the workspace can show." %}</p>
+    <ul class="task-list">
+      {% for item in mismatch_items %}
+      <li>
+        <a class="task-row task-row-simple" href="{% url 'web:exception-review' 'integrity_mismatch' item.entry.pk %}">
+          <span class="task-action">{% trans "Review mismatch" %}</span>
+          <span class="task-subject">{% blocktrans with id=item.entry.pk %}Ledger entry #{{ id }}{% endblocktrans %} · {{ item.entry.contractor_name }} · {{ item.entry.actual_cost_vnd|intcomma }} VND</span>
+          <span class="task-meta">{% if item.reviewed %}<span class="status status-info"><span class="status-icon" aria-hidden="true">●</span> {% trans "Response on file" %}</span>{% else %}<span class="status status-warning"><span class="status-icon" aria-hidden="true">●</span> {% trans "Needs a response" %}</span>{% endif %}</span>
+        </a>
+      </li>
+      {% empty %}
+      <li class="empty-state"><p>{% trans "No open integrity mismatches." %}</p></li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="workflow-section" id="failed-outbox">
+    <h2>{% trans "Failed evidence anchors" %}</h2>
+    <p class="hint">{% trans "A signed record could not be anchored. The record itself is safe and locally signed; delivery keeps retrying." %}</p>
+    <ul class="task-list">
+      {% for item in outbox_items %}
+      <li>
+        <a class="task-row task-row-simple" href="{% url 'web:exception-review' 'failed_outbox' item.event.pk %}">
+          <span class="task-action">{% trans "Review failed anchor" %}</span>
+          <span class="task-subject">{% blocktrans with id=item.event.event_id|truncatechars:18 %}Event {{ id }}{% endblocktrans %} · {{ item.event.updated_at|staff_datetime }}</span>
+          <span class="task-meta">{% if item.reviewed %}<span class="status status-info"><span class="status-icon" aria-hidden="true">●</span> {% trans "Response on file" %}</span>{% else %}<span class="status status-warning"><span class="status-icon" aria-hidden="true">●</span> {% trans "Needs a response" %}</span>{% endif %}</span>
+        </a>
+      </li>
+      {% empty %}
+      <li class="empty-state"><p>{% trans "No failed anchors." %}</p></li>
+      {% endfor %}
+    </ul>
+    {% if outbox_capped %}<p class="hint">{% blocktrans with shown=list_cap total=outbox_total %}Showing the latest {{ shown }} of {{ total }} failed anchors.{% endblocktrans %}</p>{% endif %}
+  </section>
+
+  <section class="workflow-section" id="quarantine">
+    <h2>{% trans "Quarantined uploads" %}</h2>
+    <p class="hint">{% trans "Files the virus scan refused. The stored copy is sealed off and deleted at the retention date; a clean file must be uploaded in its place." %}</p>
+    <ul class="task-list">
+      {% for item in quarantine_items %}
+      <li>
+        <a class="task-row task-row-simple" href="{% url 'web:exception-review' 'quarantined_upload' item.upload.pk %}">
+          <span class="task-action">{% trans "Review quarantined file" %}</span>
+          <span class="task-subject">{{ item.upload.filename }} · {{ item.upload.reason|staff_upload_reason }}</span>
+          <span class="task-meta">{% if item.reviewed %}<span class="status status-info"><span class="status-icon" aria-hidden="true">●</span> {% trans "Response on file" %}</span>{% else %}<span class="status status-warning"><span class="status-icon" aria-hidden="true">●</span> {% trans "Needs a response" %}</span>{% endif %}</span>
+        </a>
+      </li>
+      {% empty %}
+      <li class="empty-state"><p>{% trans "No quarantined uploads." %}</p></li>
+      {% endfor %}
+    </ul>
+    {% if quarantine_capped %}<p class="hint">{% blocktrans with shown=list_cap total=quarantine_total %}Showing the latest {{ shown }} of {{ total }} quarantined uploads.{% endblocktrans %}</p>{% endif %}
+  </section>
+
+  {% endif %}
+</section>
+{% endblock %}

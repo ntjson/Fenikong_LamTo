@@ -1,0 +1,41 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n staff_extras %}
+{% block title %}{{ announcement.title }} · LamTo{% endblock %}
+{% block content %}
+<section class="panel">
+  <p><a class="back-link" href="{% url 'web:staff-announcement-list' %}">{% trans "Back to announcements" %}</a></p>
+  <h1>{{ announcement.title }}</h1>
+  <p>{{ announcement.body|linebreaksbr }}</p>
+  <dl class="detail-list detail-list-wide">
+    <div><dt>{% trans "State" %}</dt><dd>{{ announcement.get_state_display }}</dd></div>
+    <div><dt>{% trans "Revision" %}</dt><dd>{{ announcement.revision }}</dd></div>
+    <div><dt>{% trans "Created" %}</dt><dd>{{ announcement.created_by }} · {{ announcement.created_at|staff_datetime }}</dd></div>
+    <div><dt>{% trans "Updated" %}</dt><dd>{{ announcement.updated_by }} · {{ announcement.updated_at|staff_datetime }}</dd></div>
+  </dl>
+  {% if announcement.state == "PUBLISHED" %}
+    {% if form %}
+    <div class="workflow-section workflow-primary">
+      <h2>{% trans "Edit announcement" %}</h2>
+      <form method="post" action="{% url 'web:staff-announcement-edit' announcement.pk %}" class="stack-form" data-busy-on-submit>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field|describe_errors }}
+          {% if field.errors %}<p class="field-error" id="{{ field.auto_id }}-error">{{ field.errors|striptags }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="button button-primary">{% trans "Save announcement" %}</button>
+      </form>
+    </div>
+    {% else %}
+    <p><a class="button" href="{% url 'web:staff-announcement-edit' announcement.pk %}">{% trans "Edit announcement" %}</a></p>
+    {% endif %}
+    <form method="post" action="{% url 'web:staff-announcement-withdraw' announcement.pk %}" data-busy-on-submit>
+      {% csrf_token %}
+      <input type="hidden" name="expected_revision" value="{{ announcement.revision }}">
+      <button type="submit" class="button button-secondary">{% trans "Withdraw announcement" %}</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

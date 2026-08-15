@@ -1,0 +1,2845 @@
+openapi: 3.0.3
+info:
+  title: LamTo Resident API
+  version: v1
+paths:
+  /api/v1/auth/login:
+    post:
+      operationId: auth_login_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '429':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Too many authentication attempts (code=throttled).
+  /api/v1/auth/logout:
+    post:
+      operationId: auth_logout_create
+      parameters:
+      - in: header
+        name: X-Install-Id
+        schema:
+          type: string
+        description: Stable per-install client id. When present on logout, deactivates
+          that install's FCM Device so push stops for the install. Also accepted as
+          JSON body field install_id.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutInstallIdRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutInstallIdRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutInstallIdRequest'
+      security:
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+  /api/v1/auth/logout-all:
+    post:
+      operationId: auth_logout_all_create
+      description: |-
+        Log the user out of all sessions
+        I.E. deletes all auth tokens for the user
+      tags:
+      - auth
+      security:
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+  /api/v1/bills:
+    get:
+      operationId: bills_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      tags:
+      - bills
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBillSummaryList'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+  /api/v1/bills/{id}:
+    get:
+      operationId: bills_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bills
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillDetail'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+  /api/v1/bills/{id}/confirm-payment:
+    post:
+      operationId: bills_confirm_payment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bills
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillConfirmPaymentRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BillConfirmPaymentRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BillConfirmPaymentRequestRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillDetail'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: A request conflicts with existing state.
+  /api/v1/cases/{id}/rating:
+    post:
+      operationId: cases_rating_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - cases
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseRatingRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CaseRatingRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CaseRatingRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseRatingResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+  /api/v1/devices:
+    post:
+      operationId: devices_create
+      tags:
+      - devices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceRegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceRegisterRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+  /api/v1/devices/{install_id}:
+    delete:
+      operationId: devices_destroy
+      parameters:
+      - in: path
+        name: install_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - devices
+      security:
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+  /api/v1/documents/{token}:
+    get:
+      operationId: documents_retrieve
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - documents
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+  /api/v1/fund/series:
+    get:
+      operationId: fund_series_retrieve
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      - in: query
+        name: range
+        schema:
+          type: string
+        description: 'Chart range: 30d, 6m, or 12m. Defaults to 6m.'
+      tags:
+      - fund
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundSeries'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/fund/summary:
+    get:
+      operationId: fund_summary_retrieve
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      tags:
+      - fund
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundSummary'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/gate/device:
+    get:
+      operationId: gate_device_retrieve
+      tags:
+      - gate
+      security:
+      - GateDevice: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GateDevice'
+          description: ''
+  /api/v1/gate/face:
+    post:
+      operationId: gate_face_create
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      tags:
+      - gate
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FaceUploadRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaceEnrollment'
+          description: ''
+    delete:
+      operationId: gate_face_destroy
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      tags:
+      - gate
+      security:
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/gate/plates:
+    post:
+      operationId: gate_plates_create
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      tags:
+      - gate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlateCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlateCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlateCreateRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehiclePlate'
+          description: ''
+  /api/v1/gate/plates/{id}:
+    delete:
+      operationId: gate_plates_destroy
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - gate
+      security:
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/gate/recognize/face:
+    post:
+      operationId: gate_recognize_face_create
+      tags:
+      - gate
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FaceRecognizeRequest'
+        required: true
+      security:
+      - GateDevice: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecognitionOutcome'
+          description: ''
+  /api/v1/gate/recognize/plate:
+    post:
+      operationId: gate_recognize_plate_create
+      tags:
+      - gate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlateRecognizeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlateRecognizeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlateRecognizeRequest'
+        required: true
+      security:
+      - GateDevice: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecognitionOutcome'
+          description: ''
+  /api/v1/gate/registrations:
+    get:
+      operationId: gate_registrations_retrieve
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      tags:
+      - gate
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GateRegistrations'
+          description: ''
+  /api/v1/ledger:
+    get:
+      operationId: ledger_list
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: month
+        schema:
+          type: integer
+          maximum: 12
+          minimum: 1
+      - in: query
+        name: year
+        schema:
+          type: integer
+          maximum: 2100
+          minimum: 2000
+      tags:
+      - ledger
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLedgerEntryListList'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/ledger/{id}:
+    get:
+      operationId: ledger_retrieve
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - ledger
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerEntryDetail'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/locations:
+    get:
+      operationId: locations_retrieve
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      tags:
+      - locations
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/me:
+    get:
+      operationId: me_retrieve
+      tags:
+      - me
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+  /api/v1/me/notification-preferences:
+    patch:
+      operationId: me_notification_preferences_partial_update
+      description: PATCH resident email/push preferences per event code (Flutter Account).
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreferenceUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreferenceUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreferenceUpdateRequest'
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationPreference'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+  /api/v1/notifications:
+    get:
+      operationId: notifications_list
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: event_code
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 80
+      - in: query
+        name: unread
+        schema:
+          type: boolean
+      tags:
+      - notifications
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationFeedList'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/notifications/{id}/read:
+    post:
+      operationId: notifications_read_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - notifications
+      security:
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+  /api/v1/proposals:
+    get:
+      operationId: proposal_list
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      tags:
+      - proposals
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProposalList'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/proposals/{id}:
+    get:
+      operationId: proposal_detail
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - proposals
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/proposals/{id}/rating:
+    post:
+      operationId: proposals_rating_create
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - proposals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseRatingRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CaseRatingRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CaseRatingRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalRatingResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+  /api/v1/registration-requests:
+    post:
+      operationId: registration_create
+      tags:
+      - registration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistrationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistrationCreateRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationSubmission'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: A request conflicts with existing state.
+        '429':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Too many authentication attempts (code=throttled).
+  /api/v1/registration-requests/status:
+    get:
+      operationId: registration_status
+      parameters:
+      - in: header
+        name: X-Registration-Status-Token
+        schema:
+          type: string
+        required: true
+      tags:
+      - registration
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationStatus'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+  /api/v1/registration/options:
+    get:
+      operationId: registration_options
+      tags:
+      - registration
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegistrationBuilding'
+          description: ''
+  /api/v1/reports:
+    get:
+      operationId: reports_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      tags:
+      - reports
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReportSummaryList'
+          description: ''
+    post:
+      operationId: reports_create
+      parameters:
+      - in: header
+        name: X-LamTo-Occupancy
+        schema:
+          type: integer
+        description: Active occupancy id for the authenticated resident. Required
+          when the caller has multiple active occupancies; omitted when exactly one
+          is auto-selected. Invalid or foreign ids yield 404.
+      tags:
+      - reports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReportCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReportCreateRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSummary'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSummary'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: A request conflicts with existing state.
+        '422':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Occupancy selection required (code=occupancy_selection_required);
+            send X-LamTo-Occupancy, or gate input was unusable.
+  /api/v1/reports/{id}:
+    get:
+      operationId: reports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reports
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportDetail'
+          description: ''
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+  /api/v1/reports/{id}/info-reply:
+    post:
+      operationId: reports_info_reply_create
+      description: 'Step 1 of the resident''s needs-info reply: commit the text. Text-only
+        by design so a dropped connection can never lose the words; the client then
+        attaches any photos one by one via POST /api/v1/reports/{id}/photos. A successful
+        reply resolves the open information request and moves the report from NEEDS_INFO
+        back to IN_REVIEW (photo uploads are not status-gated, so step 2 still works
+        after the flip).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InfoReplyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InfoReplyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InfoReplyRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoReplyResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+  /api/v1/reports/{id}/photos:
+    post:
+      operationId: reports_photos_create
+      description: 'Attach one photo to a report the caller submitted (active occupancy
+        in the report''s building required). There is no report-status gate, so this
+        also serves as step 2 of the needs-info reply choreography, after POST /api/v1/reports/{id}/info-reply
+        commits the text. Uploads are virus-scanned before storage and idempotent
+        per report by content SHA-256: replaying the same file returns 200 with the
+        existing photo instead of creating a duplicate (201), so per-photo retries
+        are safe.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reports
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReportPhotoUploadRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportPhoto'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportPhoto'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Validation failed (code=validation_failed).
+        '401':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Authentication required or failed (code=not_authenticated or
+            authentication_failed).
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Permission denied (code=permission_denied).
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Resource not found (code=not_found).
+components:
+  schemas:
+    BillConfirmPaymentRequestRequest:
+      type: object
+      properties:
+        reference:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+      - reference
+    BillDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        amount_vnd:
+          type: integer
+        status:
+          $ref: '#/components/schemas/BillStatusEnum'
+        period:
+          type: string
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        issued_at:
+          type: string
+          format: date-time
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        note:
+          type: string
+        document_filename:
+          type: string
+        document_download_url:
+          type: string
+      required:
+      - amount_vnd
+      - document_download_url
+      - document_filename
+      - due_date
+      - id
+      - issued_at
+      - note
+      - paid_at
+      - period
+      - status
+      - title
+    BillStatusEnum:
+      enum:
+      - ISSUED
+      - PAID
+      - VOID
+      type: string
+      description: |-
+        * `ISSUED` - Đã phát hành
+        * `PAID` - Đã thanh toán
+        * `VOID` - Đã hủy
+    BillSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        amount_vnd:
+          type: integer
+        status:
+          $ref: '#/components/schemas/BillStatusEnum'
+        period:
+          type: string
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        issued_at:
+          type: string
+          format: date-time
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - amount_vnd
+      - due_date
+      - id
+      - issued_at
+      - paid_at
+      - period
+      - status
+      - title
+    CaseRatingRequest:
+      type: object
+      properties:
+        satisfied:
+          type: boolean
+        comment:
+          type: string
+          maxLength: 500
+      required:
+      - satisfied
+    CaseRatingResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        case_id:
+          type: integer
+        satisfied:
+          type: boolean
+      required:
+      - case_id
+      - id
+      - satisfied
+    Device:
+      type: object
+      properties:
+        install_id:
+          type: string
+        platform:
+          type: string
+        active:
+          type: boolean
+      required:
+      - active
+      - install_id
+      - platform
+    DeviceRegisterRequest:
+      type: object
+      properties:
+        install_id:
+          type: string
+          minLength: 1
+          description: Stable per-install client UUID (spec 7.2).
+          maxLength: 64
+        fcm_token:
+          type: string
+          minLength: 1
+          maxLength: 512
+        platform:
+          $ref: '#/components/schemas/PlatformEnum'
+        app_version:
+          type: string
+          default: ''
+          maxLength: 32
+      required:
+      - fcm_token
+      - install_id
+      - platform
+    DirectionEnum:
+      enum:
+      - ENTRY
+      - EXIT
+      type: string
+      description: |-
+        * `ENTRY` - ENTRY
+        * `EXIT` - EXIT
+    FaceEnrollment:
+      type: object
+      properties:
+        status:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+        review_note:
+          type: string
+      required:
+      - review_note
+      - status
+      - submitted_at
+    FaceRecognizeRequest:
+      type: object
+      properties:
+        photo:
+          type: string
+          format: binary
+      required:
+      - photo
+    FaceUploadRequest:
+      type: object
+      properties:
+        photo:
+          type: string
+          format: binary
+      required:
+      - photo
+    FundSeries:
+      type: object
+      properties:
+        range:
+          type: string
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/FundSeriesPoint'
+      required:
+      - points
+      - range
+    FundSeriesPoint:
+      type: object
+      properties:
+        period_start:
+          type: string
+          format: date
+        inflows_vnd:
+          type: integer
+        outflows_vnd:
+          type: integer
+          description: Outflow-type amounts are stored negative; this is <= 0.
+        balance_vnd:
+          type: integer
+      required:
+      - balance_vnd
+      - inflows_vnd
+      - outflows_vnd
+      - period_start
+    FundSummary:
+      type: object
+      properties:
+        balance_vnd:
+          type: integer
+        period_days:
+          type: integer
+        period_inflows_vnd:
+          type: integer
+        period_outflows_vnd:
+          type: integer
+      required:
+      - balance_vnd
+      - period_days
+      - period_inflows_vnd
+      - period_outflows_vnd
+    GateDevice:
+      type: object
+      properties:
+        label:
+          type: string
+        direction:
+          $ref: '#/components/schemas/DirectionEnum'
+      required:
+      - direction
+      - label
+    GateRegistrations:
+      type: object
+      properties:
+        face:
+          allOf:
+          - $ref: '#/components/schemas/FaceEnrollment'
+          nullable: true
+        plates:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehiclePlate'
+      required:
+      - face
+      - plates
+    InfoReplyRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+      required:
+      - text
+    InfoReplyResult:
+      type: object
+      properties:
+        report_id:
+          type: integer
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+      required:
+      - report_id
+      - status
+    KindEnum:
+      enum:
+      - BEFORE
+      - AFTER
+      type: string
+      description: |-
+        * `BEFORE` - Trước
+        * `AFTER` - Sau
+    LedgerDocument:
+      type: object
+      properties:
+        label:
+          type: string
+        filename:
+          type: string
+        sha256:
+          type: string
+        download_url:
+          type: string
+      required:
+      - download_url
+      - filename
+      - label
+      - sha256
+    LedgerEntryDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        contractor_name:
+          type: string
+        actual_cost_vnd:
+          type: integer
+        published_at:
+          type: string
+          format: date-time
+        proposed_amount_vnd:
+          type: integer
+          nullable: true
+        integrity_status:
+          type: string
+        what_was_fixed:
+          type: string
+          description: Resident-visible narrative of work completed.
+        why:
+          type: string
+          description: Resident-visible rationale (cause or purpose).
+        payload: {}
+        verification:
+          allOf:
+          - $ref: '#/components/schemas/Verification'
+          nullable: true
+        approvers:
+          type: array
+          items: {}
+        corrections:
+          type: array
+          items: {}
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerDocument'
+        proof:
+          $ref: '#/components/schemas/Proof'
+      required:
+      - actual_cost_vnd
+      - approvers
+      - contractor_name
+      - corrections
+      - documents
+      - id
+      - integrity_status
+      - payload
+      - proof
+      - proposed_amount_vnd
+      - published_at
+      - verification
+      - what_was_fixed
+      - why
+    LedgerEntryList:
+      type: object
+      properties:
+        id:
+          type: integer
+        contractor_name:
+          type: string
+        actual_cost_vnd:
+          type: integer
+        published_at:
+          type: string
+          format: date-time
+        integrity_status:
+          type: string
+        evidence_level:
+          type: string
+          readOnly: true
+        what_was_fixed:
+          type: string
+          readOnly: true
+          description: Resident-visible narrative of work completed.
+      required:
+      - actual_cost_vnd
+      - contractor_name
+      - evidence_level
+      - id
+      - integrity_status
+      - published_at
+      - what_was_fixed
+    Location:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        parent_id:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - name
+      - parent_id
+    LoginRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+          minLength: 1
+          description: Email or Vietnamese phone number.
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - identifier
+      - password
+    LogoutInstallIdRequest:
+      type: object
+      description: Optional body field for logout Device deactivation (spec 7.2).
+      properties:
+        install_id:
+          type: string
+          description: Deactivate this install's FCM Device on logout (also accepted
+            via X-Install-Id).
+          maxLength: 64
+    Me:
+      type: object
+      properties:
+        display_name:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        occupancies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Occupancy'
+        notification_preferences:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationPreference'
+      required:
+      - display_name
+      - email
+      - notification_preferences
+      - occupancies
+      - phone
+    NotificationFeed:
+      type: object
+      properties:
+        id:
+          type: integer
+        event_code:
+          type: string
+        event_key:
+          type: string
+          description: 'Deep-link reference ''{code}:{entity}:{id}'' (spec 6.3/7.4).
+            Entity ids are resident-visible resources the API re-authorizes on fetch.
+            Authorization-neutral and non-sensitive: codes/entity/ids only — no PII,
+            bodies, or tokens.'
+        subject:
+          type: string
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - body
+      - created_at
+      - event_code
+      - event_key
+      - id
+      - read_at
+      - subject
+    NotificationPreference:
+      type: object
+      properties:
+        event_code:
+          type: string
+        email_enabled:
+          type: boolean
+        push_enabled:
+          type: boolean
+      required:
+      - email_enabled
+      - event_code
+      - push_enabled
+    NotificationPreferenceUpdateItemRequest:
+      type: object
+      description: One preference row for PATCH /me/notification-preferences.
+      properties:
+        event_code:
+          type: string
+          minLength: 1
+          maxLength: 64
+        email_enabled:
+          type: boolean
+        push_enabled:
+          type: boolean
+      required:
+      - event_code
+    Occupancy:
+      type: object
+      properties:
+        id:
+          type: integer
+        unit_label:
+          type: string
+        building_name:
+          type: string
+      required:
+      - building_name
+      - id
+      - unit_label
+    PaginatedBillSummaryList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillSummary'
+    PaginatedLedgerEntryListList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntryList'
+    PaginatedNotificationFeedList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationFeed'
+    PaginatedProposalList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Proposal'
+    PaginatedReportSummaryList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportSummary'
+    PatchedNotificationPreferenceUpdateRequest:
+      type: object
+      properties:
+        preferences:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationPreferenceUpdateItemRequest'
+    PlateCreateRequest:
+      type: object
+      properties:
+        plate:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required:
+      - plate
+    PlateRecognizeRequest:
+      type: object
+      properties:
+        plate:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+      - plate
+    PlatformEnum:
+      enum:
+      - IOS
+      - ANDROID
+      type: string
+      description: |-
+        * `IOS` - IOS
+        * `ANDROID` - ANDROID
+    Problem:
+      type: object
+      description: |-
+        RFC 9457 problem+json body with a LamTo stable machine ``code`` (spec 3.1).
+
+        ``detail`` is developer English; the Flutter client owns Vietnamese UI copy
+        keyed off ``code``. ``errors`` is present only for validation failures.
+      properties:
+        type:
+          type: string
+          description: Problem type URI reference; usually about:blank.
+        title:
+          type: string
+          description: Short human-readable summary (HTTP status phrase).
+        status:
+          type: integer
+          description: HTTP status code.
+        code:
+          type: string
+          description: Stable machine code for client branching (e.g. validation_failed,
+            authentication_failed, not_authenticated, permission_denied, not_found,
+            occupancy_selection_required, throttled).
+        detail:
+          type: string
+          description: Developer-English explanation; not shown raw to residents.
+        errors:
+          type: object
+          additionalProperties: {}
+          description: Per-field validation errors when code is validation_failed.
+            Values are lists of {message, code} objects (may nest for non-field errors).
+      required:
+      - code
+      - status
+      - title
+      - type
+    Proof:
+      type: object
+      properties:
+        evidence_level:
+          type: string
+        anchoring_backend:
+          type: string
+        payload_hash:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProofEvent'
+        proposal_version: {}
+        settlement: {}
+      required:
+      - anchoring_backend
+      - events
+      - evidence_level
+      - payload_hash
+      - proposal_version
+      - settlement
+    ProofEvent:
+      type: object
+      properties:
+        event_id:
+          type: string
+        event_type:
+          type: integer
+        status:
+          type: string
+        evidence_level:
+          type: string
+        transaction_hash:
+          type: string
+      required:
+      - event_id
+      - event_type
+      - evidence_level
+      - status
+      - transaction_hash
+    Proposal:
+      type: object
+      properties:
+        id:
+          type: integer
+        case_id:
+          type: integer
+          nullable: true
+        building_id:
+          type: integer
+        status:
+          type: string
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        closed_at:
+          type: string
+          format: date-time
+          nullable: true
+        purpose:
+          type: string
+        proposed_action:
+          type: string
+        amount_vnd:
+          type: integer
+        fund_code:
+          type: string
+        contractor_name:
+          type: string
+        expected_schedule:
+          type: string
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProposalVersion'
+          readOnly: true
+        progress:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProposalProgress'
+          readOnly: true
+        settlement:
+          allOf:
+          - $ref: '#/components/schemas/ProposalSettlement'
+          nullable: true
+          readOnly: true
+        can_rate:
+          type: boolean
+          readOnly: true
+      required:
+      - amount_vnd
+      - building_id
+      - can_rate
+      - case_id
+      - closed_at
+      - completed_at
+      - contractor_name
+      - expected_schedule
+      - fund_code
+      - id
+      - progress
+      - proposed_action
+      - purpose
+      - settlement
+      - status
+      - versions
+    ProposalProgress:
+      type: object
+      properties:
+        id:
+          type: integer
+        cause:
+          type: string
+        result:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - cause
+      - created_at
+      - id
+      - result
+    ProposalRatingResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        proposal_id:
+          type: integer
+        satisfied:
+          type: boolean
+      required:
+      - id
+      - proposal_id
+      - satisfied
+    ProposalSettlement:
+      type: object
+      properties:
+        amount_vnd:
+          type: integer
+        payee_name:
+          type: string
+        transfer_recorded_at:
+          type: string
+          format: date-time
+        acknowledged_at:
+          type: string
+          format: date-time
+          nullable: true
+        settled_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - acknowledged_at
+      - amount_vnd
+      - payee_name
+      - settled_at
+      - transfer_recorded_at
+    ProposalSupportingDocument:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        sha256:
+          type: string
+        download_url:
+          type: string
+      required:
+      - download_url
+      - filename
+      - id
+      - sha256
+    ProposalVersion:
+      type: object
+      properties:
+        number:
+          type: integer
+        published_at:
+          type: string
+          format: date-time
+        evidence_level:
+          type: string
+        supporting_documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProposalSupportingDocument'
+      required:
+      - evidence_level
+      - number
+      - published_at
+      - supporting_documents
+    RecognitionOutcome:
+      type: object
+      properties:
+        matched:
+          type: boolean
+        display_name:
+          type: string
+        unit_label:
+          type: string
+        direction:
+          type: string
+        score:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - direction
+      - display_name
+      - matched
+      - score
+      - unit_label
+    RegistrationBuilding:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationUnit'
+      required:
+      - id
+      - name
+      - units
+    RegistrationCreateRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 32
+        email:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        building_id:
+          type: integer
+        unit_id:
+          type: integer
+      required:
+      - building_id
+      - full_name
+      - password
+      - phone
+      - unit_id
+    RegistrationStatus:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/RegistrationStatusEnum'
+        phone:
+          type: string
+        building:
+          type: string
+        unit:
+          type: string
+        rejection_reason:
+          type: string
+      required:
+      - building
+      - phone
+      - status
+      - unit
+    RegistrationStatusEnum:
+      enum:
+      - PENDING
+      - APPROVED
+      - REJECTED
+      - EXPIRED
+      type: string
+      description: |-
+        * `PENDING` - Đang chờ
+        * `APPROVED` - Đã phê duyệt
+        * `REJECTED` - Đã từ chối
+        * `EXPIRED` - Hết hạn
+    RegistrationSubmission:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/RegistrationStatusEnum'
+        status_token:
+          type: string
+        phone:
+          type: string
+      required:
+      - phone
+      - status
+      - status_token
+    RegistrationUnit:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+      required:
+      - id
+      - label
+    ReportCase:
+      type: object
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+        urgency:
+          type: string
+        deadline_at:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        closed_at:
+          type: string
+          format: date-time
+          nullable: true
+        updates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportWorkUpdate'
+        can_rate:
+          type: boolean
+      required:
+      - active
+      - can_rate
+      - category
+      - closed_at
+      - completed_at
+      - deadline_at
+      - id
+      - updates
+      - urgency
+    ReportCreateRequest:
+      type: object
+      properties:
+        client_ref:
+          type: string
+          format: uuid
+          description: Client-generated UUID, unique per user (spec 3.5).
+        text:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        is_private:
+          type: boolean
+          default: false
+        location_id:
+          type: integer
+          description: Active BuildingLocation id in the resolved occupancy building.
+      required:
+      - client_ref
+      - location_id
+      - text
+    ReportDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        declined_reason:
+          type: string
+          nullable: true
+        is_private:
+          type: boolean
+        open_info_request:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        location_path_snapshot:
+          type: string
+        unit_label:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        triage_status:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportPhoto'
+        cases:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportCase'
+        ledger_entry_ids:
+          type: array
+          items:
+            type: integer
+      required:
+      - cases
+      - category
+      - created_at
+      - declined_reason
+      - id
+      - is_private
+      - ledger_entry_ids
+      - location_path_snapshot
+      - open_info_request
+      - photos
+      - status
+      - text
+      - triage_status
+      - unit_label
+    ReportPhoto:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        sha256:
+          type: string
+        download_url:
+          type: string
+      required:
+      - download_url
+      - filename
+      - id
+      - sha256
+    ReportPhotoUploadRequest:
+      type: object
+      properties:
+        photo:
+          type: string
+          format: binary
+          description: JPEG/PNG image; scanned by ClamAV before storage.
+      required:
+      - photo
+    ReportSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        is_private:
+          type: boolean
+        location_path_snapshot:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - id
+      - is_private
+      - location_path_snapshot
+      - status
+      - text
+    ReportWorkUpdate:
+      type: object
+      properties:
+        id:
+          type: integer
+        cause:
+          type: string
+        result:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportWorkUpdatePhoto'
+      required:
+      - cause
+      - created_at
+      - id
+      - photos
+      - result
+    ReportWorkUpdatePhoto:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        download_url:
+          type: string
+      required:
+      - download_url
+      - filename
+      - id
+      - kind
+    StatusEnum:
+      enum:
+      - SUBMITTED
+      - IN_REVIEW
+      - NEEDS_INFO
+      - DECLINED
+      - IN_PROGRESS
+      - PROPOSED
+      - COMPLETED
+      - CLOSED
+      type: string
+      description: |-
+        * `SUBMITTED` - Đã gửi
+        * `IN_REVIEW` - Đang xem xét
+        * `NEEDS_INFO` - Cần thông tin
+        * `DECLINED` - Đã từ chối
+        * `IN_PROGRESS` - Đang thực hiện
+        * `PROPOSED` - Đã đề xuất
+        * `COMPLETED` - Hoàn tất
+        * `CLOSED` - Đã đóng
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        expiry:
+          type: string
+          format: date-time
+      required:
+      - expiry
+      - token
+    VehiclePlate:
+      type: object
+      properties:
+        id:
+          type: integer
+        plate:
+          type: string
+        status:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+        review_note:
+          type: string
+      required:
+      - id
+      - plate
+      - review_note
+      - status
+      - submitted_at
+    Verification:
+      type: object
+      properties:
+        decision:
+          type: string
+        verified_by:
+          type: string
+        verified_at:
+          type: string
+          format: date-time
+      required:
+      - decision
+      - verified_at
+      - verified_by
+  securitySchemes:
+    GateDevice:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: GateDevice <credential>
+    knoxApiToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

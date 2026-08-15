@@ -1,0 +1,46 @@
+{% load i18n static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2f3a8f">
+  <title>{% block title %}{% trans "Management" %} · LamTo{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'web/brand/favicon.png' %}">
+  <link rel="stylesheet" href="{% static 'web/app.css' %}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">{% trans "Skip to content" %}</a>
+  <header class="site-header" role="banner">
+    <div class="brand">
+      <img class="brand-mark" src="{% static 'web/brand/lamto-mark.png' %}" alt="">
+      <span class="brand-name">{% trans "LamTo Management" %}</span>
+    </div>
+  </header>
+
+  {% if messages %}
+  <section class="flash-messages" role="status" tabindex="-1" aria-labelledby="messages-heading">
+    <h2 id="messages-heading" class="sr-only">{% trans "Messages" %}</h2>
+    <ul class="messages">
+    {% for message in messages %}
+    <li class="message message-{{ message.tags }}"><span class="status-icon" aria-hidden="true">●</span> <strong>{% if "error" in message.tags %}{% trans "Error:" %}{% elif "warning" in message.tags %}{% trans "Warning:" %}{% elif "info" in message.tags %}{% trans "Info:" %}{% else %}{% trans "Success:" %}{% endif %}</strong> {{ message }}</li>
+    {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <main id="main" class="site-main" role="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    window.lamtoI18n = {
+      copied: "{% filter escapejs %}{% trans 'Copied' %}{% endfilter %}",
+      copyFailed: "{% filter escapejs %}{% trans 'Copy failed. Select the value and copy it manually.' %}{% endfilter %}"
+    };
+  </script>
+  <script src="{% static 'web/staff.js' %}" defer></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

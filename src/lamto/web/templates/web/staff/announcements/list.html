@@ -1,0 +1,36 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n staff_extras %}
+{% block title %}{% trans "Announcements" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="announcements-heading">
+  <div class="panel-header">
+    <div>
+      <h1 id="announcements-heading">{% trans "Announcements" %}</h1>
+      <p class="hint">{% blocktrans with building=membership.building.name %}Notices for {{ building }}.{% endblocktrans %}</p>
+    </div>
+    <a class="button button-primary" href="{% url 'web:staff-announcement-create' %}">{% trans "Publish announcement" %}</a>
+  </div>
+
+  {% translate "Search announcements" as search_label %}
+  {% translate "Title or body…" as search_placeholder %}
+  {% include "web/staff/_list_toolbar.html" with list_meta=list_meta search_label=search_label search_placeholder=search_placeholder %}
+
+  <ul class="task-list">
+    {% for announcement in announcements %}
+    <li>
+      <a class="task-row" href="{% url 'web:staff-announcement-detail' announcement.pk %}">
+        <span class="task-action">{{ announcement.get_state_display }}</span>
+        <span class="task-subject">{{ announcement.title }} · {% trans "Revision" %} {{ announcement.revision }} · {{ announcement.created_by }} · {{ announcement.created_at|staff_datetime }}</span>
+      </a>
+    </li>
+    {% empty %}
+    <li class="empty-state">
+      <p>{% if list_meta.query %}{% trans "No announcements match your search." %}{% else %}{% trans "No announcements have been published." %}{% endif %}</p>
+      {% if list_meta.query %}<p class="hint"><a class="text-link clear-filters" href="{% url 'web:staff-announcement-list' %}">{% trans "Clear filters" %}</a></p>{% else %}<p class="hint">{% trans "Publish the first notice with Publish announcement." %}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% translate "Announcement pages" as pagination_label %}
+  {% include "web/staff/_pagination.html" with list_meta=list_meta pagination_label=pagination_label %}
+</section>
+{% endblock %}

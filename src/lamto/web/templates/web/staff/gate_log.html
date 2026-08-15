@@ -1,0 +1,18 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n staff_extras %}
+{% block title %}{% trans "Gate activity" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-header"><h1>{% trans "Gate activity" %}</h1><p class="hint">{% trans "Complete gate event rows are deleted within 24 hours. No durable movement history exists." %}</p></div>
+  <ul class="task-list">
+    {% for x in events %}
+    <li><article class="task-row">
+      <strong class="task-action">{% if x.matched_occupancy %}{{ x.matched_occupancy.user.display_name }}{% else %}{% trans "Unrecognized" %}{% endif %}</strong>
+      <span class="task-subject">{{ x.get_kind_display }}{% if x.matched_occupancy %} · {{ x.matched_occupancy.unit.label }}{% endif %}{% if x.normalized_plate_text %} · {{ x.normalized_plate_text }}{% endif %}{% if x.match_score is not None %} · {% trans "Score" %} {{ x.match_score|floatformat:2 }}{% endif %}</span>
+      <span class="task-meta"><span>{{ x.occurred_at|staff_datetime }} · {{ x.device.label }} · {{ x.get_direction_display }}</span><span class="hint">{% trans "Deleted within 24 hours" %}</span></span>
+    </article></li>
+    {% empty %}<li class="empty-state">{% trans "No activity remains in the 24-hour window." %}</li>{% endfor %}
+  </ul>
+  {% if events_capped %}<p class="hint">{% blocktrans with count=events|length %}Showing the latest {{ count }} gate events.{% endblocktrans %}</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,175 @@
+# Nightly: full Flutter unit suite + §6.5 integration_test happy path
+# against a compose-seeded backend (A7).
+#
+# Schedule: 02:15 UTC daily. Also runnable via workflow_dispatch.
+# Does not use or commit Firebase secrets — push is out of scope here
+# (see docs/ops/push-smoke-checklist.md for real-device push).
+
+name: Flutter nightly integration
+
+on:
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: flutter-nightly
+  cancel-in-progress: true
+
+env:
+  # Non-production fixture only — matches src/lamto/testing/factories.py
+  INTEGRATION_IDENTIFIER: pilot-resident@pilot.lamto.test
+  INTEGRATION_PASSWORD: pilot-test-secret
+  SECRET_KEY: nightly-ci-not-for-production
+  POSTGRES_DB: lamto
+  POSTGRES_USER: lamto_owner
+  POSTGRES_PASSWORD: lamto-owner
+  POSTGRES_HOST: 127.0.0.1
+  POSTGRES_PORT: '5432'
+  POSTGRES_SERVICE_ROLE: lamto_service
+  POSTGRES_APPLICATION_ROLE: lamto_app
+  POSTGRES_EXECUTOR_ROLE: lamto_writer
+  PRIVATE_STORAGE_ENDPOINT_URL: http://127.0.0.1:9000
+  PRIVATE_STORAGE_BUCKET: lamto-documents
+  PRIVATE_STORAGE_ACCESS_KEY: lamto-local
+  PRIVATE_STORAGE_SECRET_KEY: lamto-local-secret
+  CLAMAV_HOST: 127.0.0.1
+  CLAMAV_PORT: '3310'
+  AI_TRIAGE_URL: ''
+  AI_TRIAGE_TOKEN: ''
+  AI_TRIAGE_ALLOW_HTTP: '1'
+  DEBUG: '1'
+  PILOT_ALLOW_FIXTURES: '1'
+  EVIDENCE_ANCHORING_BACKEND: disabled
+  ALLOWED_HOSTS: localhost,127.0.0.1
+  FIREBASE_CREDENTIALS: ''
+  PUSH_ENABLED: ''
+
+jobs:
+  unit:
+    name: Analyze + unit/widget suite
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: flutter pub get
+      - name: Make API scripts executable
+        run: chmod +x tool/generate_api.sh tool/check_api_generated.sh
+      - name: API client drift gate
+        run: ./tool/check_api_generated.sh
+      - name: Analyze (lib + integration_test)
+        run: flutter analyze lib integration_test
+      - run: flutter test
+
+  integration-happy-path:
+    name: §6.5 happy path vs seeded backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start compose dependencies (db + minio)
+        run: docker compose up -d db minio minio-init
+
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 40); do
+            if docker compose exec -T db pg_isready -U lamto_bootstrap -d lamto; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Postgres not ready" >&2
+          exit 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Python package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Migrate + seed pilot fixture
+        run: |
+          python manage.py migrate --noinput
+          python manage.py seed_pilot --fixture
+
+      - name: Start Django API
+        run: |
+          nohup python manage.py runserver 0.0.0.0:8000 \
+            > /tmp/lamto-nightly-api.log 2>&1 &
+          echo $! > /tmp/lamto-nightly-api.pid
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8000/api/v1/ 2>/dev/null \
+              || curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/v1/auth/login \
+              | grep -qE '^(200|401|403|405)'; then
+              echo "API up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API failed to start" >&2
+          cat /tmp/lamto-nightly-api.log >&2 || true
+          exit 1
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Linux desktop build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-14-dev \
+            libsecret-1-dev libjsoncpp-dev \
+            xvfb
+          # Note: libsecret-1-dev satisfies native plugin *link* deps.
+          # Headless runners still lack a user session keyring. The
+          # integration_test harness uses TokenStore.memory() (see app_test.dart)
+          # so login does not depend on a live secret service.
+
+      - name: Flutter pub get
+        working-directory: app
+        run: flutter pub get
+
+      - name: Run integration_test happy path (Linux + xvfb)
+        working-directory: app
+        run: |
+          xvfb-run -a flutter test integration_test/app_test.dart -d linux \
+            --dart-define=API_BASE_URL=http://127.0.0.1:8000 \
+            --dart-define=INTEGRATION_IDENTIFIER=${{ env.INTEGRATION_IDENTIFIER }} \
+            --dart-define=INTEGRATION_PASSWORD=${{ env.INTEGRATION_PASSWORD }}
+
+      - name: API log on failure
+        if: failure()
+        run: |
+          echo "---- API log ----"
+          cat /tmp/lamto-nightly-api.log || true
+          echo "---- compose ps ----"
+          docker compose ps || true
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f /tmp/lamto-nightly-api.pid ]; then
+            kill "$(cat /tmp/lamto-nightly-api.pid)" 2>/dev/null || true
+          fi
+          docker compose down || true

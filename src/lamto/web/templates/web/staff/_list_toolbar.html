@@ -1,0 +1,40 @@
+{% load i18n %}
+{% translate "Search records" as default_search_label %}
+{% translate "ID, category, or name…" as default_search_placeholder %}
+{% translate "Task type" as default_secondary_filter_label %}
+<form method="get" class="queue-toolbar" role="search">
+  <label for="record-search">{{ search_label|default:default_search_label }}
+    <input id="record-search" name="q" value="{{ list_meta.query }}" placeholder="{{ search_placeholder|default:default_search_placeholder }}">
+  </label>
+  {% if filters %}
+  <label for="record-filter">{{ filter_label }}
+    <select id="record-filter" name="{{ filter_param|default:'status' }}">
+      <option value="">{% trans "All" %}</option>
+      {% for f in filters %}
+      <option value="{{ f.value }}" {% if f.active %}selected{% endif %}>{{ f.label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  {% if secondary_filters %}
+  <label for="record-filter-secondary">{{ secondary_filter_label|default:default_secondary_filter_label }}
+    <select id="record-filter-secondary" name="{{ secondary_filter_param|default:'kind' }}">
+      <option value="">{% trans "All task types" %}</option>
+      {% for f in secondary_filters %}
+      <option value="{{ f.value }}" {% if f.active %}selected{% endif %}>{{ f.label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  {% if list_meta.sort_options|length > 1 %}
+  <label for="record-sort">{% trans "Sort by" %}
+    <select id="record-sort" name="sort">
+      {% for opt in list_meta.sort_options %}
+      <option value="{{ opt.value }}" {% if opt.active %}selected{% endif %}>{{ opt.label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <button type="submit" class="button button-secondary">{% trans "Apply filters" %}</button>
+  {% if list_meta.query or list_meta.sort or filters_active %}<a class="text-link clear-filters" href="?">{% trans "Clear filters" %}</a>{% endif %}
+</form>

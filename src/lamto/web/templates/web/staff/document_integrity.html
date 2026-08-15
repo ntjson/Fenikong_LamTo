@@ -1,0 +1,21 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n %}
+{% block title %}{% trans "Download blocked" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="integrity-heading">
+  <h1 id="integrity-heading">{% trans "Download blocked" %}</h1>
+  {% if storage_unavailable %}
+  <p class="lede">{% trans "The document store could not be read just now, so this file's integrity could not be confirmed. Nothing was changed." %}</p>
+  <p>{% blocktrans with name=version.filename %}LamTo refuses to serve “{{ name }}” without confirming it, rather than hand over evidence it cannot vouch for. This is usually temporary — try again in a few minutes.{% endblocktrans %}</p>
+  <p>{% trans "If the problem continues, check storage under Operations health." %}</p>
+  {% else %}
+  <p class="lede">{% trans "The stored file no longer matches the fingerprint recorded when it was published." %}</p>
+  <p>{% blocktrans with name=version.filename %}“{{ name }}” failed its integrity check, so LamTo blocked the download instead of serving evidence that may have been altered. The published record and its recorded fingerprint are unchanged; only the stored file is in question.{% endblocktrans %}</p>
+  <p>{% trans "Treat this as an exception to investigate, not a broken link: review Operations health and record what you find." %}</p>
+  {% endif %}
+  <p>
+    <a class="button button-primary" href="{% url 'web:ops-health' %}">{% trans "Review Operations health" %}</a>
+    <a class="button button-secondary" href="{% url 'web:action-inbox' %}">{% trans "Back to Action inbox" %}</a>
+  </p>
+</section>
+{% endblock %}

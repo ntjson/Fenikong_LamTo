@@ -1,0 +1,18 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n %}
+{% block title %}{% trans "Gate registrations" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>{% trans "Gate registrations" %}</h1>
+  <section class="workflow-section">
+    <h2>{% trans "Faces" %}</h2>
+    <p class="hint">{% trans "Revoking deletes the resident's face data permanently and closes gate access. It cannot be undone; the resident must enrol again." %}</p>
+    <ul class="task-list">{% for x in faces %}<li>{% blocktrans with name=x.occupancy.user.display_name asvar revoke_label %}Revoke face for {{ name }}{% endblocktrans %}<div class="task-row task-row-simple"><strong class="task-action">{{ x.occupancy.user.display_name }}</strong><span class="task-subject">{% blocktrans with unit=x.occupancy.unit.label %}Unit {{ unit }}{% endblocktrans %}</span><form method="post" action="{% url 'web:gate-face-decide' x.pk %}" class="confirm-revoke" data-busy-on-submit>{% csrf_token %}<input type="hidden" name="next" value="{% url 'web:gate-registrations' %}"><label class="confirm-label"><input type="checkbox" name="confirm" value="1" required> {% blocktrans with name=x.occupancy.user.display_name %}Permanently remove {{ name }}'s face{% endblocktrans %}</label><button class="button button-secondary" name="decision" value="revoke" aria-label="{{ revoke_label }}">{% trans "Revoke face" %}</button></form></div></li>{% empty %}<li class="empty-state">{% trans "No approved faces." %}</li>{% endfor %}</ul>
+  </section>
+  <section class="workflow-section">
+    <h2>{% trans "Plates" %}</h2>
+    <p class="hint">{% trans "Revoking removes the plate's gate access permanently. It cannot be undone; the resident must enrol the plate again." %}</p>
+    <ul class="task-list">{% for x in plates %}<li>{% blocktrans with plate=x.plate asvar revoke_label %}Revoke plate {{ plate }}{% endblocktrans %}<div class="task-row task-row-simple"><strong class="task-action">{{ x.plate }}</strong><span class="task-subject">{% blocktrans with resident=x.occupancy.user.display_name unit=x.occupancy.unit.label %}{{ resident }}, unit {{ unit }}{% endblocktrans %}</span><form method="post" action="{% url 'web:gate-plate-decide' x.pk %}" class="confirm-revoke" data-busy-on-submit>{% csrf_token %}<input type="hidden" name="next" value="{% url 'web:gate-registrations' %}"><label class="confirm-label"><input type="checkbox" name="confirm" value="1" required> {% blocktrans with plate=x.plate %}Permanently remove plate {{ plate }}{% endblocktrans %}</label><button class="button button-secondary" name="decision" value="revoke" aria-label="{{ revoke_label }}">{% trans "Revoke plate" %}</button></form></div></li>{% empty %}<li class="empty-state">{% trans "No approved plates." %}</li>{% endfor %}</ul>
+  </section>
+</section>
+{% endblock %}

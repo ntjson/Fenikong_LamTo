@@ -1,0 +1,14 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Page not found" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="error-heading">
+  <h1 id="error-heading">{% trans "Page not found" %}</h1>
+  <p>{% trans "The address may be incorrect, or the page may no longer exist." %}</p>
+  {% if user.is_authenticated %}
+  <a class="button button-primary" href="{% url 'web:action-inbox' %}">{% trans "Back to Action inbox" %}</a>
+  {% else %}
+  <a class="button button-primary" href="{% url 'login' %}">{% trans "Go to sign in" %}</a>
+  {% endif %}
+</section>
+{% endblock %}

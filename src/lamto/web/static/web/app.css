@@ -1,0 +1,1161 @@
+:root {
+  --color-bg: #e9edf6;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef1f8;
+  --color-ink: #1c2434;
+  --color-muted: #5b6577;
+  --color-brand: #2f3a8f;
+  --color-brand-hover: #273178;
+  --color-brand-active: #202864;
+  --color-brand-ink: #ffffff;
+  --color-border: #a3aec6;
+  --color-control-border: #8a8fa8;
+  --color-focus: #0b57d0;
+  --color-focus-on-dark: #ffffff;
+  --color-success: #0f7a45;
+  --color-success-bg: #e7f6ee;
+  --color-warning: #8a5c00;
+  --color-warning-bg: #fff6dd;
+  --color-error: #b42318;
+  --color-error-bg: #fef3f2;
+  --color-info: #175cd3;
+  --color-info-bg: #eff8ff;
+  --color-staff-nav: #1c2434;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --radius: 12px;
+  --touch: 44px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--color-ink);
+  background: var(--color-bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  line-height: 1.5;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+img {
+  max-width: 100%;
+}
+
+a {
+  color: var(--color-brand);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--color-brand);
+  color: var(--color-brand-ink);
+  padding: var(--space-2) var(--space-3);
+  z-index: 100;
+}
+
+.skip-link:focus {
+  left: var(--space-3);
+  top: var(--space-3);
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-4);
+  row-gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.site-header .building-label {
+  margin: 0;
+}
+
+.logout-form {
+  margin-inline-start: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  color: var(--color-brand);
+}
+
+.brand-mark {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.membership-switcher {
+  margin: 0;
+}
+
+.membership-switcher-summary {
+  min-height: var(--touch);
+  cursor: pointer;
+  list-style: none;
+}
+
+.membership-switcher-summary::-webkit-details-marker {
+  display: none;
+}
+
+.membership-switcher-summary::after {
+  content: "▾";
+  margin-inline-start: var(--space-2);
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.membership-bar-disclosure {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+}
+
+.message-warning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+
+.message-info {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+}
+
+.building-label {
+  margin: var(--space-2) 0 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.site-main {
+  width: min(42rem, 100%);
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.staff {
+  padding-bottom: var(--space-4);
+}
+
+.staff .site-main,
+.staff .messages {
+  width: min(72rem, 100%);
+}
+
+.staff .panel {
+  box-shadow: none;
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.staff .panel > :last-child,
+.staff .workflow-section > :last-child,
+.staff .stack-form > :last-child {
+  margin-bottom: 0;
+}
+
+.panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.panel-header h1,
+.panel-header h2,
+.panel-header p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 var(--space-3);
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+}
+
+h3 {
+  font-size: 1rem;
+}
+
+.lede,
+.hint,
+.empty {
+  color: var(--color-muted);
+}
+
+.lede {
+  max-width: 70ch;
+}
+
+.balance-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+}
+
+.amount {
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.currency {
+  color: var(--color-muted);
+}
+
+.stat-grid {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.stat-grid div,
+.detail-list div {
+  margin: 0;
+}
+
+.stat-grid dt,
+.detail-list dt {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.stat-grid dd,
+.detail-list dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.record-layout {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.record-summary,
+.record-action {
+  min-width: 0;
+}
+
+.workflow-section {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+}
+
+.record-action > .workflow-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* The primary-action emphasis survives even when the section leads its column. */
+.record-action > .workflow-section.workflow-primary:first-child {
+  border-top: 2px solid var(--color-brand);
+  padding-top: var(--space-5);
+}
+
+.workflow-section > h2 {
+  margin-top: 0;
+}
+
+/* Secondary workflows fold behind a native disclosure; the heading stays inline
+   with the marker so the summary reads as one control. */
+details.workflow-section > summary {
+  min-height: var(--touch);
+  cursor: pointer;
+}
+
+details.workflow-section > summary > .h2 {
+  display: inline;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+details.workflow-section[open] > summary {
+  margin-bottom: var(--space-4);
+}
+
+.workflow-section > .status {
+  margin: 0 0 var(--space-3);
+}
+
+.panel > .workflow-section:first-of-type {
+  margin-top: var(--space-5);
+}
+
+.technical-proof {
+  margin-top: var(--space-5);
+}
+
+.technical-proof summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  color: var(--color-brand);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* display: flex suppresses ::marker in Chromium; the disclosure affordance
+   comes back as an explicit glyph. */
+.technical-proof summary::before {
+  content: "▸";
+  margin-right: var(--space-2);
+}
+
+.technical-proof[open] > summary::before {
+  content: "▾";
+}
+
+.technical-proof pre {
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  background: var(--color-bg);
+  padding: var(--space-3);
+  border-radius: 8px;
+}
+
+.messages {
+  list-style: none;
+  width: min(42rem, 100%);
+  margin: var(--space-3) auto 0;
+  padding: 0 var(--space-4);
+}
+
+/* A consequence is a fact to read before acting, not a failure: quiet tonal
+   block, no semantic role. */
+.consequence-note {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
+  border-radius: 10px;
+  background: var(--color-surface-muted);
+}
+
+/* The one pill vocabulary: semantic status and deadline tone share the shape. */
+.status,
+.deadline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* A deadline is one token; it never breaks mid-date. */
+.deadline-badge {
+  white-space: nowrap;
+}
+
+.status-open,
+.status-info {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+}
+
+.status-verified,
+.status-resolved {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.status-mismatch {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+.status-warning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+
+.status-icon {
+  font-size: 0.85rem;
+}
+
+a.status {
+  min-height: var(--touch);
+  align-items: center;
+  text-decoration: none;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-control-border);
+  background: var(--color-surface);
+  color: var(--color-brand);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 180ms cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 180ms cubic-bezier(0.25, 1, 0.5, 1),
+    color 180ms cubic-bezier(0.25, 1, 0.5, 1),
+    transform 180ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.button-primary {
+  background: var(--color-brand);
+  color: var(--color-brand-ink);
+}
+
+.button-primary:hover {
+  background: var(--color-brand-hover);
+}
+
+.button:active,
+.button-primary:active,
+.button-secondary:active {
+  transform: translateY(1px);
+}
+
+.button-secondary {
+  background: var(--color-surface);
+  color: var(--color-brand);
+  border-color: var(--color-control-border);
+}
+
+.button:not(.button-primary):hover,
+.button-secondary:hover {
+  background: var(--color-bg);
+  border-color: var(--color-brand);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.text-link {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.stack-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.stack-form > p {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+/* Consent rows: the checkbox sits beside its label, box first. */
+.stack-form > p:has(> input[type="checkbox"]) {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+
+.stack-form > p:has(> input[type="checkbox"]) > input[type="checkbox"] {
+  grid-column: 1;
+  grid-row: 1;
+  margin-top: 0.2rem;
+}
+
+.stack-form > p:has(> input[type="checkbox"]) > label {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.membership-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.membership-form select {
+  flex: 1 1 18rem;
+}
+
+.queue-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.queue-toolbar label {
+  display: grid;
+  flex: 1 1 15rem;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+
+.clear-filters {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+}
+
+.queue-count {
+  margin: 0;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.task-queue,
+.task-group {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.task-group + .task-group {
+  margin-top: var(--space-4);
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.task-list > li {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.task-list-item,
+.task-list > li:not(.empty-state) {
+  padding: var(--space-3) 0;
+}
+
+.task-row {
+  display: grid;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: var(--space-3) 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.task-row:hover {
+  background: var(--color-bg);
+}
+
+.task-row:focus-visible {
+  background: var(--color-bg);
+}
+
+.task-row img {
+  max-width: 100%;
+  height: auto;
+}
+
+.task-action {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.task-subject {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.task-amount {
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.empty-state {
+  padding: var(--space-6) 0;
+}
+
+.empty-state > p,
+.empty-state > h2 {
+  max-width: 65ch;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.field label,
+.field legend {
+  font-weight: 600;
+}
+
+/* Radio decisions: one row per option, the whole row is the target. */
+.choice-group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.choice-group .choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: var(--space-2) 0;
+  font-weight: 400;
+}
+
+.choice input[type="radio"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  flex: none;
+  accent-color: var(--color-brand);
+}
+
+/* Irreversible row actions arm with an explicit tick before the button. */
+.confirm-revoke {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.confirm-revoke .confirm-label {
+  display: inline-flex;
+  min-height: var(--touch);
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.confirm-revoke input[type="checkbox"] {
+  margin-top: 0.15rem;
+}
+
+/* Exception responses: an append-only trail of named sign-offs. */
+.response-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.response-item {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.response-item:last-child {
+  border-bottom: 0;
+}
+
+.response-meta {
+  margin: 0 0 var(--space-1);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.response-note {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.input,
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-control-border);
+  border-radius: 10px;
+  font: inherit;
+  background: var(--color-surface);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--color-brand);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--color-brand);
+}
+
+textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.field-error,
+.form-errors,
+.errorlist {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.errorlist {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+}
+
+.stack-form .messages {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* The region receives focus programmatically after a mutation; it is not a
+   tab stop, so the message block itself is the indicator. */
+.flash-messages:focus {
+  outline: none;
+}
+
+.message {
+  padding: var(--space-3);
+  border-radius: 10px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.message-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* Submitting: the pressed button says so, the rest of the form goes inert. */
+form[aria-busy="true"] {
+  cursor: wait;
+}
+
+form[aria-busy="true"] .button {
+  pointer-events: none;
+  opacity: 0.62;
+}
+
+.hash {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+
+code {
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 720px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .site-main {
+    padding-top: var(--space-5);
+  }
+
+  .record-layout {
+    grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 0.8fr);
+  }
+
+  /* Triage: the prefilled form is the working surface, so it takes the width. */
+  .record-layout-triage {
+    grid-template-columns: minmax(16rem, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .detail-list.detail-list-wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .task-row {
+    grid-template-columns: minmax(10rem, 1fr) minmax(14rem, 2fr) minmax(8rem, 0.8fr) minmax(10rem, 1fr);
+    gap: var(--space-4);
+    align-items: center;
+  }
+
+  /* Tabular figures only line up when the column is end-aligned. */
+  .task-amount {
+    text-align: end;
+  }
+
+  .task-meta {
+    justify-content: flex-end;
+    text-align: end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.staff-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-staff-nav);
+}
+
+.staff-nav a {
+  color: var(--color-brand-ink);
+  text-decoration: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 180ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.staff-nav a.is-active,
+.staff-nav a:hover {
+  background: var(--color-brand);
+}
+
+.staff-nav a:focus-visible {
+  outline: 3px solid var(--color-focus-on-dark);
+  outline-offset: 2px;
+}
+
+
+.sub-nav,
+.finance-nav,
+.gate-nav,
+.building-nav,
+.ops-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sub-nav,
+.finance-nav,
+.gate-nav,
+.building-nav,
+.ops-nav {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sub-nav a,
+.finance-nav a,
+.gate-nav a,
+.building-nav a,
+.ops-nav a,
+.back-link {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.sub-nav a,
+.finance-nav a,
+.gate-nav a,
+.building-nav a,
+.ops-nav a {
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.sub-nav a:hover,
+.finance-nav a:hover,
+.gate-nav a:hover,
+.building-nav a:hover,
+.ops-nav a:hover {
+  background: var(--color-bg);
+}
+
+.sub-nav a.is-active,
+.sub-nav a.is-active:hover,
+.finance-nav a.is-active,
+.finance-nav a.is-active:hover,
+.gate-nav a.is-active,
+.gate-nav a.is-active:hover,
+.building-nav a.is-active,
+.building-nav a.is-active:hover,
+.ops-nav a.is-active,
+.ops-nav a.is-active:hover {
+  background: var(--color-brand);
+  color: var(--color-brand-ink);
+}
+
+.membership-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.membership-bar select,
+.membership-bar button {
+  min-height: var(--touch);
+}
+
+/* Neutral deadline: no tone until it is soon or overdue. */
+.deadline-badge {
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+}
+
+.deadline-badge.deadline-soon {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.deadline-badge.deadline-overdue {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.deadline-badge.deadline-neutral {
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.hash-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hash-value .hash {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.button-compact {
+  position: relative;
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.workflow-section.workflow-primary {
+  border-top-color: var(--color-brand);
+  border-top-width: 2px;
+}
+
+.workflow-primary > h2 {
+  margin-top: 0;
+}
+
+@media (min-width: 720px) {
+  .task-row.task-row-simple {
+    grid-template-columns: minmax(14rem, 2.4fr) minmax(8rem, 0.8fr) minmax(10rem, 1fr);
+  }
+}
+
+
+/* Accountability chain — ordered stages, text labels carry meaning */
+.accountability-chain {
+  margin: var(--space-5) 0 0;
+}
+
+.accountability-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.accountability-stage {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.accountability-stage-label {
+  font-weight: 600;
+}
+
+.accountability-stage-state {
+  color: inherit;
+  font-weight: 700;
+}
+
+.accountability-stage-complete {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: transparent;
+}
+
+.accountability-stage-current {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+  border-color: transparent;
+}
+
+.accountability-stage-blocked {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border-color: transparent;
+}
+
+.accountability-stage-pending {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-color: transparent;
+}
+
+.accountability-stage-upcoming {
+  color: var(--color-muted);
+  background: transparent;
+}
+
+/* Fund balance chart (staff fund page + action inbox card) */
+.chart-box { position: relative; height: 260px; min-width: 0; }
+.chart-box-compact { height: 140px; }
+.range-toggle { display: flex; gap: 8px; }
+
+.hash-block { word-break: break-all; }
+.stack-form-follow { margin-top: var(--space-4); }
+.inline-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.evidence-thumbs { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.evidence-thumb { display: inline-flex; align-items: center; min-height: var(--touch); padding: var(--space-1) var(--space-2); border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-muted); }
+.bill-qr { max-width: 16rem; }
+.bill-qr svg { width: 100%; height: auto; display: block; }
+.mfa-qr { max-width: 12rem; margin-bottom: var(--space-2); }
+.mfa-qr svg { width: 100%; height: auto; display: block; }
+.health-detail { color: var(--color-muted); max-width: 65ch; }
+.brand-name { font-weight: 700; letter-spacing: 0.02em; }
+.flash-messages { margin-bottom: var(--space-4); }
+
+/* dark-* tokens are resident-app only; web staff has no prefers-color-scheme theme. */

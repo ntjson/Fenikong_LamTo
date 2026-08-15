@@ -1,0 +1,37 @@
+{% load i18n humanize staff_extras %}
+{% translate "Nothing needs attention here." as default_empty_label %}
+{% if list_meta %}
+<p class="queue-count">{% staff_result_count list_meta.page.paginator.count %}{% if list_meta.query %} {% blocktrans with q=list_meta.query %}for “{{ q }}”{% endblocktrans %}{% endif %}</p>
+{% endif %}
+<ul class="task-list">
+  {% for item in items %}
+  <li>
+    <a class="task-row" href="{{ item.url }}">
+      <span class="task-action">{% if item.next_action %}{{ item.next_action }}{% else %}<span class="sr-only">{% trans "No next action" %}</span><span aria-hidden="true">—</span>{% endif %}</span>
+      <span class="task-subject">{{ item.title }}{% if item.status %} · {{ item.status }}{% endif %}</span>
+      <span class="task-amount">{% if item.amount_vnd != None %}{{ item.amount_vnd|intcomma }} VND{% else %}<span class="sr-only">{% trans "No amount recorded" %}</span><span aria-hidden="true">—</span>{% endif %}</span>
+      <span class="task-meta">
+        {% if item.deadline %}
+        <span class="deadline-badge deadline-{{ item.deadline_tone|default:'neutral' }}">{% trans "Deadline" %} {{ item.deadline|staff_datetime }}</span>
+        {% else %}
+        <span class="sr-only">{% trans "No deadline set" %}</span><span aria-hidden="true">—</span>
+        {% endif %}
+      </span>
+    </a>
+  </li>
+  {% empty %}
+  <li class="empty-state">
+    {% if list_meta.query %}
+    <p>{% blocktrans with q=list_meta.query %}No records match “{{ q }}”. Clear the search to see every record.{% endblocktrans %}</p>
+    <p class="hint"><a class="text-link clear-filters" href="?">{% trans "Clear filters" %}</a></p>
+    {% elif filters_active %}
+    <p>{% trans "No records match your filters." %}</p>
+    <p class="hint"><a class="text-link clear-filters" href="?">{% trans "Clear filters" %}</a></p>
+    {% else %}
+    <p>{{ empty_label|default:default_empty_label }}</p>
+    <p class="hint">{% trans "Check the action inbox for your next responsibility." %}</p>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% include "web/staff/_pagination.html" %}

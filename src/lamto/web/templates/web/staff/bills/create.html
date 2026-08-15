@@ -1,0 +1,22 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n staff_extras %}
+{% block title %}{% trans "Issue bill" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="issue-bill-heading">
+  <h1 id="issue-bill-heading">{% trans "Issue bill" %}</h1>
+  <p class="hint">{% blocktrans with building=membership.building.name %}Issue a resident bill for {{ building }}.{% endblocktrans %}</p>
+  <form method="post" action="{% url 'web:staff-bill-create' %}" enctype="multipart/form-data" class="stack-form" data-busy-on-submit>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}
+    <div class="field">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field|describe_errors }}
+      {% if field.help_text %}<p class="hint">{{ field.help_text }}</p>{% endif %}
+      {% if field.errors %}<p class="field-error" id="{{ field.auto_id }}-error">{{ field.errors|striptags }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="button button-primary">{% trans "Issue bill" %}</button>
+  </form>
+</section>
+{% endblock %}

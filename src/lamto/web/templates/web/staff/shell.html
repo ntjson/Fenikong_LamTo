@@ -1,0 +1,115 @@
+{% load i18n static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2f3a8f">
+  <title>{% block title %}{% trans "Management" %} · LamTo{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'web/brand/favicon.png' %}">
+  <link rel="stylesheet" href="{% static 'web/app.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="staff">
+  <a class="skip-link" href="#main">{% trans "Skip to content" %}</a>
+  <header class="site-header" role="banner">
+    <div class="brand">
+      <img class="brand-mark" src="{% static 'web/brand/lamto-mark.png' %}" alt="">
+      <span class="brand-name">{% trans "LamTo Management" %}</span>
+    </div>
+    {% if membership and membership_count <= 1 %}
+    <p class="building-label">
+      {{ membership.building.name }}
+    </p>
+    {% elif membership and membership_count > 1 %}
+    <details class="membership-switcher">
+      <summary class="building-label membership-switcher-summary">
+        <span class="sr-only">{% trans "Switch building" %}: </span>{{ membership.building.name }}
+      </summary>
+      <div class="membership-bar membership-bar-disclosure" role="region" aria-label="{% trans 'Active membership' %}">
+        <form method="post" action="{% url 'web:switch-building' %}" class="membership-form" data-busy-on-submit>
+          {% csrf_token %}
+          <label for="active-building">{% trans "Switch building" %}</label>
+          <select id="active-building" name="building" class="input">
+            {% for m in memberships %}
+            <option value="{{ m.pk }}" {% if membership and m.pk == membership.pk %}selected{% endif %}>
+              {{ m.building.name }}
+            </option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="button button-secondary">{% trans "Switch" %}</button>
+        </form>
+      </div>
+    </details>
+    {% endif %}
+    <form method="post" action="{% url 'logout' %}" class="logout-form" data-busy-on-submit>
+      {% csrf_token %}
+      <button type="submit" class="button button-secondary button-compact">{% trans "Sign out" %}</button>
+    </form>
+  </header>
+
+  <nav class="staff-nav" role="navigation" aria-label="{% trans 'Management' %}">
+    {% for item in nav_items %}
+    <a class="{% if item.is_active %}is-active{% endif %}"
+       {% if item.is_active %}aria-current="page"{% endif %}
+       href="{% url item.url_name %}">{{ item.label }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if nav_top_active == "finance" and finance_nav_items %}
+  <nav class="sub-nav finance-nav" aria-label="{% trans 'Finance' %}">
+    {% for item in finance_nav_items %}
+    <a href="{% url item.url_name %}"{% if finance_active == item.active_key %} class="is-active" aria-current="page"{% endif %}>{{ item.label }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  {% if nav_top_active == "building" and building_nav_items %}
+  <nav class="sub-nav building-nav" aria-label="{% trans 'Building' %}">
+    {% for item in building_nav_items %}
+    <a href="{% url item.url_name %}"{% if building_active == item.active_key or nav_active == item.active_key or nav_active == "gate" and item.active_key == "gate" %} class="is-active" aria-current="page"{% endif %}>{{ item.label }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  {% if nav_active == "gate" and gate_nav_items %}
+  <nav class="sub-nav gate-nav" aria-label="{% trans 'Gate' %}">
+    {% for item in gate_nav_items %}
+    <a href="{% url item.url_name %}"{% if gate_active == item.active_key %} class="is-active" aria-current="page"{% endif %}>{{ item.label }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  {% if nav_top_active == "ops" and ops_nav_items %}
+  <nav class="sub-nav ops-nav" aria-label="{% trans 'Ops' %}">
+    {% for item in ops_nav_items %}
+    <a href="{% url item.url_name %}"{% if ops_active == item.active_key %} class="is-active" aria-current="page"{% endif %}>{{ item.label }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <main id="main" class="site-main" role="main">
+    {% if messages %}
+    <section class="flash-messages" role="status" tabindex="-1" aria-labelledby="messages-heading">
+      <h2 id="messages-heading" class="sr-only">{% trans "Messages" %}</h2>
+      <ul class="messages">
+      {% for message in messages %}
+      <li class="message message-{{ message.tags }}"><span class="status-icon" aria-hidden="true">●</span> <strong>{% if "error" in message.tags %}{% trans "Error:" %}{% elif "warning" in message.tags %}{% trans "Warning:" %}{% elif "info" in message.tags %}{% trans "Info:" %}{% else %}{% trans "Success:" %}{% endif %}</strong> {{ message }}</li>
+      {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    window.lamtoI18n = {
+      copied: "{% filter escapejs %}{% trans 'Copied' %}{% endfilter %}",
+      copyFailed: "{% filter escapejs %}{% trans 'Copy failed. Select the value and copy it manually.' %}{% endfilter %}"
+    };
+  </script>
+  <script src="{% static 'web/staff.js' %}" defer></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

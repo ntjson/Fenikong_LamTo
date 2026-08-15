@@ -1,0 +1,116 @@
+# Blockscout for LamTo local Besu (chainId 1337).
+# UI:  http://127.0.0.1:3000
+# API: http://127.0.0.1:4000
+# Requires: chain/besu up + network lamto-besu-net
+
+name: lamto-blockscout
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: lamto-blockscout-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: blockscout
+      POSTGRES_PASSWORD: blockscout
+      POSTGRES_DB: blockscout
+    volumes:
+      - blockscout-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blockscout -d blockscout"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: lamto-blockscout-redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+
+  backend:
+    image: blockscout/blockscout:latest
+    container_name: lamto-blockscout-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command:
+      - /bin/sh
+      - -c
+      - bin/blockscout eval "Elixir.Explorer.ReleaseTasks.create_and_migrate()" && bin/blockscout start
+    environment:
+      ETHEREUM_JSONRPC_VARIANT: geth
+      ETHEREUM_JSONRPC_HTTP_URL: http://lamto-besu-node1:8545/
+      ETHEREUM_JSONRPC_TRACE_URL: http://lamto-besu-node1:8545/
+      CHAIN_ID: "1337"
+      COIN: ETH
+      COIN_NAME: ETH
+      NETWORK: LamTo Besu
+      SUBNETWORK: Pilot QBFT
+      DATABASE_URL: postgresql://blockscout:blockscout@db:5432/blockscout
+      ECTO_USE_SSL: "false"
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY_BASE: "56NtB48ear7+wMSf0IQuWDAAazhpb31qyc7GiyspBP2vh7t5zlCsF5QDv76chXeN"
+      PORT: "4000"
+      API_V2_ENABLED: "true"
+      DISABLE_WEBAPP: "true"
+      DISABLE_API: "false"
+      INDEXER_DISABLE_INTERNAL_TRANSACTIONS_FETCHER: "true"
+      INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: "true"
+      FETCH_REWARDS_WAY: manual
+      DISABLE_EXCHANGE_RATES: "true"
+      SHOW_PRICE_CHART: "false"
+      ACCOUNT_ENABLED: "false"
+      MIX_ENV: prod
+      BLOCKSCOUT_PROTOCOL: http
+      BLOCKSCOUT_HOST: localhost
+    ports:
+      - "127.0.0.1:4000:4000"
+    networks:
+      - default
+      - besu
+
+  frontend:
+    image: ghcr.io/blockscout/frontend:latest
+    container_name: lamto-blockscout-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_HOST: 127.0.0.1
+      NEXT_PUBLIC_API_PROTOCOL: http
+      NEXT_PUBLIC_API_PORT: "4000"
+      NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL: ws
+      NEXT_PUBLIC_APP_HOST: 127.0.0.1
+      NEXT_PUBLIC_APP_PROTOCOL: http
+      NEXT_PUBLIC_APP_PORT: "3000"
+      NEXT_PUBLIC_NETWORK_NAME: LamTo Besu
+      NEXT_PUBLIC_NETWORK_SHORT_NAME: LamTo
+      NEXT_PUBLIC_NETWORK_ID: "1337"
+      NEXT_PUBLIC_NETWORK_CURRENCY_NAME: Ether
+      NEXT_PUBLIC_NETWORK_CURRENCY_SYMBOL: ETH
+      NEXT_PUBLIC_NETWORK_CURRENCY_DECIMALS: "18"
+      NEXT_PUBLIC_IS_TESTNET: "true"
+      NEXT_PUBLIC_API_BASE_PATH: /
+      NEXT_PUBLIC_HOMEPAGE_CHARTS: "[]"
+      NEXT_PUBLIC_VISUALIZE_API_HOST: ""
+      NEXT_PUBLIC_STATS_API_HOST: ""
+      NEXT_PUBLIC_AD_BANNER_PROVIDER: none
+      NEXT_PUBLIC_AD_TEXT_PROVIDER: none
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - default
+
+networks:
+  default:
+    name: lamto-blockscout-net
+  besu:
+    name: lamto-besu-net
+    external: true
+
+volumes:
+  blockscout-db:

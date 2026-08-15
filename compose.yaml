@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: lamto
+      POSTGRES_USER: lamto_bootstrap
+      POSTGRES_PASSWORD: lamto-bootstrap
+    ports: ["127.0.0.1:5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lamto_bootstrap -d lamto"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - "postgres-data:/var/lib/postgresql/data"
+      - "./ops/postgres-init.sql:/docker-entrypoint-initdb.d/001-roles.sql:ro"
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: lamto-local
+      MINIO_ROOT_PASSWORD: lamto-local-secret
+    ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
+    volumes: ["minio-data:/data"]
+  minio-init:
+    image: minio/mc:latest
+    depends_on: [minio]
+    entrypoint: >-
+      /bin/sh -c "until mc alias set local http://minio:9000 lamto-local lamto-local-secret; do sleep 1; done;
+      mc mb --ignore-existing local/lamto-documents;
+      mc version enable local/lamto-documents"
+  clamav:
+    image: clamav/clamav:stable
+    ports: ["127.0.0.1:3310:3310"]
+    volumes: ["clamav-data:/var/lib/clamav"]
+volumes:
+  postgres-data:
+  minio-data:
+  clamav-data:

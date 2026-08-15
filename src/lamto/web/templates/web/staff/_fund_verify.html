@@ -1,0 +1,18 @@
+{% load i18n humanize staff_extras %}
+<dl class="detail-list">
+  <div><dt>{% trans "Type" %}</dt><dd>{{ entry.get_entry_type_display }}</dd></div>
+  <div><dt>{% trans "Amount" %}</dt><dd>{{ entry.amount_vnd|intcomma }} VND</dd></div>
+  <div><dt>{% trans "Recorded" %}</dt><dd>{{ entry.recorded_at|staff_datetime }}</dd></div>
+</dl>
+{% if already_verified %}
+<p class="hint">{% trans "This source is already verified." %}</p>
+{% else %}
+<div class="workflow-section workflow-primary">
+  <h2>{% trans "Verify source" %}</h2>
+  <p class="hint">{% trans "Verification is the sign-off that lets this source count in the fund balance. Check the frozen values above against the evidence before confirming." %}</p>
+  <form method="post" class="stack-form" data-busy-on-submit>
+    {% csrf_token %}
+    <button type="submit" class="button button-primary">{% trans "Verify source" %}</button>
+  </form>
+</div>
+{% endif %}

@@ -1,0 +1,19 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n staff_extras %}
+{% block title %}{% trans "Pilot metrics" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="metrics-heading">
+  <h1 id="metrics-heading">{% trans "Pilot metrics" %}</h1>
+  <p class="lede">{% trans "Non-authoritative pilot numbers for this building. They do not drive workflow decisions." %}</p>
+  <dl class="detail-list detail-list-wide">
+    {% for row in metric_rows %}
+    <div>
+      <dt>{{ row.label }}</dt>
+      <dd>{% if row.value == None %}<span class="sr-only">{% trans "Not available" %}</span><span aria-hidden="true">—</span>{% elif row.is_datetime %}{{ row.value|staff_datetime }}{% else %}{{ row.value }}{% endif %}</dd>
+    </div>
+    {% empty %}
+    <div><dt>{% trans "Metrics" %}</dt><dd>{% trans "No metrics recorded yet." %}</dd></div>
+    {% endfor %}
+  </dl>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "web/staff/shell.html" %}
+{% load humanize i18n staff_extras %}
+{% block title %}{% trans "Bills" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="bills-heading">
+  <div class="panel-header">
+    <div>
+      <h1 id="bills-heading">{% trans "Bills" %}</h1>
+      <p class="hint">{% blocktrans with building=membership.building.name %}Resident bills for {{ building }}.{% endblocktrans %}</p>
+    </div>
+    <a class="button button-primary" href="{% url 'web:staff-bill-create' %}">{% trans "Issue bill" %}</a>
+  </div>
+
+  {% translate "Search bills" as search_label %}
+  {% translate "Title, resident, or status…" as search_placeholder %}
+  {% include "web/staff/_list_toolbar.html" with list_meta=list_meta search_label=search_label search_placeholder=search_placeholder %}
+
+  <ul class="task-list">
+    {% for bill in bills %}
+    <li>
+      <a class="task-row" href="{% url 'web:staff-bill-detail' bill.pk %}">
+        <span class="task-action">{{ bill.get_status_display }}</span>
+        <span class="task-subject">{{ bill.title }} · {{ bill.resident }} · {{ bill.issued_at|staff_datetime }}</span>
+        <span class="task-amount">{{ bill.amount_vnd|intcomma }} VND</span>
+        <span class="task-meta"></span>
+      </a>
+    </li>
+    {% empty %}
+    <li class="empty-state">
+      <p>{% if list_meta.query %}{% trans "No bills match your search." %}{% else %}{% trans "No bills have been issued." %}{% endif %}</p>
+      {% if list_meta.query %}<p class="hint"><a class="text-link clear-filters" href="{% url 'web:staff-bill-list' %}">{% trans "Clear filters" %}</a></p>{% else %}<p class="hint">{% trans "Create one with Issue bill." %}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% translate "Bill pages" as pagination_label %}
+  {% include "web/staff/_pagination.html" with list_meta=list_meta pagination_label=pagination_label %}
+</section>
+{% endblock %}

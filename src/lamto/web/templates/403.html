@@ -1,0 +1,18 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Access denied" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="error-heading">
+  <h1 id="error-heading">{% trans "Access denied" %}</h1>
+  {% if user.is_authenticated %}
+  <p>{% trans "Your account does not have access to this page. Nothing was changed." %}</p>
+  <p>
+    <a class="button button-primary" href="{% url 'web:action-inbox' %}">{% trans "Back to Action inbox" %}</a>
+    <a class="button button-secondary" href="{% url 'login' %}">{% trans "Sign in with another account" %}</a>
+  </p>
+  {% else %}
+  <p>{% trans "Sign in with a Management account that has access to this page." %}</p>
+  <a class="button button-primary" href="{% url 'login' %}">{% trans "Go to sign in" %}</a>
+  {% endif %}
+</section>
+{% endblock %}

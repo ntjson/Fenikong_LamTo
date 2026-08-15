@@ -1,0 +1,24 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n humanize %}
+{% block title %}{% trans "Create proposal" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel">
+  {% if case %}
+  <h1>{% blocktrans with id=case.pk %}Create proposal · Case #{{ id }}{% endblocktrans %}</h1>
+  <p class="hint">{% blocktrans with category=case.get_category_display %}Case category (locked on this proposal): {{ category }}{% endblocktrans %}</p>
+  {% else %}
+  <h1>{% trans "Create standalone proposal" %}</h1>
+  <p class="hint">{% trans "A spending proposal without a maintenance case. Publication freezes it either way." %}</p>
+  {% endif %}
+
+  <form method="post" class="stack-form" enctype="multipart/form-data" data-busy-on-submit>
+    {% csrf_token %}
+    <input type="hidden" name="action" value="prepare">
+    <p class="consequence-note">{% trans "Publishing freezes the amount, contractor, scope, schedule, and quotation evidence. The published proposal cannot be edited." %}</p>
+    {{ create_form.as_p }}
+    <p class="hint">{% trans "Upload the quotation (PDF). Amounts are integer VND." %}</p>
+    <p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check; re-select any file attachments before submitting again." %}</p>
+    <button type="submit" class="button button-primary">{% trans "Publish proposal" %}</button>
+  </form>
+</section>
+{% endblock %}

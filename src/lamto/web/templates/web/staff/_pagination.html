@@ -1,0 +1,13 @@
+{% load i18n %}
+{% translate "Pages" as default_pagination_label %}
+{% if list_meta.page.has_other_pages %}
+<nav class="pagination" aria-label="{{ pagination_label|default:default_pagination_label }}">
+  {% if list_meta.page.has_previous %}
+  <a class="button button-secondary" href="?{% if list_meta.querystring %}{{ list_meta.querystring }}&amp;{% endif %}{{ list_meta.page_param }}={{ list_meta.page.previous_page_number }}">{% trans "Previous" %}</a>
+  {% endif %}
+  <span>{% blocktrans with n=list_meta.page.number total=list_meta.page.paginator.num_pages %}Page {{ n }} of {{ total }}{% endblocktrans %}</span>
+  {% if list_meta.page.has_next %}
+  <a class="button button-secondary" href="?{% if list_meta.querystring %}{{ list_meta.querystring }}&amp;{% endif %}{{ list_meta.page_param }}={{ list_meta.page.next_page_number }}">{% trans "Next" %}</a>
+  {% endif %}
+</nav>
+{% endif %}

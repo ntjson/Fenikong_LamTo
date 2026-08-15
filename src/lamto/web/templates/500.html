@@ -1,0 +1,14 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Something went wrong" %} · LamTo{% endblock %}
+{% block content %}
+<section class="panel" aria-labelledby="error-heading">
+  <h1 id="error-heading">{% trans "Something went wrong" %}</h1>
+  <p>{% trans "The request could not be completed. Your last action may not have been saved — open the record and check before repeating it." %}</p>
+  {% if authed %}
+  <a class="button button-primary" href="{% url 'web:action-inbox' %}">{% trans "Back to Action inbox" %}</a>
+  {% else %}
+  <a class="button button-primary" href="{% url 'login' %}">{% trans "Go to sign in" %}</a>
+  {% endif %}
+</section>
+{% endblock %}

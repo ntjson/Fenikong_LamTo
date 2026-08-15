@@ -1,0 +1,182 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n staff_extras %}
+{% block title %}{% if list_mode %}{% trans "Cases" %}{% elif case %}{% blocktrans with id=case.pk %}Case #{{ id }}{% endblocktrans %}{% else %}{% blocktrans with id=report.pk %}Report #{{ id }}{% endblocktrans %}{% endif %} · LamTo{% endblock %}
+{% block content %}
+{% if list_mode %}
+<section class="panel" aria-labelledby="cases-heading">
+  <div class="panel-header">
+    <div>
+      <h1 id="cases-heading">{% trans "Cases" %}</h1>
+      <p class="hint">{% trans "Open resident reports awaiting triage, and active maintenance cases with their next step and deadline." %}</p>
+    </div>
+  </div>
+  {% translate "Urgency" as urgency_filter_label %}
+  {% include "web/staff/_list_toolbar.html" with list_meta=case_list filters=filters filters_active=filters_active filter_param=filter_param filter_label=urgency_filter_label %}
+  <div class="workflow-section">
+    <h2>{% trans "Open reports" %}</h2>
+    {% translate "Open report pages" as report_pages_label %}
+    {% translate "No open reports." as report_empty_label %}
+    {% include "web/staff/_list.html" with items=report_items list_meta=report_list pagination_label=report_pages_label empty_label=report_empty_label filters_active=filters_active only %}
+  </div>
+  <div class="workflow-section">
+    <h2>{% trans "Active cases" %}</h2>
+    {% translate "Active case pages" as case_pages_label %}
+    {% translate "No active cases." as case_empty_label %}
+    {% include "web/staff/_list.html" with items=case_items list_meta=case_list pagination_label=case_pages_label empty_label=case_empty_label filters_active=filters_active only %}
+  </div>
+</section>
+{% else %}
+<section class="panel" aria-labelledby="detail-heading">
+  <p><a class="back-link" href="{% url 'web:case-list' %}">{% trans "Back to cases" %}</a></p>
+  <h1 id="detail-heading">{% if case %}{% blocktrans with id=case.pk %}Case #{{ id }}{% endblocktrans %}{% else %}{% blocktrans with id=report.pk %}Report #{{ id }}{% endblocktrans %}{% endif %}</h1>
+  <div class="record-layout{% if not case %} record-layout-triage{% endif %}">
+    <div class="record-summary">
+      {% if report %}
+      <dl class="detail-list detail-list-wide">
+        <div><dt>{% trans "Report" %}</dt><dd>{{ report.text }}</dd></div>
+        <div><dt>{% trans "Location" %}</dt><dd>{{ report.location_path_snapshot }}</dd></div>
+        <div><dt>{% trans "Status" %}</dt><dd>{{ report.get_status_display }}</dd></div>
+      </dl>
+      {% if report_photos %}
+      <div class="workflow-section">
+        <h2>{% trans "Report photos" %}</h2>
+        <ul class="evidence-thumbs">
+          {% for photo in report_photos %}
+          <li><a href="{% url 'web:staff-document' photo.version_id %}" class="evidence-thumb">{{ photo.version.filename }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if report.declined_reason %}<p><strong>{% trans "Decline reason" %}:</strong> {{ report.declined_reason }}</p>{% endif %}
+      {% if open_info_request %}<p><strong>{% trans "Information requested" %}:</strong> {{ open_info_request.message }}{% if open_info_request.reply_text %}<br>{{ open_info_request.reply_text }}{% endif %}</p>{% endif %}
+      {% endif %}
+      {% if case %}
+      <dl class="detail-list detail-list-wide">
+        <div><dt>{% trans "Category" %}</dt><dd>{{ case.get_category_display }}</dd></div>
+        <div><dt>{% trans "Urgency" %}</dt><dd>{{ case.urgency|staff_urgency }}</dd></div>
+        <div><dt>{% trans "Management queue" %}</dt><dd>{{ case.department }}</dd></div>
+        <div><dt>{% trans "Deadline" %}</dt><dd>{% if case.deadline_at %}{{ case.deadline_at|staff_datetime }}{% else %}{% trans "Not set" %}{% endif %}</dd></div>
+      </dl>
+      {% if case.decision.suggestion %}
+      <div class="workflow-section">
+        <h2>{% trans "Triage decision" %}</h2>
+        {% if case.decision.differences %}
+        <p>{% blocktrans with operator=case.decision.operator.display_name %}{{ operator }} changed from the suggestion:{% endblocktrans %}</p>
+        <dl class="detail-list">
+          {% for field, diff in case.decision.differences.items %}
+          <div>
+            <dt>{% if field == "category" %}{% trans "Category" %}{% elif field == "urgency" %}{% trans "Urgency" %}{% elif field == "department" %}{% trans "Management queue" %}{% elif field == "deadline_minutes" %}{% trans "Deadline" %}{% else %}{{ field|title }}{% endif %}</dt>
+            <dd>{% if field == "deadline_minutes" %}{{ diff.suggested }} {% trans "min" %} → {{ diff.chosen }} {% trans "min" %}{% elif field == "urgency" %}{{ diff.suggested|staff_urgency }} → {{ diff.chosen|staff_urgency }}{% elif field == "category" %}{{ diff.suggested|staff_category }} → {{ diff.chosen|staff_category }}{% else %}{{ diff.suggested }} → {{ diff.chosen }}{% endif %}</dd>
+          </div>
+          {% endfor %}
+        </dl>
+        {% else %}
+        <p class="hint">{% blocktrans with operator=case.decision.operator.display_name %}{{ operator }} accepted the suggestion as recorded.{% endblocktrans %}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+      <div class="workflow-section">
+        <h2>{% trans "Progress" %}</h2>
+        <ul class="task-list">
+          {% for update in updates %}
+          <li class="task-list-item">
+            <strong>{{ update.cause }}</strong> — {{ update.result }}<br>
+            <span class="hint">{% if update.author %}{{ update.author }}{% else %}—{% endif %} · {{ update.created_at|staff_datetime }}</span>
+            {% if update.evidence_links.all %}
+            <ul class="evidence-thumbs">
+              {% for link in update.evidence_links.all %}
+              <li><a href="{% url 'web:staff-document' link.version_id %}" class="evidence-thumb">{{ link.get_kind_display }}: {{ link.version.filename }}</a></li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </li>
+          {% empty %}
+          <li class="empty-state"><p>{% trans "No progress updates yet." %}</p></li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% if ratings %}
+      <div class="workflow-section">
+        <h2>{% trans "Ratings" %}</h2>
+        <ul>{% for rating in ratings %}<li>{{ rating.resident }}: {% if rating.satisfied %}{% trans "Satisfied" %}{% else %}{% trans "Not satisfied" %}{% endif %}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+      {% endif %}
+      {% if suggestion %}
+      <div class="workflow-section">
+        <h2>{% trans "Triage assistant suggestion" %}</h2>
+        <p class="lede">
+          {% blocktrans with cat=suggestion.get_category_display urg=suggestion.urgency|staff_urgency dept=suggestion.department mins=suggestion.deadline_minutes %}Suggests <strong>{{ cat }}</strong>, <strong>{{ urg }}</strong> urgency, <strong>{{ dept }}</strong> queue, due in <strong>{{ mins }} minutes</strong>.{% endblocktrans %}
+        </p>
+        {% if suggestion.interpreted_location %}<p class="hint">{% blocktrans with loc=suggestion.interpreted_location %}Interpreted location: {{ loc }}{% endblocktrans %}</p>{% endif %}
+        {% if suggestion.missing_information %}<p class="hint">{% trans "Possibly missing:" %}</p><ul>{% for item in suggestion.missing_information %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+        <p class="hint">{% trans "The form on the right is prefilled from this suggestion. Select a location, change any field if needed, then confirm." %}</p>
+        <details class="technical-proof">
+          <summary>{% trans "Technical proof" %}</summary>
+          <dl class="detail-list">
+            <div><dt>{% trans "Confidence" %}</dt><dd>{{ suggestion.confidence_percent }}%</dd></div>
+          </dl>
+          {% if suggestion_raw_json %}<pre>{{ suggestion_raw_json }}</pre>{% endif %}
+        </details>
+      </div>
+      {% endif %}
+      {% if accountability_stages %}{% include "web/staff/_accountability_chain.html" %}{% endif %}
+    </div>
+
+    <div class="record-action">
+      {% if case %}
+      {% if case.proposal %}
+      <div class="workflow-section">
+        <a class="button button-secondary" href="{% url 'web:proposal-detail' case.proposal.pk %}">{% trans "View spending proposal" %}</a>
+      </div>
+      {% elif can_create_proposal %}
+      <div class="workflow-section">
+        <a class="button button-secondary" href="{% url 'web:proposal-create' case.pk %}">{% trans "Create spending proposal" %}</a>
+      </div>
+      {% endif %}
+      {% if case.completed_at %}
+      <div class="workflow-section">
+        <p class="status status-verified"><span class="status-icon" aria-hidden="true">●</span> {% trans "Completed" %}</p>
+        <p class="hint">{% blocktrans with ts=case.completed_at|staff_datetime %}Finished {{ ts }}. No further action is required.{% endblocktrans %}</p>
+      </div>
+      {% elif work_form %}
+      <div class="workflow-section">
+        <form method="post" data-busy-on-submit aria-label="{% trans 'Start work' %}">{% csrf_token %}<input type="hidden" name="action" value="start_work"><button type="submit" class="button button-secondary">{% trans "Start work" %}</button></form>
+      </div>
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Publish progress" %}</h2>
+        <form method="post" enctype="multipart/form-data" class="stack-form" data-busy-on-submit aria-label="{% trans 'Publish progress' %}">
+          {% csrf_token %}
+          {{ work_form.as_p }}
+          <button name="action" value="publish_progress" type="submit" class="button button-primary">{% trans "Publish progress" %}</button>
+          <button name="action" value="complete_work" type="submit" class="button button-secondary">{% trans "Complete work" %}</button>
+        </form>
+      </div>
+      {% endif %}
+      {% elif form %}
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Confirm triage" %}</h2>
+        <form method="post" class="stack-form" data-busy-on-submit aria-label="{% trans 'Confirm triage' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="confirm_triage">
+          {{ form.as_p }}
+          <button type="submit" class="button button-primary">{% trans "Confirm triage" %}</button>
+        </form>
+      </div>
+      {% if not terminal %}
+      <details class="workflow-section"{% if info_form.errors %} open{% endif %}>
+        <summary><span class="h2">{% trans "Request information" %}</span></summary>
+        <form method="post" class="stack-form" data-busy-on-submit aria-label="{% trans 'Request information' %}">{% csrf_token %}<input type="hidden" name="action" value="request_info">{{ info_form.as_p }}<button type="submit" class="button button-secondary">{% trans "Request information" %}</button></form>
+      </details>
+      <details class="workflow-section"{% if decline_form.errors %} open{% endif %}>
+        <summary><span class="h2">{% trans "Decline request" %}</span></summary>
+        <p class="consequence-note">{% trans "Declining sends this reason to the resident and closes the report. This cannot be undone." %}</p>
+        <form method="post" class="stack-form" data-busy-on-submit aria-label="{% trans 'Decline request' %}">{% csrf_token %}<input type="hidden" name="action" value="decline">{{ decline_form.as_p }}<button type="submit" class="button button-secondary">{% trans "Decline request" %}</button></form>
+      </details>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

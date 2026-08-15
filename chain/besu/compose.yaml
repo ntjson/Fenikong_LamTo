@@ -1,0 +1,196 @@
+# Four-validator Hyperledger Besu QBFT development network.
+# Roles:
+#   Node-1 / validator1 — Management Board (JSON-RPC on localhost:8545)
+#   Node-2 / validator2 — property-management operator
+#   Node-3 / validator3 — resident representative
+#   Node-4 / validator4 — auditor
+#
+# Prerequisites: run ./generate-network.sh first (writes Node-* and .env.network).
+# Usage: docker compose up -d
+
+name: lamto-besu
+
+x-besu-image: &besu-image hyperledger/besu:25.7.0
+
+services:
+  validator1:
+    image: *besu-image
+    container_name: lamto-besu-node1
+    restart: unless-stopped
+    labels:
+      lamto.role: "Management Board"
+      lamto.node: "1"
+    networks:
+      besu:
+        ipv4_address: 10.133.0.2
+    volumes:
+      - ./Node-1/genesis.json:/config/genesis.json:ro
+      - ./Node-1/data:/data
+    command:
+      - --data-path=/data
+      - --genesis-file=/config/genesis.json
+      - --node-private-key-file=/data/key
+      - --rpc-http-enabled=true
+      - --rpc-http-api=ETH,NET,QBFT
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --host-allowlist=*
+      - --rpc-http-cors-origins=*
+      - --p2p-host=0.0.0.0
+      - --p2p-port=30303
+      - --min-gas-price=0
+      - --discovery-enabled=true
+    ports:
+      - "127.0.0.1:8545:8545"
+
+  validator2:
+    image: *besu-image
+    container_name: lamto-besu-node2
+    restart: unless-stopped
+    labels:
+      lamto.role: "property-management operator"
+      lamto.node: "2"
+    networks: [besu]
+    depends_on: [validator1]
+    volumes:
+      - ./Node-2/genesis.json:/config/genesis.json:ro
+      - ./Node-2/data:/data
+    env_file:
+      - path: .env.network
+        required: false
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        BOOT="$${NODE1_ENODE:-}"
+        if [ -n "$$BOOT" ]; then
+          # Besu 25+ requires an IP in bootnode URLs (not Docker DNS names).
+          exec /opt/besu/bin/besu \
+            --data-path=/data \
+            --genesis-file=/config/genesis.json \
+            --node-private-key-file=/data/key \
+            --rpc-http-enabled=true \
+            --rpc-http-api=ETH,NET,QBFT \
+            --rpc-http-host=0.0.0.0 \
+            --host-allowlist=* \
+            --p2p-host=0.0.0.0 \
+            --p2p-port=30303 \
+            --min-gas-price=0 \
+            --bootnodes=$$BOOT \
+            --discovery-enabled=true
+        fi
+        exec /opt/besu/bin/besu \
+          --data-path=/data \
+          --genesis-file=/config/genesis.json \
+          --node-private-key-file=/data/key \
+          --rpc-http-enabled=true \
+          --rpc-http-api=ETH,NET,QBFT \
+          --rpc-http-host=0.0.0.0 \
+          --host-allowlist=* \
+          --p2p-host=0.0.0.0 \
+          --p2p-port=30303 \
+          --min-gas-price=0 \
+          --discovery-enabled=true
+
+  validator3:
+    image: *besu-image
+    container_name: lamto-besu-node3
+    restart: unless-stopped
+    labels:
+      lamto.role: "resident representative"
+      lamto.node: "3"
+    networks: [besu]
+    depends_on: [validator1]
+    volumes:
+      - ./Node-3/genesis.json:/config/genesis.json:ro
+      - ./Node-3/data:/data
+    env_file:
+      - path: .env.network
+        required: false
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        BOOT="$${NODE1_ENODE:-}"
+        if [ -n "$$BOOT" ]; then
+          # Besu 25+ requires an IP in bootnode URLs (not Docker DNS names).
+          exec /opt/besu/bin/besu \
+            --data-path=/data \
+            --genesis-file=/config/genesis.json \
+            --node-private-key-file=/data/key \
+            --rpc-http-enabled=true \
+            --rpc-http-api=ETH,NET,QBFT \
+            --rpc-http-host=0.0.0.0 \
+            --host-allowlist=* \
+            --p2p-host=0.0.0.0 \
+            --p2p-port=30303 \
+            --min-gas-price=0 \
+            --bootnodes=$$BOOT \
+            --discovery-enabled=true
+        fi
+        exec /opt/besu/bin/besu \
+          --data-path=/data \
+          --genesis-file=/config/genesis.json \
+          --node-private-key-file=/data/key \
+          --rpc-http-enabled=true \
+          --rpc-http-api=ETH,NET,QBFT \
+          --rpc-http-host=0.0.0.0 \
+          --host-allowlist=* \
+          --p2p-host=0.0.0.0 \
+          --p2p-port=30303 \
+          --min-gas-price=0 \
+          --discovery-enabled=true
+
+  validator4:
+    image: *besu-image
+    container_name: lamto-besu-node4
+    restart: unless-stopped
+    labels:
+      lamto.role: "auditor"
+      lamto.node: "4"
+    networks: [besu]
+    depends_on: [validator1]
+    volumes:
+      - ./Node-4/genesis.json:/config/genesis.json:ro
+      - ./Node-4/data:/data
+    env_file:
+      - path: .env.network
+        required: false
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        BOOT="$${NODE1_ENODE:-}"
+        if [ -n "$$BOOT" ]; then
+          # Besu 25+ requires an IP in bootnode URLs (not Docker DNS names).
+          exec /opt/besu/bin/besu \
+            --data-path=/data \
+            --genesis-file=/config/genesis.json \
+            --node-private-key-file=/data/key \
+            --rpc-http-enabled=true \
+            --rpc-http-api=ETH,NET,QBFT \
+            --rpc-http-host=0.0.0.0 \
+            --host-allowlist=* \
+            --p2p-host=0.0.0.0 \
+            --p2p-port=30303 \
+            --min-gas-price=0 \
+            --bootnodes=$$BOOT \
+            --discovery-enabled=true
+        fi
+        exec /opt/besu/bin/besu \
+          --data-path=/data \
+          --genesis-file=/config/genesis.json \
+          --node-private-key-file=/data/key \
+          --rpc-http-enabled=true \
+          --rpc-http-api=ETH,NET,QBFT \
+          --rpc-http-host=0.0.0.0 \
+          --host-allowlist=* \
+          --p2p-host=0.0.0.0 \
+          --p2p-port=30303 \
+          --min-gas-price=0 \
+          --discovery-enabled=true
+
+networks:
+  besu:
+    name: lamto-besu-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.133.0.0/24

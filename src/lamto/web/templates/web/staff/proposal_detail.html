@@ -1,0 +1,128 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n humanize %}
+{% block title %}{% if list_mode %}{% trans "Proposals" %}{% else %}{% blocktrans with id=proposal.pk %}Proposal #{{ id }}{% endblocktrans %}{% endif %} · LamTo{% endblock %}
+{% block content %}
+{% if list_mode %}
+<section class="panel" aria-labelledby="proposals-heading">
+  <div class="panel-header">
+    <div>
+      <h1 id="proposals-heading">{% if publish_only %}{% trans "Pending publication" %}{% else %}{% trans "Proposals" %}{% endif %}</h1>
+      <p class="hint">{% trans "Spending proposals for this building, from draft through publication. Each row shows the next step." %}</p>
+    </div>
+  </div>
+  {% translate "Status" as status_filter_label %}
+  {% include "web/staff/_list_toolbar.html" with filter_label=status_filter_label %}
+  {% translate "No proposals need attention." as proposals_empty_label %}
+  {% include "web/staff/_list.html" with items=proposal_items empty_label=proposals_empty_label %}
+</section>
+{% else %}
+<section class="panel">
+  <p><a class="back-link" href="{% url 'web:proposal-list' %}">{% trans "Back to proposals" %}</a></p>
+  <h1>{% blocktrans with id=proposal.pk %}Proposal #{{ id }}{% endblocktrans %}</h1>
+  <div class="record-layout">
+    <div class="record-summary">
+      <h2>{% trans "Proposal record" %}</h2>
+      {% if version %}<p class="lede">{{ version.purpose }}</p>{% endif %}
+      {% if version %}<p>{% trans "The amount, contractor, scope, schedule, and quotation evidence are frozen." %}</p>{% endif %}
+      <dl class="detail-list detail-list-wide">
+        <div><dt>{% trans "Status" %}</dt><dd>{{ proposal.get_status_display }}</dd></div>
+        {% if version %}
+        <div><dt>{% trans "Amount" %}</dt><dd>{{ version.amount_vnd|intcomma }} VND</dd></div>
+        <div><dt>{% trans "Contractor" %}</dt><dd>{{ version.contractor_name }}</dd></div>
+        {% if proposal.case_id %}<div><dt>{% trans "Maintenance case" %}</dt><dd><a href="{% url 'web:case-detail' proposal.case_id %}">{{ proposal.case.get_category_display }} · {% blocktrans with id=proposal.case_id %}Case #{{ id }}{% endblocktrans %}</a></dd></div>{% endif %}
+        <div><dt>{% trans "Evidence" %}</dt><dd>
+          {% with quotes=version.quotations.all %}
+          {% if quotes %}
+          <ul class="inline-list">{% for q in quotes %}<li><a href="{% url 'web:staff-document' q.pk %}">{{ q.filename }}</a></li>{% endfor %}</ul>
+          {% else %}
+          {% trans "No quotation files linked" %}
+          {% endif %}
+          {% endwith %}
+        </dd></div>
+        {% endif %}
+      </dl>
+
+      {% if accountability_stages %}
+      {% include "web/staff/_accountability_chain.html" %}
+      {% endif %}
+
+      {% if version %}
+      <details class="technical-proof">
+        <summary>{% trans "Technical proof" %}</summary>
+        <dl class="detail-list">
+          <div><dt>{% trans "Snapshot hash" %}</dt><dd>{% include "web/staff/_hash_value.html" with value=version.snapshot_hash label=_("Snapshot hash") %}</dd></div>
+          <div><dt>{% trans "Verification" %}</dt><dd>{{ version.verification_label|default:_("Not yet verified") }}</dd></div>
+          <div><dt>{% trans "Mode" %}</dt><dd>{{ proposal.mode }}</dd></div>
+        </dl>
+        <h2>{% trans "Signed snapshot" %}</h2>
+        <pre id="snapshot-json">{{ version.snapshot }}</pre>
+      </details>
+      {% endif %}
+    </div>
+
+    <div class="record-action">
+      {% if can_publish %}
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Publish settled expense" %}</h2>
+        <p class="consequence-note">{% trans "Publishing adds this settled expense to the resident ledger. Verify the frozen proposal and settlement evidence before continuing." %}</p>
+        <form method="post" class="stack-form" data-busy-on-submit>{% csrf_token %}<input type="hidden" name="action" value="publish">{{ publish_form.as_p }}<p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check." %}</p><button type="submit" class="button button-primary">{% trans "Publish to resident ledger" %}</button></form>
+      </div>
+      {% elif proposal.status == "PUBLISHED" %}
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Decide whether to proceed" %}</h2>
+        <p class="consequence-note">{% trans "“Do not proceed” closes this proposal permanently in your name; it cannot be reopened, and new spending needs a new proposal." %}</p>
+        <form method="post" class="stack-form" data-busy-on-submit>
+          {% csrf_token %}
+          <input type="hidden" name="action" value="decide">
+          {{ decision_form.non_field_errors }}
+          <fieldset class="field choice-group">
+            <legend>{{ decision_form.decision.label }}</legend>
+            {{ decision_form.decision.errors }}
+            {% for radio in decision_form.decision %}
+            <label class="choice">{{ radio.tag }} <span>{{ radio.choice_label }}</span></label>
+            {% endfor %}
+          </fieldset>
+          <div class="field">
+            <label for="{{ decision_form.note.id_for_label }}">{{ decision_form.note.label }}</label>
+            {{ decision_form.note.errors }}
+            {{ decision_form.note }}
+            <p class="hint">{% trans "Required when not proceeding; it is recorded with the decision." %}</p>
+          </div>
+          <p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check." %}</p>
+          <button type="submit" class="button button-primary">{% trans "Record decision" %}</button>
+        </form>
+      </div>
+      {% elif proposal.status == "IN_PROGRESS" %}
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Publish work progress" %}</h2>
+        <form method="post" enctype="multipart/form-data" class="stack-form" data-busy-on-submit>{% csrf_token %}{{ progress_form.as_p }}<p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check; re-select any file attachments before submitting again." %}</p><button name="action" value="progress" class="button button-primary">{% trans "Publish progress" %}</button><button name="action" value="complete" class="button button-secondary">{% trans "Complete work" %}</button></form>
+      </div>
+      {% endif %}
+      {% if publication_pending %}
+      <div class="workflow-section">
+        <h2>{% trans "Publication awaiting confirmation" %}</h2>
+        <p>
+          {% blocktrans with id=proposal.pk %}You signed preparation for proposal #{{ id }}. A publication snapshot is on record, but independent confirmation has not finished yet.{% endblocktrans %}
+        </p>
+        <p class="hint">
+          {% trans "No further action is required from this membership while confirmation is pending. The accountability chain above shows the same state." %}
+        </p>
+        {% if publication_snapshot and publication_snapshot.outbox_event %}
+        <dl class="detail-list">
+          <div><dt>{% trans "Evidence level" %}</dt><dd>{% include "web/staff/_evidence_level.html" with event=publication_snapshot.outbox_event %}</dd></div>
+          <div><dt>{% trans "Delivery status" %}</dt><dd>{{ publication_snapshot.outbox_event.get_status_display }}</dd></div>
+        </dl>
+        {% endif %}
+      </div>
+      {% elif publication_problem == "FAILED" %}
+      <div class="workflow-section"><h2>{% trans "Evidence anchoring failed" %}</h2><p class="status status-mismatch"><span class="status-icon" aria-hidden="true">●</span> {% trans "The signed proposal is saved, but anchoring failed. Review Operations health before retrying any action." %}</p><a class="button button-secondary" href="{% url 'web:ops-health' %}">{% trans "Review Operations health" %}</a></div>
+      {% elif publication_problem == "MISMATCH" %}
+      <div class="workflow-section"><h2>{% trans "Evidence mismatch detected" %}</h2><p class="status status-mismatch"><span class="status-icon" aria-hidden="true">●</span> {% trans "The saved proposal does not match independently observed evidence. Stop and review Operations health." %}</p><a class="button button-secondary" href="{% url 'web:ops-health' %}">{% trans "Review Operations health" %}</a></div>
+      {% elif not can_publish %}
+      <p class="empty">{% trans "No action is assigned to this membership. Review the proposal summary and return to the action inbox." %}</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

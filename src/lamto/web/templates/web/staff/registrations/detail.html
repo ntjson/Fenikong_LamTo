@@ -1,0 +1,40 @@
+{% extends "web/staff/shell.html" %}
+{% load i18n staff_extras %}
+{% block title %}{{ registration.full_name }} · LamTo{% endblock %}
+{% block content %}
+<section class="panel">
+  <p><a class="back-link" href="{% url 'web:staff-registration-list' %}">{% trans "Back to registrations" %}</a></p>
+  <h1>{{ registration.full_name }}</h1>
+  <div class="record-layout">
+    <div class="record-summary">
+      <dl class="detail-list detail-list-wide">
+        <div><dt>{% trans "Phone" %}</dt><dd>{{ registration.phone }}</dd></div>
+        {% if registration.email %}<div><dt>{% trans "Email" %}</dt><dd>{{ registration.email }}</dd></div>{% endif %}
+        <div><dt>{% trans "Building" %}</dt><dd>{{ registration.building.name }}</dd></div>
+        <div><dt>{% trans "Unit" %}</dt><dd>{{ registration.unit.label }}</dd></div>
+        <div><dt>{% trans "Submitted" %}</dt><dd>{{ registration.created_at|staff_datetime }}</dd></div>
+        <div><dt>{% trans "Status" %}</dt><dd>{{ registration.get_status_display }}</dd></div>
+      </dl>
+    </div>
+    <div class="record-action">
+      {% if registration.status == "PENDING" %}
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Decide" %}</h2>
+        <form method="post" action="{% url 'web:staff-registration-approve' registration.pk %}" data-busy-on-submit>
+          {% csrf_token %}
+          <button type="submit" class="button button-primary">{% trans "Approve" %}</button>
+        </form>
+        <form method="post" action="{% url 'web:staff-registration-reject' registration.pk %}" class="stack-form" data-busy-on-submit>
+          {% csrf_token %}
+          <div class="field">
+            <label for="rejection-reason">{% trans "Rejection reason" %}</label>
+            <textarea id="rejection-reason" name="reason" class="input" required></textarea>
+          </div>
+          <button type="submit" class="button button-secondary">{% trans "Reject" %}</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
