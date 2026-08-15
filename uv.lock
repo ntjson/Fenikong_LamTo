@@ -836,18 +836,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-otp"
-version = "1.7.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7e/a3/32b6b53ef1026387375e11236255db7c630d9527a2d33fa6529500a880cd/django_otp-1.7.0.tar.gz", hash = "sha256:961ccf2d80a67303cb46d97427b16c476ee075acfa2b4c82a59d8f1e0745a454", size = 75858, upload-time = "2026-01-07T19:57:17.19Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9c/f0/75ee6cdcf916b7c67dffa87aecdd173e4d68e456839dd53b9313e9cc9201/django_otp-1.7.0-py3-none-any.whl", hash = "sha256:406d2d7f797dc313569270e06d6c360c7d986c9f653eab80b190d663ed5f1133", size = 71331, upload-time = "2026-01-07T19:57:18.655Z" },
-]
-
-[[package]]
 name = "django-rest-knox"
 version = "5.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1733,7 +1721,6 @@ dependencies = [
     { name = "argon2-cffi" },
     { name = "boto3" },
     { name = "django" },
-    { name = "django-otp" },
     { name = "django-rest-knox" },
     { name = "django-storages", extra = ["s3"] },
     { name = "djangorestframework" },
@@ -1764,7 +1751,6 @@ requires-dist = [
     { name = "argon2-cffi", specifier = ">=23,<26" },
     { name = "boto3", specifier = ">=1.35,<2" },
     { name = "django", specifier = "~=5.2" },
-    { name = "django-otp", specifier = ">=1.6,<2" },
     { name = "django-rest-knox", specifier = ">=5.0,<6" },
     { name = "django-storages", extras = ["s3"], specifier = ">=1.14,<2" },
     { name = "djangorestframework", specifier = ">=3.16,<4" },

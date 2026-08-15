@@ -9,7 +9,6 @@ requires-python = ">=3.12"
 dependencies = [
   "Django~=5.2",
   "psycopg[binary]>=3.2,<4",
-  "django-otp>=1.6,<2",
   "django-storages[s3]>=1.14,<2",
   "boto3>=1.35,<2",
   "Pillow>=11,<13",
