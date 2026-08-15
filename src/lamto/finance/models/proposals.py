@@ -30,14 +30,36 @@ class Proposal(models.Model):
         COMPLETED = "COMPLETED", _("Completed")
         CLOSED = "CLOSED", _("Closed")
 
-    case = models.OneToOneField(MaintenanceCase, null=True, blank=True, on_delete=models.PROTECT, related_name="proposal")
-    building = models.ForeignKey("accounts.Building", on_delete=models.PROTECT, related_name="proposals")
-    creator_membership = models.ForeignKey(ManagementMembership, on_delete=models.PROTECT)
-    status = models.CharField(max_length=24, choices=Status.choices, default=Status.DRAFT)
-    current_version = models.ForeignKey(
-        "ProposalVersion", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    case = models.OneToOneField(
+        MaintenanceCase,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="proposal",
     )
-    decided_by = models.ForeignKey(ManagementMembership, null=True, blank=True, on_delete=models.PROTECT, related_name="decided_proposals")
+    building = models.ForeignKey(
+        "accounts.Building", on_delete=models.PROTECT, related_name="proposals"
+    )
+    creator_membership = models.ForeignKey(
+        ManagementMembership, on_delete=models.PROTECT
+    )
+    status = models.CharField(
+        max_length=24, choices=Status.choices, default=Status.DRAFT
+    )
+    current_version = models.ForeignKey(
+        "ProposalVersion",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="+",
+    )
+    decided_by = models.ForeignKey(
+        ManagementMembership,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="decided_proposals",
+    )
     decided_at = models.DateTimeField(null=True, blank=True)
     decision_note = models.TextField(blank=True)
     public_token = models.CharField(
@@ -52,18 +74,22 @@ class Proposal(models.Model):
             self.building_id = self.case.building_id
         return super().save(*args, **kwargs)
 
+
 class ProposalVersion(InsertOnlyModel):
-    proposal = models.ForeignKey(Proposal, on_delete=models.PROTECT, related_name="versions")
+    proposal = models.ForeignKey(
+        Proposal, on_delete=models.PROTECT, related_name="versions"
+    )
     number = models.PositiveIntegerField()
     amount_vnd = models.BigIntegerField()
     contractor_name = models.CharField(max_length=255)
-    fund_code = models.CharField(max_length=32, default="GENERAL")
     purpose = models.TextField()
     proposed_action = models.TextField()
     expected_schedule = models.CharField(max_length=200)
     snapshot = models.JSONField()
     snapshot_hash = models.CharField(max_length=64)
-    creator_membership = models.ForeignKey(ManagementMembership, on_delete=models.PROTECT)
+    creator_membership = models.ForeignKey(
+        ManagementMembership, on_delete=models.PROTECT
+    )
     creator_signature = models.CharField(max_length=132, blank=True)
     outbox_event = models.OneToOneField(
         BlockchainOutboxEvent, on_delete=models.PROTECT, related_name="proposal_version"
@@ -85,8 +111,12 @@ class ProposalVersion(InsertOnlyModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["proposal", "number"], name="proposal_version_once"),
-            models.CheckConstraint(condition=models.Q(amount_vnd__gt=0), name="proposal_amount_positive"),
+            models.UniqueConstraint(
+                fields=["proposal", "number"], name="proposal_version_once"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(amount_vnd__gt=0), name="proposal_amount_positive"
+            ),
         ]
 
 
@@ -105,6 +135,7 @@ class ProposalDocument(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["proposal_version", "document_version"], name="proposal_document_once"
+                fields=["proposal_version", "document_version"],
+                name="proposal_document_once",
             )
         ]

@@ -11,7 +11,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_direct_outcome_c_happy_path(seeded_pilot):
-    seeded_pilot.submit_report("Lift doors stick", "Building B / Lift 2")
+    seeded_pilot.submit_report("Lift doors stick", "Goldmark City / Tầng 1 / Thang máy A")
     seeded_pilot.confirm_triage_case()
     seeded_pilot.start_assigned_work()
     seeded_pilot.publish_work_progress()
@@ -28,7 +28,7 @@ def test_direct_outcome_c_happy_path(seeded_pilot):
 def test_realistic_normal_flow(page, seeded_pilot):
     seeded_pilot.submit_report(
         "Elevator shakes heavily",
-        "Building B / Lift 2",
+        "Goldmark City / Tầng 1 / Thang máy A",
         "tests/fixtures/elevator.jpg",
     )
 
@@ -39,8 +39,7 @@ def test_realistic_normal_flow(page, seeded_pilot):
     seeded_pilot.start_assigned_work()
     seeded_pilot.publish_work_progress()
     seeded_pilot.complete_assigned_work()
-    seeded_pilot.record_settlement_transfer()
-    seeded_pilot.record_settlement_ack()
+    seeded_pilot.record_settlement()
     seeded_pilot.confirm_all_chain_events()
     rating = seeded_pilot.rate_completed_case(satisfied=True)
     seeded_pilot.confirm_all_chain_events()
@@ -70,8 +69,7 @@ def test_standalone_proposal_happy_path(seeded_pilot):
     seeded_pilot.decide_proposal(proceed=True)
     seeded_pilot.publish_proposal_progress()
     seeded_pilot.complete_proposal_work()
-    seeded_pilot.record_settlement_transfer()
-    settlement = seeded_pilot.record_settlement_ack()
+    settlement = seeded_pilot.record_settlement()
     seeded_pilot.confirm_all_chain_events()
     rating = seeded_pilot.rate_completed_proposal(satisfied=True)
 

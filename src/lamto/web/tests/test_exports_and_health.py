@@ -267,7 +267,7 @@ class ExportsAndHealthTests(TestCase):
             interpreted_location="Lobby",
             urgency="LOW",
             confidence_percent=90,
-            department="x",
+            management_queue="GENERAL",
             deadline_minutes=60,
             raw_response={},
             provider_request_id="other",

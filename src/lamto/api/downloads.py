@@ -10,14 +10,13 @@ from __future__ import annotations
 from urllib.parse import quote
 
 from django.core import signing
-from django.db.models import Q
 
 from lamto.accounts.tenancy import active_occupancies
 from lamto.config.log_filters import DownloadTokenLogFilter, scrub_download_token_in_text
 from lamto.documents.models import Document
 from lamto.evidence.models import SETTLED_STATUSES
 from lamto.finance.models import Proposal, ProposalDocument, PublishedLedgerEntry
-from lamto.maintenance.models import ReportPhoto, WorkUpdateEvidence
+from lamto.maintenance.models import ReportPhoto
 
 # Re-export for callers that import scrub helpers from the downloads module.
 __all__ = (
@@ -41,8 +40,6 @@ DOWNLOAD_MAX_AGE = 300  # spec 3.6: TTL <= 5 minutes
 RESIDENT_DOWNLOADABLE_KINDS = frozenset(
     {
         Document.Kind.REPORT_PHOTO,
-        Document.Kind.BEFORE_PHOTO,
-        Document.Kind.AFTER_PHOTO,
         Document.Kind.QUOTATION,
         Document.Kind.PAYMENT_PROOF,
         Document.Kind.RESIDENT_BILL,
@@ -111,11 +108,6 @@ def resident_can_download(user, version) -> bool:
         )
     if version.document.kind == Document.Kind.REPORT_PHOTO:
         return ReportPhoto.objects.filter(version=version, report__reporter=user).exists()
-    if version.document.kind in (Document.Kind.BEFORE_PHOTO, Document.Kind.AFTER_PHOTO):
-        return WorkUpdateEvidence.objects.filter(
-            version=version,
-            update__case__case_reports__report__reporter=user,
-        ).exists()
     building_ids = list(active_occupancies(user).values_list("unit__building_id", flat=True))
     if not building_ids:
         return False
@@ -140,9 +132,6 @@ def resident_can_download(user, version) -> bool:
             proposal__current_version__outbox_event__status__in=SETTLED_STATUSES,
             settlement__outbox_event__status__in=SETTLED_STATUSES,
         )
-        .filter(
-            Q(settlement__transfer=version)
-            | Q(settlement__ack=version)
-        )
+        .filter(settlement__transfer=version)
         .exists()
     )

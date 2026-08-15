@@ -22,7 +22,7 @@ from django.urls import reverse
 
 from lamto.finance.models import MaintenanceFundEntry, Proposal, Settlement
 from lamto.gate.models import GateDevice
-from lamto.testing.factories import PILOT_PASSWORD, PilotDomainDriver, seed_pilot_world
+from lamto.testing.factories import PILOT_PASSWORD, PilotDomainDriver, new_event_id, seed_pilot_world
 
 _TEMP = tempfile.mkdtemp(prefix="lamto-sens-")
 
@@ -86,7 +86,6 @@ class SensitiveActionsPasswordOnlyTests(TestCase):
                 "action": "prepare",
                 "amount_vnd": 5_000_000,
                 "contractor_name": "Acme Co",
-                "fund_code": "GENERAL",
                 "purpose": "Elevator noise",
                 "proposed_action": "Replace bearings",
                 "expected_schedule": "August 2026",
@@ -115,13 +114,11 @@ class SensitiveActionsPasswordOnlyTests(TestCase):
 
         response = self.client.post(
             reverse(
-                "web:settlement-record-transfer",
+                "web:settlement-record",
                 kwargs={"pk": proposal.pk},
             ),
             {
-                "amount_vnd": proposal.current_version.amount_vnd,
-                "payee_name": "Acme Co",
-                "bank_reference": "BANK-1",
+                "event_id": new_event_id(),
                 "proof_upload": _pdf("transfer.pdf", b"transfer"),
             },
         )

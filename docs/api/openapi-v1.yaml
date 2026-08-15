@@ -1845,14 +1845,6 @@ components:
       required:
       - report_id
       - status
-    KindEnum:
-      enum:
-      - BEFORE
-      - AFTER
-      type: string
-      description: |-
-        * `BEFORE` - Trước
-        * `AFTER` - Sau
     LedgerDocument:
       type: object
       properties:
@@ -2318,8 +2310,6 @@ components:
           type: string
         amount_vnd:
           type: integer
-        fund_code:
-          type: string
         contractor_name:
           type: string
         expected_schedule:
@@ -2351,7 +2341,6 @@ components:
       - completed_at
       - contractor_name
       - expected_schedule
-      - fund_code
       - id
       - progress
       - proposed_action
@@ -2394,25 +2383,12 @@ components:
       properties:
         amount_vnd:
           type: integer
-        payee_name:
-          type: string
-        transfer_recorded_at:
-          type: string
-          format: date-time
-        acknowledged_at:
-          type: string
-          format: date-time
-          nullable: true
         settled_at:
           type: string
           format: date-time
-          nullable: true
       required:
-      - acknowledged_at
       - amount_vnd
-      - payee_name
       - settled_at
-      - transfer_recorded_at
     ProposalSupportingDocument:
       type: object
       properties:
@@ -2741,32 +2717,11 @@ components:
         created_at:
           type: string
           format: date-time
-        photos:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReportWorkUpdatePhoto'
       required:
       - cause
       - created_at
       - id
-      - photos
       - result
-    ReportWorkUpdatePhoto:
-      type: object
-      properties:
-        id:
-          type: integer
-        filename:
-          type: string
-        kind:
-          $ref: '#/components/schemas/KindEnum'
-        download_url:
-          type: string
-      required:
-      - download_url
-      - filename
-      - id
-      - kind
     StatusEnum:
       enum:
       - SUBMITTED

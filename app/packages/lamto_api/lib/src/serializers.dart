@@ -74,7 +74,6 @@ import 'package:lamto_api/src/model/report_detail.dart';
 import 'package:lamto_api/src/model/report_photo.dart';
 import 'package:lamto_api/src/model/report_summary.dart';
 import 'package:lamto_api/src/model/report_work_update.dart';
-import 'package:lamto_api/src/model/report_work_update_photo.dart';
 import 'package:lamto_api/src/model/status_enum.dart';
 import 'package:lamto_api/src/model/token_response.dart';
 import 'package:lamto_api/src/model/vehicle_plate.dart';
@@ -143,7 +142,6 @@ part 'serializers.g.dart';
   ReportPhoto,
   ReportSummary,
   ReportWorkUpdate,
-  ReportWorkUpdatePhoto,
   StatusEnum,
   TokenResponse,
   VehiclePlate,

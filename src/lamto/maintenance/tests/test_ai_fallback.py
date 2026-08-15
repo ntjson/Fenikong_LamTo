@@ -14,7 +14,12 @@ from lamto.maintenance.ai import (
     process_triage_job,
 )
 from lamto.maintenance.candidates import find_duplicate_candidates
-from lamto.maintenance.models import BuildingLocation, IssueReport, TriageJob, TriageSuggestion
+from lamto.maintenance.models import (
+    BuildingLocation,
+    IssueReport,
+    TriageJob,
+    TriageSuggestion,
+)
 from lamto.maintenance.reporting import submit_report
 
 
@@ -26,7 +31,7 @@ def triage_payload(**overrides):
         "confidence_percent": 87,
         "requires_manual_review": False,
         "duplicate_report_ids": [],
-        "department": "Maintenance",
+        "management_queue": "MAINTENANCE",
         "deadline_minutes": 240,
         "missing_information": [],
     }
@@ -102,16 +107,22 @@ class TriageTests(TestCase):
         urlopen.assert_not_called()
 
     def submit(self, text):
-        building = getattr(self, "building", None) or Building.objects.create(name="Building B")
+        building = getattr(self, "building", None) or Building.objects.create(
+            name="Building B"
+        )
         self.building = building
         resident = get_user_model().objects.create_user(
             email=f"resident-{IssueReport.objects.count()}@example.test",
             password="secret",
             display_name="Resident",
         )
-        unit = Unit.objects.create(building=building, label=f"A-{IssueReport.objects.count()}")
+        unit = Unit.objects.create(
+            building=building, label=f"A-{IssueReport.objects.count()}"
+        )
         ResidentOccupancy.objects.create(user=resident, unit=unit)
-        location, _ = BuildingLocation.objects.get_or_create(building=building, name="Lift 2")
+        location, _ = BuildingLocation.objects.get_or_create(
+            building=building, name="Lift 2"
+        )
         return submit_report(resident, unit, text, location, [])
 
     @patch("lamto.maintenance.ai.urlopen")
@@ -138,7 +149,7 @@ class TriageTests(TestCase):
         body = json.loads(request.data)
         self.assertEqual(body["model"], "gpt-4o-mini")
         self.assertEqual(body["temperature"], 0)
-        self.assertEqual(body["response_format"], {"type": "json_object"})
+        self.assertNotIn("response_format", body)
         self.assertEqual(
             [message["role"] for message in body["messages"]], ["system", "user"]
         )
@@ -227,9 +238,7 @@ class TriageTests(TestCase):
     @patch("lamto.maintenance.ai.urlopen")
     def test_missing_response_id_routes_to_manual_triage(self, urlopen):
         report = self.submit("Elevator shakes")
-        urlopen.return_value = FakeResponse(
-            envelope(triage_payload(), request_id=None)
-        )
+        urlopen.return_value = FakeResponse(envelope(triage_payload(), request_id=None))
 
         job = process_triage_job(report.triage_job.id)
 
@@ -249,7 +258,7 @@ class TriageTests(TestCase):
 
     @patch("lamto.maintenance.ai.urlopen")
     def test_oversized_model_strings_route_to_manual_triage(self, urlopen):
-        limits = {"category": 128, "department": 128, "interpreted_location": 1000}
+        limits = {"category": 128, "management_queue": 128, "interpreted_location": 1000}
         for field, limit in limits.items():
             with self.subTest(field=field):
                 report = self.submit("Elevator shakes")
@@ -265,7 +274,9 @@ class TriageTests(TestCase):
     @patch("lamto.maintenance.ai.urlopen")
     def test_oversized_response_id_routes_to_manual_triage(self, urlopen):
         report = self.submit("Elevator shakes")
-        urlopen.return_value = FakeResponse(envelope(triage_payload(), request_id="x" * 256))
+        urlopen.return_value = FakeResponse(
+            envelope(triage_payload(), request_id="x" * 256)
+        )
 
         job = process_triage_job(report.triage_job.id)
 
@@ -303,7 +314,9 @@ class TriageTests(TestCase):
     def test_manual_log_includes_latency_and_response_id(self, urlopen):
         report = self.submit("Elevator shakes")
         urlopen.return_value = FakeResponse(
-            envelope(triage_payload(requires_manual_review=True), request_id="cmpl-manual")
+            envelope(
+                triage_payload(requires_manual_review=True), request_id="cmpl-manual"
+            )
         )
 
         with self.assertLogs("lamto.maintenance.ai", level="INFO") as logs:

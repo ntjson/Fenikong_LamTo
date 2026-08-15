@@ -30,11 +30,11 @@ class CaseProposalEligibilityTests(TestCase):
         )
         decision = TriageDecision.objects.create(
             report=report, operator=self.manager, category="General", urgency="HIGH",
-            location=self.location, department="Ops", deadline_minutes=60,
+            location=self.location, management_queue="GENERAL", deadline_minutes=60,
         )
         case = MaintenanceCase.objects.create(
             decision=decision, building=self.building, category="General", urgency="HIGH",
-            location=self.location, department="Ops",
+            location=self.location, management_queue="GENERAL",
             deadline_at=timezone.now() + timedelta(hours=1),
         )
         CaseReport.objects.create(case=case, report=report, grouped_by=self.manager)

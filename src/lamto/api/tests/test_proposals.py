@@ -62,7 +62,6 @@ class ProposalApiTests(TestCase):
             self.manager,
             amount_vnd=2_500_000,
             contractor_name="Lift Co",
-            fund_code="GENERAL",
             purpose=purpose,
             proposed_action="Replace controller",
             expected_schedule="Within 14 days",
@@ -112,7 +111,6 @@ class ProposalApiTests(TestCase):
         assert body["purpose"] == "Thang máy"
         assert body["proposed_action"] == "Repair the affected equipment"
         assert body["amount_vnd"] > 0
-        assert body["fund_code"] == "GENERAL"
         assert body["contractor_name"] == "Pilot Contractor Co"
         assert body["expected_schedule"] == "Within 14 days"
         assert body["versions"][0]["number"] == 1
@@ -173,13 +171,9 @@ class ProposalApiTests(TestCase):
         driver = PilotDomainDriver(self.seed)
         driver._ctx.update(proposal=proposal, amount_vnd=2_500_000)
         self.seed.proposal = proposal
-        pending = driver.record_settlement_transfer()
+        settled = driver.record_settlement()
         body = self.client.get(detail_url, headers=auth).json()
-        assert body["settlement"]["amount_vnd"] == pending.amount_vnd
-        assert body["settlement"]["settled_at"] is None
-
-        settled = driver.record_settlement_ack()
-        body = self.client.get(detail_url, headers=auth).json()
+        assert body["settlement"]["amount_vnd"] == settled.amount_vnd
         assert settled.settled_at is not None
         assert body["settlement"]["settled_at"] is not None
 

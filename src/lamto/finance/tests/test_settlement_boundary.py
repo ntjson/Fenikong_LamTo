@@ -26,8 +26,7 @@ class SettlementBoundaryTests(TestCase):
         driver = PilotDomainDriver(seed)
         driver.prepare_local_normal_work()
         driver.complete_assigned_work()
-        driver.record_settlement_transfer()
-        settlement = driver.record_settlement_ack()
+        settlement = driver.record_settlement()
         driver.confirm_all_chain_events()
         return driver, settlement
 
@@ -37,7 +36,7 @@ class SettlementBoundaryTests(TestCase):
         proposal.refresh_from_db()
         self.assertEqual(_load_execution_chain(proposal), settlement)
         gates = {gate for _document, _digest, gate in _collect_document_checks(proposal, proposal.current_version, settlement)}
-        self.assertTrue({"SETTLEMENT_TRANSFER", "SETTLEMENT_ACK"}.issubset(gates))
+        self.assertIn("SETTLEMENT_TRANSFER", gates)
 
     def test_publication_finalizes_and_integrity_traverses_settlement_chain(self):
         driver, settlement = self.flow()
@@ -60,7 +59,6 @@ class SettlementBoundaryTests(TestCase):
             seed.management_memberships[0],
             amount_vnd=19_000_000,
             contractor_name="Replacement Contractor",
-            fund_code="GENERAL",
             purpose="Elevator",
             proposed_action="Replace the affected equipment",
             expected_schedule="Within 21 days",
@@ -68,8 +66,7 @@ class SettlementBoundaryTests(TestCase):
             event_id=new_event_id(),
         )
         driver.complete_assigned_work()
-        driver.record_settlement_transfer(amount_vnd=19_000_000)
-        settlement = driver.record_settlement_ack()
+        settlement = driver.record_settlement()
         driver.confirm_all_chain_events()
 
         def chain_record(event):

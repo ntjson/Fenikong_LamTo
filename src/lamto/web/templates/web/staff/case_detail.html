@@ -54,7 +54,7 @@
       <dl class="detail-list detail-list-wide">
         <div><dt>{% trans "Category" %}</dt><dd>{{ case.get_category_display }}</dd></div>
         <div><dt>{% trans "Urgency" %}</dt><dd>{{ case.urgency|staff_urgency }}</dd></div>
-        <div><dt>{% trans "Management queue" %}</dt><dd>{{ case.department }}</dd></div>
+        <div><dt>{% trans "Management queue" %}</dt><dd>{{ case.get_management_queue_display }}</dd></div>
         <div><dt>{% trans "Deadline" %}</dt><dd>{% if case.deadline_at %}{{ case.deadline_at|staff_datetime }}{% else %}{% trans "Not set" %}{% endif %}</dd></div>
       </dl>
       {% if case.decision.suggestion %}
@@ -65,7 +65,7 @@
         <dl class="detail-list">
           {% for field, diff in case.decision.differences.items %}
           <div>
-            <dt>{% if field == "category" %}{% trans "Category" %}{% elif field == "urgency" %}{% trans "Urgency" %}{% elif field == "department" %}{% trans "Management queue" %}{% elif field == "deadline_minutes" %}{% trans "Deadline" %}{% else %}{{ field|title }}{% endif %}</dt>
+            <dt>{% if field == "category" %}{% trans "Category" %}{% elif field == "urgency" %}{% trans "Urgency" %}{% elif field == "management_queue" %}{% trans "Management queue" %}{% elif field == "deadline_minutes" %}{% trans "Deadline" %}{% else %}{{ field|title }}{% endif %}</dt>
             <dd>{% if field == "deadline_minutes" %}{{ diff.suggested }} {% trans "min" %} → {{ diff.chosen }} {% trans "min" %}{% elif field == "urgency" %}{{ diff.suggested|staff_urgency }} → {{ diff.chosen|staff_urgency }}{% elif field == "category" %}{{ diff.suggested|staff_category }} → {{ diff.chosen|staff_category }}{% else %}{{ diff.suggested }} → {{ diff.chosen }}{% endif %}</dd>
           </div>
           {% endfor %}
@@ -106,7 +106,7 @@
       <div class="workflow-section">
         <h2>{% trans "Triage assistant suggestion" %}</h2>
         <p class="lede">
-          {% blocktrans with cat=suggestion.get_category_display urg=suggestion.urgency|staff_urgency dept=suggestion.department mins=suggestion.deadline_minutes %}Suggests <strong>{{ cat }}</strong>, <strong>{{ urg }}</strong> urgency, <strong>{{ dept }}</strong> queue, due in <strong>{{ mins }} minutes</strong>.{% endblocktrans %}
+          {% blocktrans with cat=suggestion.get_category_display urg=suggestion.urgency|staff_urgency dept=suggestion.get_management_queue_display mins=suggestion.deadline_minutes %}Suggests <strong>{{ cat }}</strong>, <strong>{{ urg }}</strong> urgency, <strong>{{ dept }}</strong> queue, due in <strong>{{ mins }} minutes</strong>.{% endblocktrans %}
         </p>
         {% if suggestion.interpreted_location %}<p class="hint">{% blocktrans with loc=suggestion.interpreted_location %}Interpreted location: {{ loc }}{% endblocktrans %}</p>{% endif %}
         {% if suggestion.missing_information %}<p class="hint">{% trans "Possibly missing:" %}</p><ul>{% for item in suggestion.missing_information %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}

@@ -171,9 +171,8 @@ class SecurityTests(TestCase):
         self.client.force_login(board.user)
 
         response = self.client.post(
-            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}),
+            reverse("web:settlement-record", kwargs={"pk": 999999}),
             {
-                "bank_reference": "REF-1",
                 "amount_vnd": "1000",
                 "external_status": "COMPLETED",
                 "proof": "1",

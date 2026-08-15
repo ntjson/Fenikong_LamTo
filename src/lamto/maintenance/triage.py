@@ -17,6 +17,7 @@ from .models import (
     TriageDecision,
     TriageSuggestion,
     normalize_category,
+    normalize_management_queue,
 )
 
 
@@ -33,21 +34,22 @@ def _active_location(location, building_id):
     raise ValidationError(_("Case location hierarchy is invalid."))
 
 
-def _decision_values(category, urgency, department, deadline_minutes):
+def _decision_values(category, urgency, management_queue, deadline_minutes):
     if not isinstance(category, str) or not (category := category.strip()):
         raise ValidationError(_("Case category is required."))
     category = normalize_category(category)
     if urgency not in URGENCIES:
         raise ValidationError(_("Case urgency is invalid."))
-    if not isinstance(department, str) or not (department := department.strip()):
-        raise ValidationError(_("Case department is required."))
+    if not isinstance(management_queue, str) or not (management_queue := management_queue.strip()):
+        raise ValidationError(_("Management queue is required."))
+    management_queue = normalize_management_queue(management_queue)
     if type(deadline_minutes) is not int or deadline_minutes <= 0:
         raise ValidationError(_("Case deadline must be a positive number of minutes."))
-    return category, urgency, department, deadline_minutes
+    return category, urgency, management_queue, deadline_minutes
 
 
 @transaction.atomic
-def confirm_triage(report, operator, category, urgency, location, department, deadline_minutes):
+def confirm_triage(report, operator, category, urgency, location, management_queue, deadline_minutes):
     report = (
         IssueReport.objects.select_for_update()
         .select_related("unit")
@@ -58,8 +60,8 @@ def confirm_triage(report, operator, category, urgency, location, department, de
         raise ValidationError(_("Report is required."))
     membership = require_management(operator, report.unit.building_id)
     location = _active_location(location, report.unit.building_id)
-    category, urgency, department, deadline_minutes = _decision_values(
-        category, urgency, department, deadline_minutes
+    category, urgency, management_queue, deadline_minutes = _decision_values(
+        category, urgency, management_queue, deadline_minutes
     )
     suggestion = TriageSuggestion.objects.select_for_update().filter(job__report=report).first()
     decision = TriageDecision.objects.select_for_update().filter(report=report).first()
@@ -68,13 +70,13 @@ def confirm_triage(report, operator, category, urgency, location, department, de
     selected = {
         "category": category,
         "urgency": urgency,
-        "department": department,
+        "management_queue": management_queue,
         "deadline_minutes": deadline_minutes,
     }
     suggested = {} if suggestion is None else {
         "category": suggestion.category,
         "urgency": suggestion.urgency,
-        "department": suggestion.department,
+        "management_queue": suggestion.management_queue,
         "deadline_minutes": suggestion.deadline_minutes,
     }
     differences = {
@@ -97,7 +99,7 @@ def confirm_triage(report, operator, category, urgency, location, department, de
         deadline_at=timezone.now() + timedelta(minutes=deadline_minutes),
         category=category,
         urgency=urgency,
-        department=department,
+        management_queue=management_queue,
     )
     CaseReport.objects.create(case=case, report=report, grouped_by=operator)
     record_audit(

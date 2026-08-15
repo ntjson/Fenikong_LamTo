@@ -42,8 +42,7 @@ ACTION_KIND_LABELS = {
     "in_progress_case": _lazy("Case in progress"),
     "proposal_create": _lazy("Proposal creation"),
     "proposal_decision": _lazy("Proposal decision"),
-    "settlement_transfer": _lazy("Transfer recording"),
-    "settlement_ack": _lazy("Acknowledgement recording"),
+    "settlement": _lazy("Settlement recording"),
     "integrity_mismatch": _lazy("Integrity mismatch"),
     "failed_outbox": _lazy("Failed evidence anchor"),
     "quarantined_upload": _lazy("Quarantined upload"),
@@ -99,8 +98,7 @@ def action_items_for(membership: ManagementMembership) -> list[ActionItem]:
     items.extend(_in_progress_case_items(building_id))
     items.extend(_proposal_create_candidates(building_id))
     items.extend(_proposal_decision_items(building_id))
-    items.extend(_settlement_transfer_items(building_id))
-    items.extend(_settlement_ack_items(building_id))
+    items.extend(_settlement_items(building_id))
     items.extend(_integrity_mismatch_items(building_id))
     items.extend(_failed_outbox_items(building_id))
     items.extend(_quarantined_upload_items(building_id, membership))
@@ -252,12 +250,8 @@ def _proposal_decision_items(building_id: int) -> list[ActionItem]:
     ).order_by("created_at")[:30]]
 
 
-def _settlement_transfer_items(building_id: int) -> list[ActionItem]:
-    return [ActionItem(kind="settlement_transfer", title=_kind_title("settlement_transfer"), summary=_("Proposal #%(id)s") % {"id": p.pk}, target_type="Proposal", target_id=p.pk, url=reverse("web:proposal-detail", kwargs={"pk": p.pk}), priority=16, amount_vnd=p.current_version.amount_vnd) for p in Proposal.objects.filter(building_id=building_id, status=Proposal.Status.COMPLETED, settlement__isnull=True).select_related("current_version")[:40]]
-
-
-def _settlement_ack_items(building_id: int) -> list[ActionItem]:
-    return [ActionItem(kind="settlement_ack", title=_kind_title("settlement_ack"), summary=_("Settlement #%(id)s") % {"id": s.pk}, target_type="Settlement", target_id=s.pk, url=reverse("web:settlement-detail", kwargs={"pk": s.pk}), priority=14, amount_vnd=s.amount_vnd) for s in Settlement.objects.filter(proposal__building_id=building_id, settled_at__isnull=True)[:40]]
+def _settlement_items(building_id: int) -> list[ActionItem]:
+    return [ActionItem(kind="settlement", title=_kind_title("settlement"), summary=_("Proposal #%(id)s") % {"id": p.pk}, target_type="Proposal", target_id=p.pk, url=reverse("web:proposal-detail", kwargs={"pk": p.pk}), priority=16, amount_vnd=p.current_version.amount_vnd) for p in Proposal.objects.filter(building_id=building_id, status=Proposal.Status.COMPLETED, settlement__isnull=True).select_related("current_version")[:40]]
 
 
 def mismatched_ledger_entry_ids(building_id: int, limit: int = 30) -> list[int]:

@@ -148,7 +148,7 @@ def _referenced_document_ids():
         ProposalDocument,
         Settlement,
     )
-    from lamto.maintenance.models import ReportPhoto, WorkUpdateEvidence
+    from lamto.maintenance.models import ReportPhoto
 
     def _docs_from_version_ids(qs_values):
         version_ids = [vid for vid in qs_values if vid is not None]
@@ -168,17 +168,11 @@ def _referenced_document_ids():
             "evidence_id", flat=True
         )
     )
-    settlement_fields = ("transfer_id", "ack_id")
-    for model, fields in ((Settlement, settlement_fields),):
-        for field in fields:
-            protected |= _docs_from_version_ids(
-                model.objects.exclude(**{field: None}).values_list(field, flat=True)
-            )
     protected |= _docs_from_version_ids(
-        ReportPhoto.objects.values_list("version_id", flat=True)
+        Settlement.objects.values_list("transfer_id", flat=True)
     )
     protected |= _docs_from_version_ids(
-        WorkUpdateEvidence.objects.values_list("version_id", flat=True)
+        ReportPhoto.objects.values_list("version_id", flat=True)
     )
     return protected
 

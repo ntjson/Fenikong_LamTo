@@ -8,7 +8,6 @@ from lamto.maintenance.models import (
     CompletionRating,
     IssueReport,
     WorkUpdate,
-    WorkUpdateEvidence,
 )
 
 
@@ -41,13 +40,7 @@ def resident_report_timeline(report):
     cases = []
     updates = Prefetch(
         "case__updates",
-        queryset=WorkUpdate.objects.order_by("pk").prefetch_related(
-            Prefetch(
-                "evidence_links",
-                queryset=WorkUpdateEvidence.objects.select_related("version").order_by("pk"),
-                to_attr="timeline_evidence_links",
-            )
-        ),
+        queryset=WorkUpdate.objects.order_by("pk"),
         to_attr="timeline_updates",
     )
     for link in CaseReport.objects.filter(report=report).select_related("case").prefetch_related(
@@ -62,14 +55,6 @@ def resident_report_timeline(report):
                     "cause": update.cause,
                     "result": update.result,
                     "created_at": update.created_at,
-                    "photos": [
-                        {
-                            "id": link.version.pk,
-                            "filename": link.version.filename,
-                            "kind": link.kind,
-                        }
-                        for link in update.timeline_evidence_links
-                    ],
                 }
             )
         cases.append(

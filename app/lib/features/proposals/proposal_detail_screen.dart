@@ -74,7 +74,6 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
         _Field(l10n.proposalProblem, proposal.purpose),
         _Field(l10n.proposalAction, proposal.proposedAction),
         _Field(l10n.proposalCost, formatVnd(proposal.amountVnd), amount: true),
-        _Field(l10n.proposalFund, _fundLabel(proposal.fundCode, l10n)),
         _Field(l10n.proposalContractor, proposal.contractorName),
         _Field(l10n.proposalSchedule, proposal.expectedSchedule),
         const Divider(height: 32),
@@ -113,11 +112,7 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
           const Divider(height: 32),
           Text(l10n.proposalSettlement, style: titleStyle),
           const SizedBox(height: 8),
-          Text(
-            settlement.settledAt == null
-                ? l10n.proposalUnsettled
-                : l10n.proposalSettled,
-          ),
+          Text(l10n.proposalSettled),
         ],
         // Inline where the rate CTA sits (visible on iOS, unlike a SnackBar).
         if (_rated) ...[
@@ -151,14 +146,6 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
 
 String _date(DateTime value) =>
     DateFormat('dd/MM/yyyy').format(value.toLocal());
-
-/// fund_code is free-text staff input; unknown codes fall back to an honest
-/// generic label instead of leaking the raw value (Vietnamese-First Rule).
-String _fundLabel(String code, AppLocalizations l10n) => switch (code) {
-  'GENERAL' => l10n.fundGeneral,
-  'MAINTENANCE' => l10n.fundMaintenance,
-  _ => l10n.fundOther,
-};
 
 class _Field extends StatelessWidget {
   const _Field(this.label, this.value, {this.amount = false});

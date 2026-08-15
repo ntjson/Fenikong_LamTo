@@ -67,7 +67,6 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ReportPhoto.serializer)
       ..add(ReportSummary.serializer)
       ..add(ReportWorkUpdate.serializer)
-      ..add(ReportWorkUpdatePhoto.serializer)
       ..add(StatusEnum.serializer)
       ..add(TokenResponse.serializer)
       ..add(VehiclePlate.serializer)
@@ -120,10 +119,6 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ReportWorkUpdate)]),
           () => ListBuilder<ReportWorkUpdate>())
-      ..addBuilderFactory(
-          const FullType(
-              BuiltList, const [const FullType(ReportWorkUpdatePhoto)]),
-          () => ListBuilder<ReportWorkUpdatePhoto>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(VehiclePlate)]),
           () => ListBuilder<VehiclePlate>())

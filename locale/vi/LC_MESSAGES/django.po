@@ -62,9 +62,6 @@ msgstr "Ký và công bố lên sổ cư dân"
 msgid "Publish to resident ledger"
 msgstr "Công bố lên sổ cái cư dân"
 
-msgid "LamTo Staff"
-msgstr "LamTo Quản lý"
-
 msgid "Skip to content"
 msgstr "Bỏ qua đến nội dung"
 
@@ -194,26 +191,8 @@ msgstr "Nguyên nhân"
 msgid "Result"
 msgstr "Kết quả"
 
-msgid "Before photos"
-msgstr "Ảnh trước khi thực hiện"
-
-msgid "After photos"
-msgstr "Ảnh sau khi thực hiện"
-
-msgid "Upload a new before photo"
-msgstr "Tải lên ảnh mới trước khi thực hiện"
-
-msgid "Upload a new after photo"
-msgstr "Tải lên ảnh mới sau khi thực hiện"
-
 msgid "Amount (VND)"
 msgstr "Số tiền (VND)"
-
-msgid "Payee name"
-msgstr "Tên người nhận"
-
-msgid "Bank reference"
-msgstr "Mã tham chiếu ngân hàng"
 
 msgid "Existing payment proof"
 msgstr "Bằng chứng thanh toán hiện có"
@@ -229,9 +208,6 @@ msgstr "Chọn bằng chứng hiện có hoặc tải lên bằng chứng thanh 
 
 msgid "Contractor name"
 msgstr "Tên nhà thầu"
-
-msgid "Fund code"
-msgstr "Mã quỹ"
 
 msgid "Purpose"
 msgstr "Mục đích"
@@ -537,9 +513,6 @@ msgstr ""
 msgid "Review settlement"
 msgstr "Xem thanh toán"
 
-msgid "Record acknowledgement"
-msgstr "Ghi nhận xác nhận"
-
 msgid "Gate"
 msgstr "Cổng"
 
@@ -569,12 +542,6 @@ msgstr "Tạo đề xuất"
 
 msgid "Proposal decision"
 msgstr "Quyết định đề xuất"
-
-msgid "Transfer recording"
-msgstr "Ghi nhận chuyển khoản"
-
-msgid "Acknowledgement recording"
-msgstr "Ghi nhận xác nhận"
 
 msgid "Integrity mismatch"
 msgstr "Không khớp toàn vẹn"
@@ -658,9 +625,6 @@ msgstr "Vụ việc này đã có đề xuất."
 msgid "Accountability chain"
 msgstr "Chuỗi trách nhiệm"
 
-msgid "Acknowledgement recorded; settlement anchored."
-msgstr "Đã ghi nhận xác nhận; thanh toán đã neo."
-
 msgid "Active cases"
 msgstr "Vụ việc đang mở"
 
@@ -702,12 +666,6 @@ msgstr "Đã phê duyệt"
 
 msgid "Audit events"
 msgstr "Sự kiện kiểm toán"
-
-msgid "Awaiting acknowledgement"
-msgstr "Đang chờ xác nhận"
-
-msgid "Awaiting transfer evidence"
-msgstr "Đang chờ bằng chứng chuyển khoản"
 
 msgid "Back to announcements"
 msgstr "Về thông báo"
@@ -915,8 +873,8 @@ msgstr "Phát hành hóa đơn"
 msgid "Issued"
 msgstr "Đã phát hành"
 
-msgid "LamTo Management"
-msgstr "LamTo Quản lý"
+msgid "Làm Tổ Management"
+msgstr "Làm Tổ Quản lý"
 
 msgid "Last confirmed at"
 msgstr "Xác nhận cuối lúc"
@@ -976,9 +934,6 @@ msgstr "Chưa phát hành hóa đơn nào."
 
 msgid "No bills match your search."
 msgstr "Không có hóa đơn khớp tìm kiếm."
-
-msgid "No completed proposals await transfer evidence."
-msgstr "Không có đề xuất hoàn tất đang chờ bằng chứng chuyển khoản."
 
 msgid "No current failures"
 msgstr "Không có lỗi hiện tại"
@@ -1079,21 +1034,11 @@ msgstr "Chi ra (30 ngày)"
 msgid "Paid"
 msgstr "Đã thanh toán"
 
-msgid "Payee"
-msgstr "Người nhận"
-
 msgid "Payment"
 msgstr "Thanh toán"
 
 msgid "Payment QR (demo)"
 msgstr "QR thanh toán (demo)"
-
-msgid ""
-"Payment evidence for completed proposals, from transfer through payee "
-"acknowledgement."
-msgstr ""
-"Bằng chứng thanh toán cho đề xuất hoàn tất, từ chuyển khoản đến xác nhận "
-"người nhận."
 
 msgid "Pending items"
 msgstr "Mục đang chờ"
@@ -1176,12 +1121,6 @@ msgstr "Đánh giá"
 
 msgid "Record source"
 msgstr "Ghi nguồn"
-
-msgid "Record the payee acknowledgement"
-msgstr "Ghi nhận xác nhận người nhận"
-
-msgid "Record transfer"
-msgstr "Ghi nhận chuyển khoản"
 
 msgid "Recorded"
 msgstr "Đã ghi"
@@ -1297,12 +1236,6 @@ msgstr ""
 "Biểu mẫu bên phải được điền sẵn từ gợi ý này. Chọn vị trí, sửa nếu cần, rồi "
 "xác nhận."
 
-msgid ""
-"The transfer is on record. Settlement completes once the payee's "
-"acknowledgement is filed."
-msgstr ""
-"Chuyển khoản đã ghi nhận. Thanh toán hoàn tất khi có xác nhận người nhận."
-
 msgid "There is nothing for this membership to act on now."
 msgstr "Hiện không có việc nào cho tư cách thành viên này."
 
@@ -1323,9 +1256,6 @@ msgstr "Tiêu đề"
 
 msgid "Transfer evidence"
 msgstr "Bằng chứng chuyển khoản"
-
-msgid "Transfer evidence recorded."
-msgstr "Đã ghi nhận bằng chứng chuyển khoản."
 
 msgid "Triage"
 msgstr "Phân loại"
@@ -1416,10 +1346,6 @@ msgid "Replacement"
 msgstr "Thay thế"
 
 #, python-format
-msgid "Acknowledgement (%(kind)s)"
-msgstr "Xác nhận (%(kind)s)"
-
-#, python-format
 msgid "Case #%(id)s"
 msgstr "Vụ việc #%(id)s"
 
@@ -1466,14 +1392,6 @@ msgstr "Trang %(n)s / %(total)s"
 #, python-format
 msgid "Proposal #%(id)s"
 msgstr "Đề xuất #%(id)s"
-
-#, python-format
-msgid "Record acknowledgement for settlement #%(id)s"
-msgstr "Ghi nhận xác nhận cho thanh toán #%(id)s"
-
-#, python-format
-msgid "Record transfer for proposal #%(id)s"
-msgstr "Ghi nhận chuyển khoản cho đề xuất #%(id)s"
 
 #, python-format
 msgid "Report #%(id)s"
@@ -1825,9 +1743,6 @@ msgstr "Cư dân xuất hiện ở đây khi họ xin gia nhập tòa nhà."
 msgid "Add an opening balance or inflow with Record source."
 msgstr "Thêm số dư đầu kỳ hoặc khoản thu bằng nút Ghi nguồn."
 
-msgid "Record a transfer on a completed proposal to start one."
-msgstr "Ghi nhận chuyển khoản trên một đề xuất đã hoàn tất để bắt đầu."
-
 msgid "Success:"
 msgstr "Thành công:"
 
@@ -2006,9 +1921,6 @@ msgstr "Giá trị quyết định không hợp lệ."
 msgid "This proposal cannot receive another version."
 msgstr "Đề xuất này không thể nhận thêm phiên bản."
 
-msgid "Funding source is required."
-msgstr "Cần nguồn kinh phí."
-
 msgid "Problem or need is required."
 msgstr "Cần mô tả vấn đề hoặc nhu cầu."
 
@@ -2033,9 +1945,6 @@ msgstr "Cần phiên bản hiện tại của đề xuất."
 msgid "Settlement is required before publication."
 msgstr "Cần quyết toán trước khi công bố."
 
-msgid "Bank reference is required."
-msgstr "Cần mã tham chiếu ngân hàng."
-
 msgid ""
 "Settlement evidence requires a clean payment proof in the proposal building."
 msgstr ""
@@ -2047,18 +1956,6 @@ msgstr "Chỉ đề xuất đã hoàn tất công việc mới có thể quyết
 
 msgid "Settlement already exists for this proposal."
 msgstr "Đề xuất này đã có quyết toán."
-
-msgid "Settlement amount must be a positive integer VND amount."
-msgstr "Số tiền quyết toán phải là số nguyên dương (VND)."
-
-msgid "Settlement amount must match the published proposal amount."
-msgstr "Số tiền quyết toán phải khớp với số tiền đề xuất đã công bố."
-
-msgid "Payee name is required."
-msgstr "Cần tên người nhận tiền."
-
-msgid "Settlement is already settled."
-msgstr "Khoản quyết toán này đã hoàn tất."
 
 msgid "A rejection reason is required."
 msgstr "Cần lý do từ chối."
@@ -2129,9 +2026,6 @@ msgstr "Cần chọn hạng mục."
 
 msgid "Case urgency is invalid."
 msgstr "Mức khẩn cấp không hợp lệ."
-
-msgid "Case department is required."
-msgstr "Cần chọn hàng đợi quản lý."
 
 msgid "Case deadline must be a positive number of minutes."
 msgstr "Hạn xử lý phải là số phút dương."
@@ -2273,9 +2167,6 @@ msgstr "Đã ghi nhận quyết định. Công việc của đề xuất có th�
 msgid "Decision recorded. This proposal is closed as not proceeding."
 msgstr ""
 "Đã ghi nhận quyết định. Đề xuất được đóng với kết luận không tiến hành."
-
-msgid "Review the progress fields and evidence uploads."
-msgstr "Hãy kiểm tra các trường tiến độ và bằng chứng tải lên."
 
 #, python-format
 msgid "Case #%(id)s · %(category)s · %(location)s"
@@ -2628,21 +2519,8 @@ msgstr ""
 "“Không tiến hành” sẽ đóng vĩnh viễn đề xuất này dưới tên bạn; không thể mở "
 "lại, và khoản chi mới cần một đề xuất mới."
 
-msgid ""
-"Check the transfer you are recording against these frozen values before "
-"typing."
-msgstr ""
-"Đối chiếu khoản chuyển bạn sắp ghi với các giá trị đã đóng băng này trước "
-"khi nhập."
-
 msgid "Frozen proposal to settle"
 msgstr "Đề xuất đã đóng băng cần quyết toán"
-
-msgid "Recorded transfer"
-msgstr "Chuyển khoản đã ghi nhận"
-
-msgid "The acknowledgement you file must match this recorded transfer."
-msgstr "Xác nhận bạn nộp phải khớp với khoản chuyển đã ghi nhận này."
 
 msgid "Sign out"
 msgstr "Đăng xuất"
@@ -2656,12 +2534,6 @@ msgstr[0] "%(counter)s thiết bị không hoạt động; xem số liệu bên 
 msgid "%(counter)s notification failure; see the counts below"
 msgid_plural "%(counter)s notification failures; see the counts below"
 msgstr[0] "%(counter)s lượt thông báo thất bại; xem số liệu bên dưới"
-
-msgid "Management-uploaded evidence"
-msgstr "Bằng chứng do Ban quản lý tải lên"
-
-msgid "Payee link (reserved)"
-msgstr "Liên kết người nhận tiền (dự phòng)"
 
 msgid "Verified"
 msgstr "Đã xác minh"
@@ -2716,14 +2588,6 @@ msgstr "Số dư quỹ theo kỳ"
 
 msgid "Settlement pages"
 msgstr "Trang quyết toán"
-
-#, python-format
-msgid ""
-"Showing the latest %(shown)s of %(total)s proposals awaiting transfer "
-"evidence."
-msgstr ""
-"Đang hiển thị %(shown)s đề xuất chờ bằng chứng chuyển khoản mới nhất trong "
-"tổng số %(total)s."
 
 #, python-format
 msgid "Showing the latest %(count)s gate events."
@@ -2807,3 +2671,70 @@ msgstr "Cần có người dùng."
 
 msgid "Request is required."
 msgstr "Cần có yêu cầu."
+
+
+msgid "Payment evidence for completed proposals."
+msgstr "Bằng chứng thanh toán cho các đề xuất đã hoàn tất."
+
+msgid "Awaiting settlement"
+msgstr "Chờ thanh toán"
+
+msgid "Record settlement"
+msgstr "Ghi nhận thanh toán"
+
+msgid "No completed proposals await settlement."
+msgstr "Không có đề xuất hoàn tất nào đang chờ thanh toán."
+
+msgid "Record a settlement on a completed proposal to start one."
+msgstr "Ghi nhận thanh toán cho một đề xuất đã hoàn tất để bắt đầu."
+
+msgid "The settlement is recorded against these frozen values."
+msgstr "Khoản thanh toán được ghi nhận theo các giá trị đã đóng băng này."
+
+msgid "Recipient"
+msgstr "Người nhận"
+
+msgid "Settlement recorded and anchored."
+msgstr "Đã ghi nhận và neo khoản thanh toán."
+
+msgid "Settlement recording"
+msgstr "Ghi nhận thanh toán"
+
+msgid "Record settlement for proposal #%(id)s"
+msgstr "Ghi nhận thanh toán cho đề xuất #%(id)s"
+
+msgid "Showing the latest %(shown)s of %(total)s proposals awaiting settlement."
+msgstr "Đang hiển thị %(shown)s trong %(total)s đề xuất đang chờ thanh toán."
+
+msgid "Review the progress fields."
+msgstr "Xem lại các trường tiến độ."
+
+msgid "Management queue is required."
+msgstr "Cần chọn hàng đợi quản lý."
+
+msgid "Maintenance"
+msgstr "Bảo trì"
+
+msgid "Plumbing"
+msgstr "Cấp thoát nước"
+
+msgid "Electrical"
+msgstr "Điện"
+
+msgid "HVAC"
+msgstr "Điều hòa – thông gió"
+
+msgid "Cleaning"
+msgstr "Vệ sinh"
+
+msgid "Security"
+msgstr "An ninh"
+
+msgid "Landscaping"
+msgstr "Cảnh quan"
+
+msgid "Pest control"
+msgstr "Kiểm soát côn trùng"
+
+msgid "General"
+msgstr "Chung"

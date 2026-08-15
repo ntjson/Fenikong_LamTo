@@ -131,7 +131,7 @@ def verify_published_entry(entry_id, using="default") -> VerificationObservation
             .select_related(
                 "proposal__current_version",
                 "proposal__case",
-                "settlement__ack_recorded_by__user",
+                "settlement__settled_by__user",
             )
             .filter(pk=entry_id)
             .first()
@@ -210,7 +210,7 @@ def verify_published_entry(entry_id, using="default") -> VerificationObservation
         )
 
         if result == VerificationObservation.Result.MISMATCH:
-            publisher = entry.settlement.ack_recorded_by
+            publisher = entry.settlement.settled_by
             record_audit(
                 publisher.user,
                 publisher,

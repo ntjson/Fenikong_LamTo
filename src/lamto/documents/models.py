@@ -20,8 +20,6 @@ class InsertOnlyModel(models.Model):
 class Document(InsertOnlyModel):
     class Kind(models.TextChoices):
         REPORT_PHOTO = "REPORT_PHOTO", "Report photo"
-        BEFORE_PHOTO = "BEFORE_PHOTO", "Before photo"
-        AFTER_PHOTO = "AFTER_PHOTO", "After photo"
         QUOTATION = "QUOTATION", "Quotation"
         INVOICE = "INVOICE", "Invoice"
         ACCEPTANCE_REPORT = "ACCEPTANCE_REPORT", "Completion report"

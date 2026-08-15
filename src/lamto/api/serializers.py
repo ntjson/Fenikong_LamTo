@@ -3,7 +3,7 @@
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 
-from lamto.maintenance.models import IssueReport, WorkUpdateEvidence
+from lamto.maintenance.models import IssueReport
 
 
 class ProblemSerializer(serializers.Serializer):
@@ -240,19 +240,11 @@ class ReportPhotoUploadSerializer(serializers.Serializer):
     photo = serializers.FileField(help_text="JPEG/PNG image; scanned by ClamAV before storage.")
 
 
-class ReportWorkUpdatePhotoSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    filename = serializers.CharField()
-    kind = serializers.ChoiceField(choices=WorkUpdateEvidence.Kind.choices)
-    download_url = serializers.CharField()
-
-
 class ReportWorkUpdateSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     cause = serializers.CharField()
     result = serializers.CharField()
     created_at = serializers.DateTimeField()
-    photos = ReportWorkUpdatePhotoSerializer(many=True)
 
 
 class ReportCaseSerializer(serializers.Serializer):
@@ -327,10 +319,7 @@ class ProposalProgressSerializer(serializers.Serializer):
 
 class ProposalSettlementSerializer(serializers.Serializer):
     amount_vnd = serializers.IntegerField()
-    payee_name = serializers.CharField()
-    transfer_recorded_at = serializers.DateTimeField()
-    acknowledged_at = serializers.DateTimeField(allow_null=True)
-    settled_at = serializers.DateTimeField(allow_null=True)
+    settled_at = serializers.DateTimeField()
 
 
 class ProposalSerializer(serializers.Serializer):
@@ -343,7 +332,6 @@ class ProposalSerializer(serializers.Serializer):
     purpose = serializers.CharField(source="current_version.purpose")
     proposed_action = serializers.CharField(source="current_version.proposed_action")
     amount_vnd = serializers.IntegerField(source="current_version.amount_vnd")
-    fund_code = serializers.CharField(source="current_version.fund_code")
     contractor_name = serializers.CharField(source="current_version.contractor_name")
     expected_schedule = serializers.CharField(source="current_version.expected_schedule")
     versions = serializers.SerializerMethodField()
@@ -400,9 +388,6 @@ class ProposalSerializer(serializers.Serializer):
         return ProposalSettlementSerializer(
             {
                 "amount_vnd": settlement.amount_vnd,
-                "payee_name": settlement.payee_name,
-                "transfer_recorded_at": settlement.transfer_recorded_at,
-                "acknowledged_at": settlement.ack_recorded_at,
                 "settled_at": settlement.settled_at,
             }
         ).data

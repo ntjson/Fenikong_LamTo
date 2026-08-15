@@ -33,11 +33,11 @@ class CaseWorkTests(TestCase):
         )
         decision = TriageDecision.objects.create(
             report=report, operator=self.manager, category="Plumbing", urgency="HIGH",
-            location=self.location, department="Water", deadline_minutes=1440,
+            location=self.location, management_queue="PLUMBING", deadline_minutes=1440,
         )
         case = MaintenanceCase.objects.create(
             decision=decision, building=self.building, category="Plumbing",
-            urgency="HIGH", location=self.location, department="Water",
+            urgency="HIGH", location=self.location, management_queue="PLUMBING",
             deadline_at=timezone.now() + timedelta(days=1),
         )
         CaseReport.objects.create(case=case, report=report, grouped_by=self.manager)

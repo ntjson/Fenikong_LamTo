@@ -50,9 +50,8 @@ class PlatformChainIntegrationTests(TestCase):
             driver.decide_proposal()
             driver.publish_proposal_progress()
             driver.complete_proposal_work()
-            driver.record_settlement_transfer()
             driver.pause_chain()
-            settlement = driver.record_settlement_ack()
+            settlement = driver.record_settlement()
 
             proposal_event = process_outbox_event(version.outbox_event_id)
             settlement_event = process_outbox_event(settlement.outbox_event_id)

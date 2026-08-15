@@ -540,13 +540,6 @@ class ReportDetailView(APIView):
                 "api:document-download",
                 args=[issue_download_token(request.user.pk, photo["id"])],
             )
-        for case in timeline["cases"]:
-            for update in case["updates"]:
-                for photo in update["photos"]:
-                    photo["download_url"] = reverse(
-                        "api:document-download",
-                        args=[issue_download_token(request.user.pk, photo["id"])],
-                    )
         return Response(ReportDetailSerializer(timeline).data)
 
 

@@ -19,8 +19,7 @@ pytestmark = pytest.mark.django_db
 def test_role_access_denies_prohibited_document_reads(page, seeded_pilot):
     seeded_pilot.prepare_local_normal_work(page)
     seeded_pilot.complete_assigned_work()
-    seeded_pilot.record_settlement_transfer()
-    seeded_pilot.record_settlement_ack()
+    seeded_pilot.record_settlement()
     seeded_pilot.confirm_all_chain_events()
     seeded_pilot.publish_settlement_entry()
     seeded_pilot.confirm_all_chain_events()
@@ -58,7 +57,7 @@ def test_proposal_change_after_signature_requires_resubmission(page, seeded_pilo
     event_id = new_event_id()
     version2 = publish_proposal_version(
         proposal, manager, amount_vnd=19_000_000, contractor_name="Changed",
-        fund_code="GENERAL", purpose="Elevator",
+        purpose="Elevator",
         proposed_action="Replace the affected equipment",
         expected_schedule="Within 21 days", quotation_versions=[quotation],
         event_id=event_id,

@@ -212,7 +212,7 @@ class DeadlineRiskNotificationTests(TestCase):
             category="General",
             urgency="HIGH",
             location=location,
-            department="Ops",
+            management_queue="GENERAL",
             deadline_minutes=60,
             differences={},
         )
@@ -222,7 +222,7 @@ class DeadlineRiskNotificationTests(TestCase):
             category="General",
             urgency="HIGH",
             location=location,
-            department="Ops",
+            management_queue="GENERAL",
             deadline_at=timezone.now() + timedelta(hours=12),
             active=True,
         )

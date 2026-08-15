@@ -9,7 +9,7 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
-  String get appTitle => 'LamTo';
+  String get appTitle => 'Làm Tổ';
 
   @override
   String get loginTitle => 'Đăng nhập';
@@ -906,18 +906,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get proposalCost => 'Chi phí dự kiến';
 
   @override
-  String get proposalFund => 'Nguồn kinh phí';
-
-  @override
-  String get fundGeneral => 'Quỹ chung';
-
-  @override
-  String get fundMaintenance => 'Quỹ bảo trì';
-
-  @override
-  String get fundOther => 'Quỹ của tòa nhà';
-
-  @override
   String get proposalContractor => 'Nhà thầu';
 
   @override
@@ -935,10 +923,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get proposalSettlement => 'Quyết toán thanh toán';
 
   @override
-  String get proposalSettled => 'Đã thanh toán và bên nhận đã xác nhận';
-
-  @override
-  String get proposalUnsettled => 'Chưa quyết toán thanh toán';
+  String get proposalSettled => 'Đã thanh toán';
 
   @override
   String get proposalViewFromLedger => 'Xem đề xuất';

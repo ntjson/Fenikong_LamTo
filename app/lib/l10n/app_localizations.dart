@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'LamTo'**
+  /// **'Làm Tổ'**
   String get appTitle;
 
   /// No description provided for @loginTitle.
@@ -1748,30 +1748,6 @@ abstract class AppLocalizations {
   /// **'Estimated cost'**
   String get proposalCost;
 
-  /// No description provided for @proposalFund.
-  ///
-  /// In en, this message translates to:
-  /// **'Funding source'**
-  String get proposalFund;
-
-  /// No description provided for @fundGeneral.
-  ///
-  /// In en, this message translates to:
-  /// **'General fund'**
-  String get fundGeneral;
-
-  /// No description provided for @fundMaintenance.
-  ///
-  /// In en, this message translates to:
-  /// **'Maintenance fund'**
-  String get fundMaintenance;
-
-  /// No description provided for @fundOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Building fund'**
-  String get fundOther;
-
   /// No description provided for @proposalContractor.
   ///
   /// In en, this message translates to:
@@ -1805,14 +1781,8 @@ abstract class AppLocalizations {
   /// No description provided for @proposalSettled.
   ///
   /// In en, this message translates to:
-  /// **'Paid and acknowledged by the payee'**
+  /// **'Paid'**
   String get proposalSettled;
-
-  /// No description provided for @proposalUnsettled.
-  ///
-  /// In en, this message translates to:
-  /// **'Payment not yet settled'**
-  String get proposalUnsettled;
 
   /// No description provided for @proposalViewFromLedger.
   ///
@@ -1925,7 +1895,7 @@ abstract class AppLocalizations {
   /// No description provided for @billInvalidQr.
   ///
   /// In en, this message translates to:
-  /// **'That QR code is not a LamTo bill.'**
+  /// **'That QR code is not a Làm Tổ bill.'**
   String get billInvalidQr;
 
   /// No description provided for @billPaymentRecorded.

@@ -12,21 +12,6 @@ void main() {
       // TODO
     });
 
-    // String payeeName
-    test('to test the property `payeeName`', () async {
-      // TODO
-    });
-
-    // DateTime transferRecordedAt
-    test('to test the property `transferRecordedAt`', () async {
-      // TODO
-    });
-
-    // DateTime acknowledgedAt
-    test('to test the property `acknowledgedAt`', () async {
-      // TODO
-    });
-
     // DateTime settledAt
     test('to test the property `settledAt`', () async {
       // TODO

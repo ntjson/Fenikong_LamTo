@@ -47,7 +47,7 @@ def _triage_initial_from_suggestion(suggestion):
     return {
         "category": suggestion.category,
         "urgency": suggestion.urgency,
-        "department": suggestion.department,
+        "management_queue": suggestion.management_queue,
         "deadline_minutes": suggestion.deadline_minutes,
     }
 
@@ -95,7 +95,7 @@ def case_list(request):
     case_list = prepare_record_list(
         request,
         cases_qs,
-        search_fields=("category", "department", "location__name"),
+        search_fields=("category", "management_queue", "location__name"),
         sorts=(
             ("", _("Newest first"), ("-created_at",)),
             ("deadline", _("Deadline soonest"), ("deadline_at",)),
@@ -272,25 +272,14 @@ def case_detail(request, pk):
                 messages.success(request, _("Case work started."))
             return redirect("web:case-detail", pk=case.pk)
         if action in {"publish_progress", "complete_work"}:
-            work_form = ProgressUpdateForm(request.POST, request.FILES, building_id=building_id, uploader_id=request.user.pk)
+            work_form = ProgressUpdateForm(request.POST)
             if work_form.is_valid():
-                uploaded = []
                 try:
                     with transaction.atomic():
-                        before = list(work_form.cleaned_data["before_versions"])
-                        after = list(work_form.cleaned_data["after_versions"])
-                        if work_form.cleaned_data.get("before_upload"):
-                            uploaded.append(upload_document(case.building, Document.Kind.BEFORE_PHOTO, request.user, work_form.cleaned_data["before_upload"]))
-                            before.extend(uploaded[-1:])
-                        if work_form.cleaned_data.get("after_upload"):
-                            uploaded.append(upload_document(case.building, Document.Kind.AFTER_PHOTO, request.user, work_form.cleaned_data["after_upload"]))
-                            after.extend(uploaded[-1:])
                         service = complete_case_work if action == "complete_work" else publish_progress
                         service(case, request.user, work_form.cleaned_data["cause"],
-                                work_form.cleaned_data["result"], before, after)
+                                work_form.cleaned_data["result"])
                 except (ValidationError, PermissionDenied) as error:
-                    for version in uploaded:
-                        _delete_storage_blob(version.storage_key, version.provider_version_id or "")
                     if isinstance(error, ValidationError):
                         work_form.add_error(None, error)
                     else:
@@ -303,7 +292,7 @@ def case_detail(request, pk):
                     return redirect("web:case-detail", pk=case.pk)
 
     if work_form is None:
-        work_form = ProgressUpdateForm(building_id=building_id, uploader_id=request.user.pk)
+        work_form = ProgressUpdateForm()
 
     return render(
         request,

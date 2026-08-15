@@ -52,11 +52,6 @@ void main() {
       // TODO
     });
 
-    // String fundCode
-    test('to test the property `fundCode`', () async {
-      // TODO
-    });
-
     // String contractorName
     test('to test the property `contractorName`', () async {
       // TODO

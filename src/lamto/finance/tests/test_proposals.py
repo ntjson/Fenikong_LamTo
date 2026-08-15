@@ -50,7 +50,7 @@ class ProposalVersionTests(TestCase):
             category="Elevator",
             urgency="HIGH",
             location=location,
-            department="Maintenance",
+            management_queue="MAINTENANCE",
             deadline_minutes=240,
         )
         case = MaintenanceCase.objects.create(
@@ -59,7 +59,7 @@ class ProposalVersionTests(TestCase):
             category="Elevator",
             urgency="HIGH",
             location=location,
-            department="Maintenance",
+            management_queue="MAINTENANCE",
             deadline_at="2026-07-20T12:00:00Z",
         )
         CaseReport.objects.create(case=case, report=report, grouped_by=operator)
@@ -143,7 +143,7 @@ class ProposalVersionTests(TestCase):
                         contractor_name="Company X", event_id=None):
         return publish_proposal_version(
             proposal, membership, amount_vnd=amount_vnd,
-            contractor_name=contractor_name, fund_code="GENERAL",
+            contractor_name=contractor_name,
             purpose="Elevator", proposed_action="Repair elevator",
             expected_schedule="Within 14 days", quotation_versions=[quotation],
             event_id=event_id or "0x" + "aa" * 32,

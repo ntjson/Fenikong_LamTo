@@ -80,7 +80,6 @@ def published_ledger_entry_for_proof(building_id, pk):
         .select_related(
             "case__decision__report",
             "settlement__transfer",
-            "settlement__ack",
             "settlement__outbox_event",
             "proposal__current_version",
         )
@@ -238,7 +237,6 @@ def ledger_entry_proof(entry):
     docs = []
     for label, version_obj in (
         ("Transfer evidence", entry.settlement.transfer),
-        ("Payee acknowledgement", entry.settlement.ack),
     ):
         if version_obj is not None:
             docs.append(

@@ -35,7 +35,7 @@ class TenantIntegrityCommandTests(TestCase):
             category="c",
             urgency="LOW",
             location=self.loc_a,
-            department="d",
+            management_queue="GENERAL",
             deadline_minutes=60,
         )
         # Bypass form scoping the way a bug would: plain FK, no composite key.

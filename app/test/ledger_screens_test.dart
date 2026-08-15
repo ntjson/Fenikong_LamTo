@@ -189,7 +189,6 @@ class _EmptyProposalsRepository implements ProposalsRepository {
       ..purpose = 'Lift repair proposal'
       ..proposedAction = 'Repair lift'
       ..amountVnd = 1000000
-      ..fundCode = 'GENERAL'
       ..contractorName = 'Lift Co'
       ..expectedSchedule = 'August'
       ..versions = ListBuilder()

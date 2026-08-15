@@ -13,7 +13,7 @@ from lamto.documents.models import Document, DocumentVersion
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
-    CaseReport, InfoRequest, IssueReport, MaintenanceCase, WorkUpdate, WorkUpdateEvidence,
+    CaseReport, InfoRequest, IssueReport, MaintenanceCase, WorkUpdate,
 )
 
 TERMINAL_STATUSES = frozenset(
@@ -29,35 +29,10 @@ def _locked_case(case):
     return case
 
 
-def _evidence_versions(versions, kind, building_id, uploader):
-    versions = list(versions)
-    if not versions:
-        return []
-    ids = [getattr(version, "pk", None) for version in versions]
-    if None in ids or len(ids) != len(set(ids)):
-        raise ValidationError(_("Progress requires distinct evidence versions."))
-    valid = list(DocumentVersion.objects.select_for_update().select_related("document").filter(
-        pk__in=ids, document__building_id=building_id, document__kind=kind,
-        scan_status=DocumentVersion.ScanStatus.CLEAN,
-        uploader=uploader,
-    ))
-    if len(valid) != len(ids) or any(not v.content_type.lower().startswith("image/") for v in valid):
-        raise ValidationError(_("Progress evidence must be clean original images from the case building."))
-    return valid
-
-
-def _append_update(case, manager, cause, result, before_versions, after_versions, proposal=None):
+def _append_update(case, manager, cause, result, proposal=None):
     if not (cause or "").strip() or not (result or "").strip():
         raise ValidationError(_("Progress updates need both a cause and a result."))
-    building_id = case.building_id if case else proposal.building_id
-    before = _evidence_versions(before_versions, Document.Kind.BEFORE_PHOTO, building_id, manager)
-    after = _evidence_versions(after_versions, Document.Kind.AFTER_PHOTO, building_id, manager)
-    update = WorkUpdate.objects.create(case=case, proposal=proposal, author=manager, cause=cause.strip(), result=result.strip())
-    WorkUpdateEvidence.objects.bulk_create([
-        *[WorkUpdateEvidence(update=update, version=v, kind=WorkUpdateEvidence.Kind.BEFORE) for v in before],
-        *[WorkUpdateEvidence(update=update, version=v, kind=WorkUpdateEvidence.Kind.AFTER) for v in after],
-    ])
-    return update
+    return WorkUpdate.objects.create(case=case, proposal=proposal, author=manager, cause=cause.strip(), result=result.strip())
 
 
 @transaction.atomic
@@ -73,7 +48,7 @@ def start_case_work(case, manager) -> MaintenanceCase:
 
 
 @transaction.atomic
-def publish_progress(case=None, manager=None, cause="", result="", before_versions=(), after_versions=(), proposal=None) -> WorkUpdate:
+def publish_progress(case=None, manager=None, cause="", result="", proposal=None) -> WorkUpdate:
     if (case is None) == (proposal is None):
         raise ValidationError(_("Progress requires exactly one case or proposal."))
     if case is not None:
@@ -86,7 +61,7 @@ def publish_progress(case=None, manager=None, cause="", result="", before_versio
             raise ValidationError(_("An in-progress standalone proposal is required."))
         building_id = proposal.building_id
     membership = require_management(manager, building_id)
-    update = _append_update(case, manager, cause, result, before_versions, after_versions, proposal)
+    update = _append_update(case, manager, cause, result, proposal)
     record_audit(actor=manager, membership=membership, action="case.progress_published",
                  target_type="WorkUpdate", target_id=str(update.pk), result="accepted",
                  metadata={"case_id": case.pk if case else None, "proposal_id": proposal.pk if proposal else None})
@@ -99,13 +74,13 @@ def publish_progress(case=None, manager=None, cause="", result="", before_versio
 
 
 @transaction.atomic
-def complete_proposal_work(proposal, manager, cause, result, before_versions=(), after_versions=()):
+def complete_proposal_work(proposal, manager, cause, result):
     from lamto.finance.models import Proposal
     proposal = Proposal.objects.select_for_update().filter(pk=getattr(proposal, "pk", None), case__isnull=True).first()
     if proposal is None or proposal.status != Proposal.Status.IN_PROGRESS:
         raise ValidationError(_("An in-progress standalone proposal is required."))
     membership = require_management(manager, proposal.building_id)
-    update = _append_update(None, manager, cause, result, before_versions, after_versions, proposal)
+    update = _append_update(None, manager, cause, result, proposal)
     proposal.status = Proposal.Status.COMPLETED
     proposal.completed_at = timezone.now()
     proposal.save(update_fields=["status", "completed_at"])
@@ -115,10 +90,10 @@ def complete_proposal_work(proposal, manager, cause, result, before_versions=(),
 
 
 @transaction.atomic
-def complete_case_work(case, manager, cause, result, before_versions=(), after_versions=()) -> MaintenanceCase:
+def complete_case_work(case, manager, cause, result) -> MaintenanceCase:
     case = _locked_case(case)
     membership = require_management(manager, case.building_id)
-    update = _append_update(case, manager, cause, result, before_versions, after_versions)
+    update = _append_update(case, manager, cause, result)
     case.completed_at = timezone.now()
     case.save(update_fields=["completed_at"])
     try:

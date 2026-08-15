@@ -53,7 +53,7 @@ class CaseFixture:
             urgency="MEDIUM",
             confidence_percent=90,
             duplicate_report_ids=[],
-            department="Maintenance",
+            management_queue="MAINTENANCE",
             deadline_minutes=60,
             raw_response={},
             provider_request_id=f"request-{number}",
@@ -125,7 +125,7 @@ class CaseTests(CaseFixture, TestCase):
             category="Elevator",
             urgency="HIGH",
             location=self.location,
-            department="Maintenance",
+            management_queue="MAINTENANCE",
             deadline_minutes=240,
         )
         self.assertEqual(case.reports.get(), first)

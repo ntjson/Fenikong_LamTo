@@ -53,7 +53,7 @@ class ListPatternTests(TestCase):
             category="c",
             urgency="HIGH",
             location=location,
-            department="Ops",
+            management_queue="GENERAL",
             deadline_minutes=60,
             differences={},
         )
@@ -63,7 +63,7 @@ class ListPatternTests(TestCase):
             category="c",
             urgency="HIGH",
             location=location,
-            department="Ops",
+            management_queue="GENERAL",
             deadline_at=timezone.now(),
             active=True,
         )
@@ -91,7 +91,7 @@ class ListPatternTests(TestCase):
             category="c",
             urgency="LOW",
             location=location,
-            department="Ops",
+            management_queue="GENERAL",
             deadline_minutes=60,
             differences={},
         )
@@ -101,7 +101,7 @@ class ListPatternTests(TestCase):
             category="c",
             urgency="LOW",
             location=location,
-            department="Ops",
+            management_queue="GENERAL",
             deadline_at=timezone.now(),
             active=True,
         )
@@ -144,11 +144,11 @@ class ListPatternTests(TestCase):
         )
         decision2 = TriageDecision.objects.create(
             report=report2, operator=user, category="c", urgency="HIGH",
-            location=case.location, department="Ops", deadline_minutes=60,
+            location=case.location, management_queue="GENERAL", deadline_minutes=60,
         )
         case2 = MaintenanceCase.objects.create(
             decision=decision2, building=building, category="c", urgency="HIGH",
-            location=case.location, department="Ops", deadline_at=timezone.now(),
+            location=case.location, management_queue="GENERAL", deadline_at=timezone.now(),
         )
         in_review = Proposal.objects.create(
             case=case2,

@@ -24,7 +24,6 @@ part 'proposal.g.dart';
 /// * [purpose]
 /// * [proposedAction]
 /// * [amountVnd]
-/// * [fundCode]
 /// * [contractorName]
 /// * [expectedSchedule]
 /// * [versions]
@@ -59,9 +58,6 @@ abstract class Proposal implements Built<Proposal, ProposalBuilder> {
 
   @BuiltValueField(wireName: r'amount_vnd')
   int get amountVnd;
-
-  @BuiltValueField(wireName: r'fund_code')
-  String get fundCode;
 
   @BuiltValueField(wireName: r'contractor_name')
   String get contractorName;
@@ -148,11 +144,6 @@ class _$ProposalSerializer implements PrimitiveSerializer<Proposal> {
     yield serializers.serialize(
       object.amountVnd,
       specifiedType: const FullType(int),
-    );
-    yield r'fund_code';
-    yield serializers.serialize(
-      object.fundCode,
-      specifiedType: const FullType(String),
     );
     yield r'contractor_name';
     yield serializers.serialize(
@@ -272,13 +263,6 @@ class _$ProposalSerializer implements PrimitiveSerializer<Proposal> {
             specifiedType: const FullType(int),
           ) as int;
           result.amountVnd = valueDes;
-          break;
-        case r'fund_code':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.fundCode = valueDes;
           break;
         case r'contractor_name':
           final valueDes = serializers.deserialize(

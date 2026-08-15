@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from lamto.accounts.models import ManagementMembership
 from lamto.documents.models import Document, DocumentVersion
 from lamto.finance.models import MaintenanceFundEntry
-from lamto.maintenance.models import BuildingLocation, CaseCategory
+from lamto.maintenance.models import BuildingLocation, CaseCategory, ManagementQueue
 from lamto.maintenance.triage import confirm_triage
 from lamto.notifications.models import NotificationPreference
 from lamto.notifications.services import PREFERENCE_EVENT_CHOICES
@@ -45,10 +45,10 @@ class ConfirmTriageForm(forms.Form):
         label=_("Location"),
         widget=forms.Select(attrs={"class": "input"}),
     )
-    department = forms.CharField(
-        max_length=128,
+    management_queue = forms.ChoiceField(
+        choices=ManagementQueue.choices,
         label=_("Management queue"),
-        widget=forms.TextInput(attrs={"class": "input"}),
+        widget=forms.Select(attrs={"class": "input"}),
     )
     deadline_minutes = forms.TypedChoiceField(
         choices=[
@@ -93,7 +93,7 @@ class ConfirmTriageForm(forms.Form):
             self.cleaned_data["category"],
             self.cleaned_data["urgency"],
             self.cleaned_data["location"],
-            self.cleaned_data["department"],
+            self.cleaned_data["management_queue"],
             self.cleaned_data["deadline_minutes"],
         )
 
@@ -146,72 +146,18 @@ class ProposalDecisionForm(forms.Form):
 
 
 class ProgressUpdateForm(forms.Form):
+    """A work update is its narrative: what caused the problem and what fixed it."""
+
     cause = forms.CharField(label=_("Cause"), widget=forms.Textarea(attrs={"class": "input", "rows": 3}))
     result = forms.CharField(label=_("Result"), widget=forms.Textarea(attrs={"class": "input", "rows": 3}))
-    before_versions = forms.ModelMultipleChoiceField(
-        queryset=DocumentVersion.objects.none(),
-        widget=forms.SelectMultiple(attrs={"class": "input"}),
-        label=_("Before photos"),
-        required=False,
-    )
-    after_versions = forms.ModelMultipleChoiceField(
-        queryset=DocumentVersion.objects.none(),
-        widget=forms.SelectMultiple(attrs={"class": "input"}),
-        label=_("After photos"),
-        required=False,
-    )
-    before_upload = forms.FileField(
-        required=False, label=_("Upload a new before photo"),
-        widget=forms.ClearableFileInput(attrs={"class": "input", "accept": "image/*"}),
-    )
-    after_upload = forms.FileField(
-        required=False, label=_("Upload a new after photo"),
-        widget=forms.ClearableFileInput(attrs={"class": "input", "accept": "image/*"}),
-    )
-
-    def __init__(self, *args, building_id=None, uploader_id=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        base = DocumentVersion.objects.filter(
-            document__building_id=building_id,
-            uploader_id=uploader_id,
-            scan_status=DocumentVersion.ScanStatus.CLEAN,
-        )
-        self.fields["before_versions"].queryset = base.filter(
-            document__kind=Document.Kind.BEFORE_PHOTO
-        )
-        self.fields["after_versions"].queryset = base.filter(
-            document__kind=Document.Kind.AFTER_PHOTO
-        )
-
-        def _label(obj):
-            return (
-                f"{obj.filename} (v{obj.version})"
-                if getattr(obj, "filename", None)
-                else str(obj.pk)
-            )
-
-        self.fields["before_versions"].label_from_instance = _label
-        self.fields["after_versions"].label_from_instance = _label
-
-class RecordSettlementTransferForm(forms.Form):
-    amount_vnd = forms.IntegerField(min_value=1, label=_("Amount (VND)"), widget=forms.NumberInput(attrs={"class": "input"}))
-    payee_name = forms.CharField(max_length=255, label=_("Payee name"), widget=forms.TextInput(attrs={"class": "input"}))
-    bank_reference = forms.CharField(max_length=64, label=_("Bank reference"), widget=forms.TextInput(attrs={"class": "input"}))
-    proof = forms.ChoiceField(choices=(), required=False, label=_("Existing payment proof"), widget=forms.Select(attrs={"class": "input"}))
-    proof_upload = forms.FileField(required=False, label=_("Upload new payment proof"), widget=forms.ClearableFileInput(attrs={"class": "input"}))
-
-    def __init__(self, *args, proof_choices=(), **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["proof"].choices = [("", _("Select evidence…")), *proof_choices]
-
-    def clean(self):
-        cleaned = super().clean()
-        if not cleaned.get("proof") and not cleaned.get("proof_upload"):
-            self.add_error("proof", _("Select existing evidence or upload a new payment proof."))
-        return cleaned
 
 
-class RecordSettlementAcknowledgementForm(forms.Form):
+class RecordSettlementForm(forms.Form):
+    """The whole of settling: one payment proof (ADR 0002).
+
+    The amount is not asked for — it is the frozen published proposal amount.
+    """
+
     event_id = forms.CharField(max_length=66, label=_("Event ID"), widget=forms.HiddenInput())
     proof = forms.ChoiceField(choices=(), required=False, label=_("Existing payment proof"), widget=forms.Select(attrs={"class": "input"}))
     proof_upload = forms.FileField(required=False, label=_("Upload new payment proof"), widget=forms.ClearableFileInput(attrs={"class": "input"}))
@@ -273,7 +219,6 @@ class CreateProposalForm(forms.Form):
 
     amount_vnd = forms.IntegerField(min_value=1, label=_("Amount (VND)"), widget=forms.NumberInput(attrs={"class": "input"}))
     contractor_name = forms.CharField(max_length=255, label=_("Contractor name"), widget=forms.TextInput(attrs={"class": "input"}))
-    fund_code = forms.CharField(max_length=32, required=False, initial="GENERAL", label=_("Fund code"), widget=forms.TextInput(attrs={"class": "input"}))
     purpose = forms.CharField(required=False, label=_("Purpose"), widget=forms.Textarea(attrs={"class": "input"}))
     proposed_action = forms.CharField(required=False, label=_("Proposed action"), widget=forms.Textarea(attrs={"class": "input"}))
     expected_schedule = forms.CharField(max_length=200, required=False, label=_("Expected schedule"), widget=forms.TextInput(attrs={"class": "input"}))
@@ -294,7 +239,7 @@ class PublishLedgerEntryForm(forms.Form):
 class StandaloneProposalForm(CreateProposalForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in ("fund_code", "purpose", "proposed_action", "expected_schedule"):
+        for name in ("purpose", "proposed_action", "expected_schedule"):
             self.fields[name].required = True
 
 

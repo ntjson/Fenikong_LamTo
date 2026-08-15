@@ -27,7 +27,6 @@ void main() {
       // TODO
     });
 
-    // BuiltList<ReportWorkUpdatePhoto> photos
     test('to test the property `photos`', () async {
       // TODO
     });

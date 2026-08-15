@@ -15,8 +15,7 @@ class FinanceMembershipModelTests(SimpleTestCase):
         for model, field in (
             (Proposal, "creator_membership"),
             (ProposalVersion, "creator_membership"),
-            (Settlement, "transfer_recorded_by"),
-            (Settlement, "ack_recorded_by"),
+            (Settlement, "settled_by"),
             (MaintenanceFundEntry, "recorder"),
             (FundEntryVerification, "membership"),
         ):

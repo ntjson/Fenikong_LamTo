@@ -80,7 +80,7 @@ def proposal_list(request):
         Proposal.Status.DRAFT: _("Complete and submit"),
         Proposal.Status.IN_PROGRESS: _("Publish progress or complete"),
         Proposal.Status.PUBLISHED: _("Decide whether to proceed"),
-        Proposal.Status.COMPLETED: _("Record transfer"),
+        Proposal.Status.COMPLETED: _("Record settlement"),
     }
     proposal_items = [
         {
@@ -147,9 +147,6 @@ def proposal_detail(request, pk):
     action = request.POST.get("action") if request.method == "POST" else None
     progress_form = ProgressUpdateForm(
         request.POST if action in {"progress", "complete"} else None,
-        request.FILES if action in {"progress", "complete"} else None,
-        building_id=membership.building_id,
-        uploader_id=request.user.pk,
     )
     publish_form = PublishLedgerEntryForm(request.POST if action == "publish" else None)
     decision_form = ProposalDecisionForm(
@@ -190,33 +187,21 @@ def proposal_detail(request, pk):
                         messages.success(request, _("Decision recorded. This proposal is closed as not proceeding."))
                 return redirect("web:proposal-detail", pk=proposal.pk)
         elif action in {"progress", "complete"}:
-            uploaded = []
             try:
                 if not progress_form.is_valid():
-                    raise ValidationError(_("Review the progress fields and evidence uploads."))
+                    raise ValidationError(_("Review the progress fields."))
                 with transaction.atomic():
-                    before = list(progress_form.cleaned_data["before_versions"])
-                    after = list(progress_form.cleaned_data["after_versions"])
-                    if progress_form.cleaned_data.get("before_upload"):
-                        uploaded.append(upload_document(proposal.building, Document.Kind.BEFORE_PHOTO, request.user, progress_form.cleaned_data["before_upload"]))
-                        before.extend(uploaded[-1:])
-                    if progress_form.cleaned_data.get("after_upload"):
-                        uploaded.append(upload_document(proposal.building, Document.Kind.AFTER_PHOTO, request.user, progress_form.cleaned_data["after_upload"]))
-                        after.extend(uploaded[-1:])
                     if action == "progress":
                         publish_progress(
                             proposal=proposal, manager=request.user,
                             cause=progress_form.cleaned_data["cause"], result=progress_form.cleaned_data["result"],
-                            before_versions=before, after_versions=after,
                         )
                     else:
                         complete_proposal_work(
                             proposal, request.user, progress_form.cleaned_data["cause"],
-                            progress_form.cleaned_data["result"], before, after,
+                            progress_form.cleaned_data["result"],
                         )
             except (ValidationError, PermissionDenied) as error:
-                for uploaded_version in uploaded:
-                    _delete_storage_blob(uploaded_version.storage_key, uploaded_version.provider_version_id or "")
                 if isinstance(error, ValidationError):
                     progress_form.add_error(None, error)
                 else:
@@ -300,7 +285,6 @@ def proposal_create(request, pk):
                 publish_proposal_version(
                     proposal, membership, amount_vnd=create_form.cleaned_data["amount_vnd"],
                     contractor_name=create_form.cleaned_data["contractor_name"],
-                    fund_code=create_form.cleaned_data.get("fund_code") or "GENERAL",
                     purpose=create_form.cleaned_data.get("purpose") or case.get_category_display(),
                     proposed_action=create_form.cleaned_data.get("proposed_action") or "Perform proposed maintenance",
                     expected_schedule=create_form.cleaned_data.get("expected_schedule") or "To be scheduled",
@@ -350,7 +334,7 @@ def standalone_proposal_create(request):
                     publish_proposal_version(
                         proposal, membership, amount_vnd=form.cleaned_data["amount_vnd"],
                         contractor_name=form.cleaned_data["contractor_name"],
-                        fund_code=form.cleaned_data["fund_code"], purpose=form.cleaned_data["purpose"],
+                        purpose=form.cleaned_data["purpose"],
                         proposed_action=form.cleaned_data["proposed_action"],
                         expected_schedule=form.cleaned_data["expected_schedule"],
                         quotation_versions=[original], event_id=new_event_id(),

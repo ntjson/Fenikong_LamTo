@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from lamto.finance.models import Proposal, ProposalVersion, Settlement
 from lamto.documents.models import Document, DocumentVersion
-from lamto.maintenance.models import IssueReport, WorkUpdateEvidence
+from lamto.maintenance.models import IssueReport, WorkUpdate
 from lamto.testing.factories import PilotDomainDriver, seed_pilot_world
 from lamto.web.staff_documents import new_event_id
 
@@ -64,7 +64,6 @@ class ProposalCreateTests(TestCase):
                 "action": "prepare",
                 "amount_vnd": 5_000_000,
                 "contractor_name": "Acme Co",
-                "fund_code": "GENERAL",
                 "purpose": "Elevator noise",
                 "proposed_action": "Replace bearings",
                 "expected_schedule": "August 2026",
@@ -85,7 +84,7 @@ class ProposalCreateTests(TestCase):
 
         response = self.client.post(reverse("web:proposal-create", kwargs={"pk": self.work.pk}), {
             "amount_vnd": 5_000_000, "contractor_name": "Acme Co",
-            "fund_code": "GENERAL", "purpose": "Lift jerks",
+            "purpose": "Lift jerks",
             "proposed_action": "Replace bearings", "expected_schedule": "August 2026",
             "quotation": _pdf("q.pdf", b"orig"),
         })
@@ -99,7 +98,7 @@ class ProposalCreateTests(TestCase):
         self._login_operator()
         self.client.post(reverse("web:proposal-create", kwargs={"pk": self.work.pk}), {
             "action": "prepare", "amount_vnd": 5_000_000, "contractor_name": "Acme Co",
-            "fund_code": "GENERAL", "purpose": "Lift jerks",
+            "purpose": "Lift jerks",
             "proposed_action": "Replace bearings", "expected_schedule": "August 2026",
             "quotation": _pdf("q.pdf", b"orig"),
             "confirm": "on",
@@ -122,7 +121,7 @@ class ProposalCreateTests(TestCase):
         self._login_operator()
         self.client.post(reverse("web:proposal-create", kwargs={"pk": self.work.pk}), {
             "amount_vnd": 5_000_000, "contractor_name": "Acme Co",
-            "fund_code": "GENERAL", "purpose": "Lift jerks",
+            "purpose": "Lift jerks",
             "proposed_action": "Replace bearings", "expected_schedule": "August 2026",
             "quotation": _pdf("q.pdf", b"orig"), "confirm": "on",
         })
@@ -164,7 +163,7 @@ class ProposalCreateTests(TestCase):
         self.assertEqual({path for path in Path(_TEMP).rglob("*") if path.is_file()}, before_files)
 
     @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
-    def test_standalone_progress_uploads_before_and_after_in_same_post(self):
+    def test_standalone_progress_records_the_work_narrative(self):
         self._login_operator()
         driver = PilotDomainDriver(self.seed)
         driver.publish_standalone_proposal()
@@ -172,18 +171,14 @@ class ProposalCreateTests(TestCase):
 
         response = self.client.post(reverse("web:proposal-detail", args=[self.seed.proposal.pk]), {
             "action": "progress", "cause": "Wear", "result": "Repair underway",
-            "before_upload": _image("before.png", b"before"),
-            "after_upload": _image("after.png", b"after"),
         })
 
         self.assertRedirects(response, reverse("web:proposal-detail", args=[self.seed.proposal.pk]))
-        self.assertEqual(
-            set(WorkUpdateEvidence.objects.values_list("kind", flat=True)),
-            {WorkUpdateEvidence.Kind.BEFORE, WorkUpdateEvidence.Kind.AFTER},
-        )
+        update = WorkUpdate.objects.get(proposal=self.seed.proposal)
+        self.assertEqual((update.cause, update.result), ("Wear", "Repair underway"))
 
     @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
-    def test_settlement_transfer_and_ack_each_accept_upload_in_same_post(self):
+    def test_settlement_accepts_upload_in_same_post(self):
         self._login_operator()
         driver = PilotDomainDriver(self.seed)
         driver.publish_standalone_proposal()
@@ -191,23 +186,15 @@ class ProposalCreateTests(TestCase):
         driver.complete_proposal_work()
         proposal = self.seed.proposal
 
-        transfer = self.client.post(reverse("web:settlement-record-transfer", args=[proposal.pk]), {
-            "amount_vnd": proposal.current_version.amount_vnd,
-            "payee_name": "Acme Co", "bank_reference": "BANK-1",
+        response = self.client.post(reverse("web:settlement-record", args=[proposal.pk]), {
+            "event_id": new_event_id(),
             "proof_upload": _pdf("transfer.pdf", b"transfer"),
         })
+
         settlement = Settlement.objects.get(proposal=proposal)
-        self.assertRedirects(transfer, reverse("web:settlement-detail", args=[settlement.pk]))
-
-        ack = self.client.post(reverse("web:settlement-record-ack", args=[settlement.pk]), {
-            "event_id": new_event_id(),
-            "proof_upload": _pdf("ack.pdf", b"ack"),
-        })
-
-        self.assertRedirects(ack, reverse("web:settlement-detail", args=[settlement.pk]))
-        settlement.refresh_from_db()
+        self.assertRedirects(response, reverse("web:settlement-detail", args=[settlement.pk]))
         self.assertEqual(settlement.transfer.document.kind, Document.Kind.PAYMENT_PROOF)
-        self.assertEqual(settlement.ack.document.kind, Document.Kind.PAYMENT_PROOF)
+        self.assertIsNotNone(settlement.settled_at)
 
     @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
     def test_failed_and_mismatched_evidence_are_not_described_as_pending(self):

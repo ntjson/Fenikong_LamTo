@@ -23,10 +23,35 @@ class CaseCategory(models.TextChoices):
     OTHER = "OTHER", _("Other")
 
 
+class ManagementQueue(models.TextChoices):
+    """The team that handles a case (ADR 0003).
+
+    Closed, like CaseCategory, so the label can be Vietnamese and the assistant
+    cannot invent a queue by spelling one differently.
+    """
+
+    MAINTENANCE = "MAINTENANCE", _("Maintenance")
+    PLUMBING = "PLUMBING", _("Plumbing")
+    ELECTRICAL = "ELECTRICAL", _("Electrical")
+    ELEVATOR = "ELEVATOR", _("Elevator")
+    HVAC = "HVAC", _("HVAC")
+    CLEANING = "CLEANING", _("Cleaning")
+    SECURITY = "SECURITY", _("Security")
+    LANDSCAPING = "LANDSCAPING", _("Landscaping")
+    PEST_CONTROL = "PEST_CONTROL", _("Pest control")
+    GENERAL = "GENERAL", _("General")
+
+
 def normalize_category(value):
     """Map a code or legacy free-text label to a CaseCategory code (OTHER if unknown)."""
     code = re.sub(r"[^A-Z0-9]+", "_", str(value).upper()).strip("_")
     return code if code in CaseCategory.values else CaseCategory.OTHER.value
+
+
+def normalize_management_queue(value):
+    """Map a code or legacy free-text label to a queue code (GENERAL if unknown)."""
+    code = re.sub(r"[^A-Z0-9]+", "_", str(value).upper()).strip("_")
+    return code if code in ManagementQueue.values else ManagementQueue.GENERAL.value
 
 
 class BuildingLocation(models.Model):
@@ -159,7 +184,7 @@ class TriageSuggestion(models.Model):
     urgency = models.CharField(max_length=16)
     confidence_percent = models.PositiveSmallIntegerField()
     duplicate_report_ids = models.JSONField(default=list)
-    department = models.CharField(max_length=128)
+    management_queue = models.CharField(max_length=32, choices=ManagementQueue.choices)
     deadline_minutes = models.PositiveIntegerField()
     missing_information = models.JSONField(default=list)
     raw_response = models.JSONField()
@@ -176,7 +201,7 @@ class TriageDecision(models.Model):
     category = models.CharField(max_length=128, choices=CaseCategory.choices)
     urgency = models.CharField(max_length=16)
     location = models.ForeignKey(BuildingLocation, on_delete=models.PROTECT)
-    department = models.CharField(max_length=128)
+    management_queue = models.CharField(max_length=32, choices=ManagementQueue.choices)
     deadline_minutes = models.PositiveIntegerField()
     differences = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -188,7 +213,7 @@ class MaintenanceCase(models.Model):
     category = models.CharField(max_length=128, choices=CaseCategory.choices)
     urgency = models.CharField(max_length=16)
     location = models.ForeignKey(BuildingLocation, on_delete=models.PROTECT)
-    department = models.CharField(max_length=128)
+    management_queue = models.CharField(max_length=32, choices=ManagementQueue.choices)
     deadline_at = models.DateTimeField()
     active = models.BooleanField(default=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -262,7 +287,6 @@ class WorkUpdate(AppendOnlyModel):
     )
     cause = models.TextField()
     result = models.TextField()
-    evidence = models.ManyToManyField(DocumentVersion, through="WorkUpdateEvidence", related_name="work_updates")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -270,22 +294,6 @@ class WorkUpdate(AppendOnlyModel):
             condition=(models.Q(case__isnull=False, proposal__isnull=True) | models.Q(case__isnull=True, proposal__isnull=False)),
             name="work_update_case_xor_proposal",
         )]
-
-
-class WorkUpdateEvidence(AppendOnlyModel):
-    class Kind(models.TextChoices):
-        BEFORE = "BEFORE", _("Before")
-        AFTER = "AFTER", _("After")
-
-    update = models.ForeignKey(WorkUpdate, on_delete=models.PROTECT, related_name="evidence_links")
-    version = models.ForeignKey(DocumentVersion, on_delete=models.PROTECT)
-    kind = models.CharField(max_length=8, choices=Kind.choices)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["update", "version"], name="work_update_evidence_once")
-        ]
 
 
 class CompletionRating(models.Model):

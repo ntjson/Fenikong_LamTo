@@ -55,8 +55,7 @@ def test_disabled_mode_publication_and_fund_flows(page, temp_storage, settings):
     # --- Publication flow -------------------------------------------------
     driver.prepare_local_normal_work(page)
     driver.complete_assigned_work()
-    driver.record_settlement_transfer()
-    driver.record_settlement_ack()
+    driver.record_settlement()
     _settle_locally()
 
     entry = PublishedLedgerEntry.objects.get(case__building=seed.building)

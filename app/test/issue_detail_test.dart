@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lamto/core/authenticated_image.dart';
 import 'package:lamto/core/occupancy.dart';
 import 'package:lamto/core/providers.dart';
 import 'package:lamto/features/reports/issue_detail_screen.dart';
@@ -58,31 +57,14 @@ ReportDetail _detail({
     ]),
 );
 
-ReportWorkUpdate _update(
-  int id, {
-  String? cause,
-  String? result,
-  bool withPhoto = false,
-}) => ReportWorkUpdate(
-  (u) => u
-    ..id = id
-    ..cause = cause ?? 'Cáp mòn $id'
-    ..result = result ?? 'Đã cố định cáp $id'
-    ..createdAt = DateTime.utc(2026, 7, 10 + id)
-    ..photos = ListBuilder<ReportWorkUpdatePhoto>(
-      withPhoto
-          ? [
-              ReportWorkUpdatePhoto(
-                (p) => p
-                  ..id = id
-                  ..filename = 'update-$id.jpg'
-                  ..kind = KindEnum.AFTER
-                  ..downloadUrl = '/work-updates/$id/photo',
-              ),
-            ]
-          : [],
-    ),
-);
+ReportWorkUpdate _update(int id, {String? cause, String? result}) =>
+    ReportWorkUpdate(
+      (u) => u
+        ..id = id
+        ..cause = cause ?? 'Cáp mòn $id'
+        ..result = result ?? 'Đã cố định cáp $id'
+        ..createdAt = DateTime.utc(2026, 7, 10 + id),
+    );
 
 MapBuilder<String, JsonObject?> _infoRequest([JsonObject? message]) =>
     MapBuilder<String, JsonObject?>({
@@ -258,17 +240,12 @@ Future<void> _pump(
 }
 
 void main() {
-  testWidgets('renders progress updates in order with causes and photos', (
+  testWidgets('renders progress updates in order with causes', (
     tester,
   ) async {
     await _pump(
       tester,
-      _FakeRepo(
-        _detail(
-          canRate: false,
-          updates: [_update(1, withPhoto: true), _update(2, withPhoto: true)],
-        ),
-      ),
+      _FakeRepo(_detail(canRate: false, updates: [_update(1), _update(2)])),
     );
 
     expect(find.text('Tiến độ xử lý'), findsOneWidget);
@@ -276,7 +253,6 @@ void main() {
     expect(find.text('Đã cố định cáp 1'), findsOneWidget);
     expect(find.text('Cáp mòn 2'), findsOneWidget);
     expect(find.text('Đã cố định cáp 2'), findsOneWidget);
-    expect(find.byType(AuthenticatedImage), findsNWidgets(2));
     expect(
       tester.getTopLeft(find.text('Cáp mòn 1')).dy,
       lessThan(tester.getTopLeft(find.text('Cáp mòn 2')).dy),

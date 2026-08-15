@@ -11,7 +11,7 @@ from knox.models import AuthToken
 from lamto.evidence.models import BlockchainOutboxEvent, EvidenceLevel
 from lamto.finance.models import PublishedLedgerEntry
 from lamto.finance.proposals import create_standalone_proposal, decide_proposal, publish_proposal_version
-from lamto.finance.settlements import record_acknowledgement, record_transfer
+from lamto.finance.settlements import record_settlement
 from lamto.maintenance.cases import complete_proposal_work
 from lamto.documents.models import Document
 from lamto.testing.factories import PilotDomainDriver, seed_pilot_world
@@ -51,8 +51,7 @@ class LedgerApiTests(TestCase):
         driver.confirm_triage_case()
         driver.publish_proposal()
         driver.complete_assigned_work()
-        driver.record_settlement_transfer()
-        driver.record_settlement_ack()
+        driver.record_settlement()
         driver.confirm_all_chain_events()
         driver.publish_settlement_entry()
         driver.confirm_all_chain_events()
@@ -188,21 +187,15 @@ class LedgerApiTests(TestCase):
         quotation = self.seed.document(Document.Kind.QUOTATION, manager.user, "standalone-q")
         publish_proposal_version(
             proposal, manager, amount_vnd=2_000_000, contractor_name="Standalone Co",
-            fund_code="GENERAL", purpose="Lobby repaint", proposed_action="Repaint lobby",
+            purpose="Lobby repaint", proposed_action="Repaint lobby",
             expected_schedule="August", quotation_versions=[quotation],
             event_id="0x" + secrets.token_hex(32),
         )
         decide_proposal(proposal, manager.user, True)
         complete_proposal_work(proposal, manager.user, "Peeling paint", "Lobby repainted")
         transfer = self.seed.document(Document.Kind.PAYMENT_PROOF, manager.user, "standalone-transfer")
-        settlement = record_transfer(
-            proposal, manager, amount_vnd=2_000_000, payee_name="Standalone Co",
-            bank_reference="STANDALONE-1", transfer=transfer,
-        )
-        acknowledger = self.seed.management_memberships[0]
-        ack = self.seed.document(Document.Kind.PAYMENT_PROOF, acknowledger.user, "standalone-ack")
-        settlement = record_acknowledgement(
-            settlement, acknowledger, ack=ack,
+        settlement = record_settlement(
+            proposal, manager, transfer=transfer,
             event_id="0x" + secrets.token_hex(32),
         )
         proposal.refresh_from_db()

@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'LamTo';
+  String get appTitle => 'Làm Tổ';
 
   @override
   String get loginTitle => 'Sign in';
@@ -906,18 +906,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proposalCost => 'Estimated cost';
 
   @override
-  String get proposalFund => 'Funding source';
-
-  @override
-  String get fundGeneral => 'General fund';
-
-  @override
-  String get fundMaintenance => 'Maintenance fund';
-
-  @override
-  String get fundOther => 'Building fund';
-
-  @override
   String get proposalContractor => 'Contractor';
 
   @override
@@ -935,10 +923,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proposalSettlement => 'Payment settlement';
 
   @override
-  String get proposalSettled => 'Paid and acknowledged by the payee';
-
-  @override
-  String get proposalUnsettled => 'Payment not yet settled';
+  String get proposalSettled => 'Paid';
 
   @override
   String get proposalViewFromLedger => 'View proposal';
@@ -998,7 +983,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Point the camera at the bill QR to record your payment.';
 
   @override
-  String get billInvalidQr => 'That QR code is not a LamTo bill.';
+  String get billInvalidQr => 'That QR code is not a Làm Tổ bill.';
 
   @override
   String get billPaymentRecorded => 'Payment recorded';

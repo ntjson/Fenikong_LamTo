@@ -12,7 +12,6 @@ import 'package:lamto_api/lamto_api.dart';
 Proposal _proposal({
   bool canRate = true,
   bool includeSettlement = true,
-  bool settled = true,
 }) => Proposal(
   (b) => b
     ..id = 7
@@ -22,7 +21,6 @@ Proposal _proposal({
     ..purpose = 'Repair the lobby lift'
     ..proposedAction = 'Replace the control board'
     ..amountVnd = 12500000
-    ..fundCode = 'GENERAL'
     ..contractorName = 'Acme Lift'
     ..expectedSchedule = 'Within 14 days'
     ..canRate = canRate
@@ -63,9 +61,7 @@ Proposal _proposal({
         ? ProposalSettlement(
             (s) => s
               ..amountVnd = 12500000
-              ..payeeName = 'Acme Lift'
-              ..transferRecordedAt = DateTime.utc(2026, 7, 19)
-              ..settledAt = settled ? DateTime.utc(2026, 7, 20) : null,
+              ..settledAt = DateTime.utc(2026, 7, 20),
           ).toBuilder()
         : null,
 );
@@ -137,10 +133,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // fund_code renders as a localized label, never the raw code.
-    expect(find.text('General fund', skipOffstage: false), findsOneWidget);
-    expect(find.text('GENERAL', skipOffstage: false), findsNothing);
-
     // Status uses the one system pill, not a second Material Chip shape.
     expect(find.byType(Chip), findsNothing);
     expect(find.byType(StatusChip), findsWidgets);
@@ -149,7 +141,6 @@ void main() {
       'Problem or need',
       'Proposed action',
       'Estimated cost',
-      'Funding source',
       'Contractor',
       'Expected schedule',
       'Published versions',
@@ -172,7 +163,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('quotation.pdf', skipOffstage: false), findsOneWidget);
-    expect(find.text('Paid and acknowledged by the payee'), findsOneWidget);
+    expect(find.text('Paid'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('Rate the result'),
@@ -187,7 +178,7 @@ void main() {
     expect(repository.satisfied, isFalse);
   });
 
-  testWidgets('absent settlement is not presented as unsettled', (
+  testWidgets('absent settlement shows no settlement section', (
     tester,
   ) async {
     final repository = _FakeProposalsRepository(
@@ -199,10 +190,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Payment settlement', skipOffstage: false), findsNothing);
-    expect(
-      find.text('Payment not yet settled', skipOffstage: false),
-      findsNothing,
-    );
   });
 
   testWidgets('completed proposal already rated has no rating action', (

@@ -1,30 +1,19 @@
 """System prompt and taxonomy for AI triage.
 
-``category`` is a closed set of machine codes (``CaseCategory``) so resident
-copy can be keyed from codes; ``department`` stays free-text guidance. The
-operator always reviews and may override.
+Both ``category`` and ``management_queue`` are closed sets of machine codes
+(``CaseCategory``, ``ManagementQueue``) so staff and resident copy can be keyed
+from codes and translated. The operator always reviews and may override.
 """
 
-from .models import CaseCategory
-
-SUGGESTED_DEPARTMENTS = [
-    "Maintenance",
-    "Plumbing",
-    "Electrical",
-    "Elevator",
-    "HVAC",
-    "Cleaning",
-    "Security",
-    "Landscaping",
-    "Pest Control",
-    "General",
-]
+from .models import CaseCategory, ManagementQueue
 
 CATEGORY_CODES = list(CaseCategory.values)
+MANAGEMENT_QUEUE_CODES = list(ManagementQueue.values)
 
 _CONTRACT_KEYS = (
     "category, interpreted_location, urgency, confidence_percent, "
-    "requires_manual_review, duplicate_report_ids, department, deadline_minutes, "
+    "requires_manual_review, duplicate_report_ids, management_queue, "
+    "deadline_minutes, "
     "missing_information"
 )
 
@@ -44,9 +33,9 @@ def build_system_prompt():
         "- category: exactly one of: "
         + ", ".join(CATEGORY_CODES)
         + ". Choose the closest code; use OTHER if none fit.\n"
-        "- department: the team that handles it. Prefer one of: "
-        + ", ".join(SUGGESTED_DEPARTMENTS)
-        + ".\n"
+        "- management_queue: exactly one of: "
+        + ", ".join(MANAGEMENT_QUEUE_CODES)
+        + ". Choose the team that handles it; use GENERAL if none fit.\n"
         "- urgency: exactly one of LOW, MEDIUM, HIGH.\n"
         "- deadline_minutes: positive integer SLA. Guide: HIGH <= 240, "
         "MEDIUM <= 1440, LOW <= 4320.\n"
@@ -59,6 +48,12 @@ def build_system_prompt():
         "need; [] if none.\n"
         "- requires_manual_review: true when you are unsure, or the report is "
         "unsafe or ambiguous; a human will then triage it.\n"
+        "\n"
+        "\n"
+        "Write every free-text value in Vietnamese: interpreted_location and "
+        "each entry in missing_information. A Vietnamese-speaking operator "
+        "reads them verbatim. Codes and enum values are not free text — return "
+        "category and urgency exactly as listed above, never translated.\n"
         "\n"
         "No photos are ever provided; triage on text only. Return only the JSON "
         "object, with no surrounding prose."

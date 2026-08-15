@@ -43,10 +43,7 @@ def _collect_document_checks(proposal, version, settlement, using="default"):
     for item in version.snapshot.get("quotation_versions", []):
         quotation = DocumentVersion.objects.using(using).get(pk=item["version_id"])
         checks.append((quotation, item["sha256"], "QUOTATION"))
-    checks.extend((
-        (settlement.transfer, settlement.transfer.sha256, "SETTLEMENT_TRANSFER"),
-        (settlement.ack, settlement.ack.sha256, "SETTLEMENT_ACK"),
-    ))
+    checks.append((settlement.transfer, settlement.transfer.sha256, "SETTLEMENT_TRANSFER"))
     return checks
 
 
@@ -54,7 +51,7 @@ def _collect_document_checks(proposal, version, settlement, using="default"):
 def publish_settlement_entry(settlement) -> PublishedLedgerEntry:
     settlement = type(settlement).objects.select_for_update(of=("self",)).select_related(
         "proposal__current_version", "proposal__case__decision__report", "transfer",
-        "ack", "outbox_event",
+        "outbox_event",
     ).get(pk=settlement.pk)
     existing = PublishedLedgerEntry.objects.filter(settlement=settlement).first()
     if existing:
@@ -74,5 +71,5 @@ def publish_settlement_entry(settlement) -> PublishedLedgerEntry:
         contractor_name=version.contractor_name,
         published_at=timezone.now(),
     )
-    record_audit(settlement.ack_recorded_by.user, settlement.ack_recorded_by, "ledger.published", "PublishedLedgerEntry", str(entry.pk), "accepted")
+    record_audit(settlement.settled_by.user, settlement.settled_by, "ledger.published", "PublishedLedgerEntry", str(entry.pk), "accepted")
     return entry

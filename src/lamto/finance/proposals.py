@@ -56,13 +56,23 @@ def _quotation_versions(building_id, quotation_versions, *, lock=False):
             or version.document.building_id != building_id
             or version.scan_status != DocumentVersion.ScanStatus.CLEAN
         ):
-            raise ValidationError(_("Quotations must be clean, safe, and in the work-order building."))
+            raise ValidationError(
+                _("Quotations must be clean, safe, and in the work-order building.")
+            )
         resolved.append(version)
     return resolved
 
 
-def _submission_snapshot(proposal, amount_vnd, contractor_name, fund_code, purpose,
-                         proposed_action, expected_schedule, versions, number):
+def _submission_snapshot(
+    proposal,
+    amount_vnd,
+    contractor_name,
+    purpose,
+    proposed_action,
+    expected_schedule,
+    versions,
+    number,
+):
     case = proposal.case
     quotation_snapshot = [
         {
@@ -78,7 +88,6 @@ def _submission_snapshot(proposal, amount_vnd, contractor_name, fund_code, purpo
         "building_id": proposal.building_id,
         "amount_vnd": amount_vnd,
         "contractor_name": contractor_name,
-        "fund_code": fund_code,
         "purpose": purpose,
         "proposed_action": proposed_action,
         "expected_schedule": expected_schedule,
@@ -96,28 +105,55 @@ def _submission_snapshot(proposal, amount_vnd, contractor_name, fund_code, purpo
     if case:
         evidence_payload.update(
             case_id=case.pk,
-            case_snapshot_hash=payload_hash({
-                "case_id": case.pk, "category": case.category,
-                "department": case.department, "location_id": case.location_id,
-            }),
+            case_snapshot_hash=payload_hash(
+                {
+                    "case_id": case.pk,
+                    "category": case.category,
+                    "management_queue": case.management_queue,
+                    "location_id": case.location_id,
+                }
+            ),
         )
     return snapshot, evidence_payload
 
 
-def build_proposal_evidence_payload(proposal, amount_vnd, contractor_name, quotation_versions,
-                                    fund_code="GENERAL", purpose=None, proposed_action="",
-                                    expected_schedule=""):
+def build_proposal_evidence_payload(
+    proposal,
+    amount_vnd,
+    contractor_name,
+    quotation_versions,
+    purpose=None,
+    proposed_action="",
+    expected_schedule="",
+):
     """Build the exact signed payload callers must use before submission."""
     if type(amount_vnd) is not int or amount_vnd <= 0:
         raise ValidationError(_("Proposal amount must be a positive integer."))
     if not isinstance(contractor_name, str) or not contractor_name.strip():
         raise ValidationError(_("Contractor name is required."))
-    purpose = proposal.case.get_category_display() if purpose is None and proposal.case_id else (purpose or "")
-    versions = _quotation_versions(proposal.building_id or proposal.case.building_id, quotation_versions)
-    number = (ProposalVersion.objects.filter(proposal=proposal).aggregate(Max("number"))["number__max"] or 0) + 1
+    purpose = (
+        proposal.case.get_category_display()
+        if purpose is None and proposal.case_id
+        else (purpose or "")
+    )
+    versions = _quotation_versions(
+        proposal.building_id or proposal.case.building_id, quotation_versions
+    )
+    number = (
+        ProposalVersion.objects.filter(proposal=proposal).aggregate(Max("number"))[
+            "number__max"
+        ]
+        or 0
+    ) + 1
     _, evidence_payload = _submission_snapshot(
-        proposal, amount_vnd, contractor_name.strip(), fund_code, purpose,
-         proposed_action, expected_schedule, versions, number
+        proposal,
+        amount_vnd,
+        contractor_name.strip(),
+        purpose,
+        proposed_action,
+        expected_schedule,
+        versions,
+        number,
     )
     return evidence_payload
 
@@ -140,7 +176,9 @@ def create_proposal(case, creator_membership) -> Proposal:
     if any(link.report.is_private for link in links):
         raise ValidationError(_("Private requests cannot become community proposals."))
     if any(link.report.status == IssueReport.Status.IN_PROGRESS for link in links):
-        raise ValidationError(_("Cases already proceeding without spending cannot add a proposal."))
+        raise ValidationError(
+            _("Cases already proceeding without spending cannot add a proposal.")
+        )
     try:
         proposal = Proposal.objects.create(
             case=locked_case,
@@ -166,10 +204,19 @@ def create_proposal(case, creator_membership) -> Proposal:
 
 @transaction.atomic
 def create_standalone_proposal(building, creator_membership) -> Proposal:
-    membership = require_management(creator_membership.user, getattr(building, "pk", None))
+    membership = require_management(
+        creator_membership.user, getattr(building, "pk", None)
+    )
     proposal = Proposal.objects.create(building=building, creator_membership=membership)
-    record_audit(membership.user, membership, "proposal.create", "Proposal", str(proposal.pk),
-                 "accepted", {"case_id": None})
+    record_audit(
+        membership.user,
+        membership,
+        "proposal.create",
+        "Proposal",
+        str(proposal.pk),
+        "accepted",
+        {"case_id": None},
+    )
     return proposal
 
 
@@ -182,48 +229,89 @@ def decide_proposal(proposal, manager, proceed: bool, note="") -> Proposal:
     if type(proceed) is not bool:
         raise ValidationError(_("Proceed must be a boolean."))
     now = timezone.now()
-    locked.status = Proposal.Status.IN_PROGRESS if proceed else Proposal.Status.NOT_PROCEEDING
+    locked.status = (
+        Proposal.Status.IN_PROGRESS if proceed else Proposal.Status.NOT_PROCEEDING
+    )
     locked.decided_by = membership
     locked.decided_at = now
     locked.decision_note = (note or "").strip()
     locked.closed_at = None if proceed else now
-    locked.save(update_fields=["status", "decided_by", "decided_at", "decision_note", "closed_at"])
-    record_audit(manager, membership, "proposal.decided", "Proposal", str(locked.pk), "accepted",
-                 {"proceed": proceed})
+    locked.save(
+        update_fields=[
+            "status",
+            "decided_by",
+            "decided_at",
+            "decision_note",
+            "closed_at",
+        ]
+    )
+    record_audit(
+        manager,
+        membership,
+        "proposal.decided",
+        "Proposal",
+        str(locked.pk),
+        "accepted",
+        {"proceed": proceed},
+    )
     return locked
 
 
 @transaction.atomic
 def publish_proposal_version(
-    proposal, creator_membership, *, amount_vnd, contractor_name, fund_code, purpose,
-    proposed_action, expected_schedule, quotation_versions, event_id
+    proposal,
+    creator_membership,
+    *,
+    amount_vnd,
+    contractor_name,
+    purpose,
+    proposed_action,
+    expected_schedule,
+    quotation_versions,
+    event_id,
 ) -> ProposalVersion:
     locked_proposal = (
         Proposal.objects.select_for_update()
         .select_related("creator_membership__user", "building")
         .get(pk=getattr(proposal, "pk", None))
     )
-    membership = require_management(creator_membership.user, locked_proposal.building_id)
+    membership = require_management(
+        creator_membership.user, locked_proposal.building_id
+    )
     if type(amount_vnd) is not int or amount_vnd <= 0:
         raise ValidationError(_("Proposal amount must be a positive integer."))
     if not isinstance(contractor_name, str) or not contractor_name.strip():
         raise ValidationError(_("Contractor name is required."))
-    if locked_proposal.status not in {Proposal.Status.DRAFT, Proposal.Status.PUBLISHED, Proposal.Status.IN_PROGRESS}:
+    if locked_proposal.status not in {
+        Proposal.Status.DRAFT,
+        Proposal.Status.PUBLISHED,
+        Proposal.Status.IN_PROGRESS,
+    }:
         raise ValidationError(_("This proposal cannot receive another version."))
-    for value, message in ((fund_code, _("Funding source is required.")), (purpose, _("Problem or need is required.")),
-                           (proposed_action, _("Proposed action is required.")),
-                           (expected_schedule, _("Expected schedule is required."))):
+    for value, message in (
+        (purpose, _("Problem or need is required.")),
+        (proposed_action, _("Proposed action is required.")),
+        (expected_schedule, _("Expected schedule is required.")),
+    ):
         if not isinstance(value, str) or not value.strip():
             raise ValidationError(message)
 
-    versions = _quotation_versions(locked_proposal.building_id, quotation_versions, lock=True)
+    versions = _quotation_versions(
+        locked_proposal.building_id, quotation_versions, lock=True
+    )
     previous = locked_proposal.versions.order_by("-number").first()
     number = (previous.number if previous else 0) + 1
     if previous is None:
         locked_proposal.public_token = new_public_token()
     snapshot, evidence_payload = _submission_snapshot(
-        locked_proposal, amount_vnd, contractor_name.strip(), fund_code.strip(), purpose.strip(),
-         proposed_action.strip(), expected_schedule.strip(), versions, number
+        locked_proposal,
+        amount_vnd,
+        contractor_name.strip(),
+        purpose.strip(),
+        proposed_action.strip(),
+        expected_schedule.strip(),
+        versions,
+        number,
     )
     previous_hash = "0x" + previous.outbox_event.payload_hash if previous else ZERO_HASH
     event = queue_platform_event(
@@ -238,7 +326,6 @@ def publish_proposal_version(
         number=number,
         amount_vnd=amount_vnd,
         contractor_name=contractor_name.strip(),
-        fund_code=fund_code.strip(),
         purpose=purpose.strip(),
         proposed_action=proposed_action.strip(),
         expected_schedule=expected_schedule.strip(),
@@ -264,6 +351,10 @@ def publish_proposal_version(
         "ProposalVersion",
         str(version.pk),
         "accepted",
-        {"proposal_id": locked_proposal.pk, "number": number, "event_id": event.event_id},
+        {
+            "proposal_id": locked_proposal.pk,
+            "number": number,
+            "event_id": event.event_id,
+        },
     )
     return version

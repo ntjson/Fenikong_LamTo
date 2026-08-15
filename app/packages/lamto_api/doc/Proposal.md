@@ -17,7 +17,6 @@ Name | Type | Description | Notes
 **purpose** | **String** |  |
 **proposedAction** | **String** |  |
 **amountVnd** | **int** |  |
-**fundCode** | **String** |  |
 **contractorName** | **String** |  |
 **expectedSchedule** | **String** |  |
 **versions** | [**BuiltList&lt;ProposalVersion&gt;**](ProposalVersion.md) |  |

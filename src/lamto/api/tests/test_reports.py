@@ -181,7 +181,7 @@ class ReportCreateTests(TestCase):
         )
         assert miss.status_code == 404
 
-    def test_detail_timeline_includes_work_update_evidence_photos(self):
+    def test_detail_timeline_includes_work_update_narrative(self):
         report = IssueReport.objects.create(
             reporter=self.resident,
             unit=self.seed.unit,
@@ -197,7 +197,7 @@ class ReportCreateTests(TestCase):
             category="Lift",
             urgency="HIGH",
             location=self.seed.location,
-            department="Maintenance",
+            management_queue="MAINTENANCE",
             deadline_minutes=1440,
         )
         case = MaintenanceCase.objects.create(
@@ -206,12 +206,11 @@ class ReportCreateTests(TestCase):
             category="Lift",
             urgency="HIGH",
             location=self.seed.location,
-            department="Maintenance",
+            management_queue="MAINTENANCE",
             deadline_at=timezone.now() + timedelta(days=1),
         )
         CaseReport.objects.create(case=case, report=report, grouped_by=manager)
-        before = self.seed.photo(Document.Kind.BEFORE_PHOTO, manager, "before")
-        publish_progress(case, manager, "Inspected lift", "Found worn guide", before_versions=[before])
+        publish_progress(case, manager, "Inspected lift", "Found worn guide")
 
         response = self.client.get(
             reverse("api:report-detail", kwargs={"pk": report.pk}),
@@ -219,8 +218,6 @@ class ReportCreateTests(TestCase):
         )
 
         assert response.status_code == 200, response.content
-        photo = response.json()["cases"][0]["updates"][0]["photos"][0]
-        assert photo["id"] == before.pk
-        assert photo["kind"] == "BEFORE"
-        assert photo["filename"]
-        assert photo["download_url"]
+        update = response.json()["cases"][0]["updates"][0]
+        assert update["cause"] == "Inspected lift"
+        assert update["result"] == "Found worn guide"

@@ -52,7 +52,7 @@ class CompositeTenantFkTests(TestCase):
             category="c",
             urgency="LOW",
             location=self.loc_a,
-            department="d",
+            management_queue="GENERAL",
             deadline_minutes=60,
         )
         with self.assertRaises(IntegrityError):
@@ -63,6 +63,6 @@ class CompositeTenantFkTests(TestCase):
                     category="c",
                     urgency="LOW",
                     location=self.loc_b,
-                    department="d",
+                    management_queue="GENERAL",
                     deadline_at=timezone.now(),
                 )

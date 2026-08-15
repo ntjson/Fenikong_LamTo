@@ -11,13 +11,13 @@ from lamto.accounts.models import Building, ManagementMembership, ResidentOccupa
 from lamto.maintenance.models import BuildingLocation, IssueReport, MaintenanceCase, TriageDecision
 from lamto.testing.factories import PilotDomainDriver, seed_pilot_world
 from lamto.web.forms.staff import ConfirmTriageForm
-from lamto.web.forms.staff import ProgressUpdateForm, RecordSettlementAcknowledgementForm, RecordSettlementTransferForm
+from lamto.web.forms.staff import RecordSettlementForm
 
 
 @override_settings(LANGUAGE_CODE="en-us")  # asserts English source strings
 class ManagementWorkspaceTests(TestCase):
-    def test_triage_department_is_labeled_management_queue(self):
-        self.assertEqual(ConfirmTriageForm().fields["department"].label, "Management queue")
+    def test_triage_queue_field_is_labeled_management_queue(self):
+        self.assertEqual(ConfirmTriageForm().fields["management_queue"].label, "Management queue")
 
     def authenticate_management(self, membership):
         self.client.force_login(membership.user)
@@ -92,7 +92,7 @@ class ManagementWorkspaceTests(TestCase):
             category="Elevator",
             urgency="HIGH",
             location=location,
-            department="Ops",
+            management_queue="GENERAL",
             deadline_minutes=120,
             differences={},
         )
@@ -102,7 +102,7 @@ class ManagementWorkspaceTests(TestCase):
             category="Elevator",
             urgency="HIGH",
             location=location,
-            department="Ops",
+            management_queue="GENERAL",
             deadline_at=timezone.now(),
             active=True,
         )
@@ -146,20 +146,17 @@ class ManagementWorkspaceTests(TestCase):
 
         response = self.client.post(reverse("web:staff-report-detail", args=[report.pk]), {
             "action": "confirm_triage", "category": "Plumbing", "urgency": "HIGH",
-            "department": "Ops", "deadline_minutes": 60,
+            "management_queue": "GENERAL", "deadline_minutes": 60,
         })
 
         self.assertTrue(response.context["form"].is_bound)
         self.assertFalse(response.context["info_form"].is_bound)
         self.assertFalse(response.context["decline_form"].is_bound)
 
-    def test_evidence_forms_accept_new_uploads_in_the_same_post(self):
-        self.assertIn("before_upload", ProgressUpdateForm().fields)
-        self.assertIn("after_upload", ProgressUpdateForm().fields)
-        self.assertIn("proof_upload", RecordSettlementTransferForm().fields)
-        self.assertIn("proof_upload", RecordSettlementAcknowledgementForm().fields)
+    def test_settlement_form_accepts_a_new_upload_in_the_same_post(self):
+        self.assertIn("proof_upload", RecordSettlementForm().fields)
 
-    def test_manager_can_reach_both_payment_steps(self):
+    def test_manager_can_reach_the_payment_step(self):
         seed = seed_pilot_world(
             building_name="Payment Tower",
             email_prefix="workspace-payment",
@@ -169,21 +166,15 @@ class ManagementWorkspaceTests(TestCase):
         driver.confirm_triage_case()
         driver.publish_proposal()
         driver.complete_assigned_work()
-        settlement = driver.record_settlement_transfer()
+        settlement = driver.record_settlement()
         (manager,) = seed.management_memberships
 
         self.authenticate_management(manager)
-        self.assertEqual(self.client.get(reverse("web:settlement-detail", kwargs={"pk": settlement.pk})).status_code, 200)
 
-        self.client.logout()
-        self.authenticate_management(manager)
-        verify_response = self.client.get(
-            reverse("web:settlement-record-ack", kwargs={"pk": settlement.pk})
-        )
-        self.assertEqual(verify_response.status_code, 200)
-        self.assertEqual(verify_response.context["membership"], manager)
-        self.assertEqual(verify_response.context["settlement"], settlement)
-        self.assertContains(verify_response, f"settlement #{settlement.pk}", html=False)
+        detail = self.client.get(reverse("web:settlement-detail", kwargs={"pk": settlement.pk}))
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.context["membership"], manager)
+        self.assertEqual(detail.context["settlement"], settlement)
 
     def test_settlement_rows_lead_with_next_action(self):
         with translation.override("en"):
@@ -192,11 +183,9 @@ class ManagementWorkspaceTests(TestCase):
                 {
                     "list_mode": True,
                     "pending": [],
-                    "settlements": [
-                        SimpleNamespace(pk=7, amount_vnd=250_000, ack=None)
-                    ],
+                    "settlements": [SimpleNamespace(pk=7, amount_vnd=250_000)],
                 },
             )
 
-        self.assertIn('<span class="task-action">Record acknowledgement</span>', html)
+        self.assertIn('<span class="task-action">Review settlement</span>', html)
         self.assertIn("Settlement #7", html)

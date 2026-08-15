@@ -9,27 +9,25 @@ from .proposals import Proposal
 
 
 class Settlement(models.Model):
-    class AckKind(models.TextChoices):
-        MANAGEMENT_UPLOAD = "MANAGEMENT_UPLOAD", _("Management-uploaded evidence")
-        PAYEE_LINK = "PAYEE_LINK", _("Payee link (reserved)")
+    """Evidence that a published proposal was paid (ADR 0002).
+
+    Single-sided: filing the transfer proof settles the proposal, so there is no
+    state in which a Settlement row exists but is not yet settled. The recipient
+    is not stored here — it is the contractor frozen on the proposal version.
+    """
 
     proposal = models.OneToOneField(Proposal, on_delete=models.PROTECT, related_name="settlement")
     amount_vnd = models.BigIntegerField()
-    payee_name = models.CharField(max_length=255)
-    bank_reference = models.CharField(max_length=64)
     transfer = models.ForeignKey(DocumentVersion, on_delete=models.PROTECT, related_name="+")
-    transfer_recorded_by = models.ForeignKey(ManagementMembership, on_delete=models.PROTECT, related_name="+")
-    transfer_recorded_at = models.DateTimeField()
-    ack_kind = models.CharField(max_length=24, choices=AckKind.choices, default=AckKind.MANAGEMENT_UPLOAD)
-    ack = models.ForeignKey(DocumentVersion, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
-    ack_recorded_by = models.ForeignKey(ManagementMembership, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
-    ack_recorded_at = models.DateTimeField(null=True, blank=True)
-    settled_at = models.DateTimeField(null=True, blank=True)
+    settled_by = models.ForeignKey(ManagementMembership, on_delete=models.PROTECT, related_name="+")
+    settled_at = models.DateTimeField()
+    # Nullable only because the anchored payload carries settlement_id, so the
+    # row must exist before its event does. record_settlement() sets this inside
+    # the same transaction; a settled row with no event never becomes visible.
     outbox_event = models.OneToOneField(BlockchainOutboxEvent, null=True, blank=True, on_delete=models.PROTECT, related_name="settlement")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
-            models.CheckConstraint(condition=models.Q(settled_at__isnull=True) | (models.Q(ack_recorded_at__isnull=False) & models.Q(outbox_event__isnull=False)), name="settlement_requires_both_evidence_sides"),
             models.CheckConstraint(condition=models.Q(amount_vnd__gt=0), name="settlement_amount_positive"),
         ]

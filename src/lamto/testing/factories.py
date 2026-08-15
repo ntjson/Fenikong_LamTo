@@ -40,7 +40,7 @@ from lamto.finance.models import (
     Proposal,
     PublishedLedgerEntry,
 )
-from lamto.finance.settlements import record_acknowledgement, record_transfer
+from lamto.finance.settlements import record_settlement as settle_proposal
 from lamto.finance.proposals import (
     create_proposal,
     create_standalone_proposal,
@@ -61,7 +61,22 @@ from lamto.maintenance.triage import confirm_triage
 
 
 PILOT_PASSWORD = "pilot-test-secret"
-PILOT_BUILDING_NAME = "Pilot Settlement Building"
+PILOT_BUILDING_NAME = "Goldmark City"
+PILOT_RESIDENT_FLOORS = 5
+# Two-level location tree, in the order residents drill through it. Sibling
+# names are unique per parent, so a lift or stairwell repeats on every floor.
+PILOT_LOCATION_TREE: list[tuple[str, list[str]]] = [
+    ("Tầng hầm", ["Bãi đỗ xe", "Phòng kỹ thuật", "Máy bơm nước", "Thang máy B1"]),
+    ("Tầng 1", ["Sảnh chính", "Khu để xe máy", "Văn phòng BQL", "Thang máy A", "Thang máy B"]),
+    *[
+        (f"Tầng {floor}", [f"Hành lang tầng {floor}", "Cầu thang bộ", "Thang máy A", "Thang máy B"])
+        for floor in range(2, PILOT_RESIDENT_FLOORS + 1)
+    ],
+    ("Sân thượng", ["Khu phơi đồ", "Khu kỹ thuật mái"]),
+    ("Khu tiện ích", ["Phòng gym", "Khu vui chơi trẻ em", "Bể bơi", "Vườn nội khu"]),
+]
+# The leaf the seeded sample report is filed against, as (parent, child).
+PILOT_SAMPLE_LOCATION = ("Tầng 1", "Thang máy A")
 PILOT_EMAIL_DOMAIN = "pilot.lamto.test"
 DEFAULT_AMOUNT_VND = 18_500_000
 DEFAULT_FUND_OPENING_VND = 100_000_000
@@ -174,6 +189,23 @@ class PilotSeed:
         return photo(self.building, kind, uploader, tag or self._tag("photo"))
 
 
+def seed_location_tree(building) -> dict[tuple[str, str], BuildingLocation]:
+    """Create PILOT_LOCATION_TREE under ``building``.
+
+    Returns the leaves keyed by ``(parent name, child name)``; the key is a pair
+    because child names repeat across parents.
+    """
+
+    leaves = {}
+    for parent_name, child_names in PILOT_LOCATION_TREE:
+        parent = BuildingLocation.objects.create(building=building, name=parent_name)
+        for child_name in child_names:
+            leaves[(parent_name, child_name)] = BuildingLocation.objects.create(
+                building=building, parent=parent, name=child_name
+            )
+    return leaves
+
+
 def seed_pilot_world(
     *,
     building_name: str = PILOT_BUILDING_NAME,
@@ -186,7 +218,7 @@ def seed_pilot_world(
     """Create the full pilot cast. Idempotent only when used via seed_pilot --fixture."""
 
     building = Building.objects.create(name=building_name)
-    location = BuildingLocation.objects.create(building=building, name="Lift 2")
+    location = seed_location_tree(building)[PILOT_SAMPLE_LOCATION]
     unit = Unit.objects.create(building=building, label="B-1204")
     seed = PilotSeed(building=building, unit=unit, location=location, password=password)
     prefix = email_prefix if email_prefix is not None else secrets.token_hex(3)
@@ -337,7 +369,7 @@ class PilotDomainDriver:
             category="ELEVATOR",
             urgency="HIGH",
             location=self.seed.location,
-            department="Maintenance",
+            management_queue="MAINTENANCE",
             deadline_minutes=240,
         )
         self.seed.case = case
@@ -354,7 +386,7 @@ class PilotDomainDriver:
         event_id = new_event_id()
         version = publish_proposal_version(
             proposal, manager, amount_vnd=amount_vnd,
-            contractor_name="Pilot Contractor Co", fund_code="GENERAL",
+            contractor_name="Pilot Contractor Co",
             purpose=work.get_category_display(), proposed_action="Repair the affected equipment",
             expected_schedule="Within 14 days", quotation_versions=[quotation],
             event_id=event_id,
@@ -374,7 +406,7 @@ class PilotDomainDriver:
         proposal = create_standalone_proposal(self.seed.building, manager)
         version = publish_proposal_version(
             proposal, manager, amount_vnd=amount_vnd,
-            contractor_name="Pilot Contractor Co", fund_code="GENERAL",
+            contractor_name="Pilot Contractor Co",
             purpose="Preventive maintenance", proposed_action="Service the equipment",
             expected_schedule="Within 14 days", quotation_versions=[quotation],
             event_id=new_event_id(),
@@ -441,11 +473,7 @@ class PilotDomainDriver:
         if not work.reports.filter(status=IssueReport.Status.IN_PROGRESS).exists():
             work = start_case_work(work, self.seed.management_users[0])
         manager = self.seed.management_users[0]
-        before = self.seed.photo(Document.Kind.BEFORE_PHOTO, manager, "before")
-        after = self.seed.photo(Document.Kind.AFTER_PHOTO, manager, "after")
-        completed = complete_case_work(
-            work, manager, "Worn cable", "Cable secured", [before], [after]
-        )
+        completed = complete_case_work(work, manager, "Worn cable", "Cable secured")
         self._ctx["case"] = completed
         self.seed.case = completed
         return completed
@@ -458,33 +486,15 @@ class PilotDomainDriver:
         self._ctx["rating"] = rating
         return rating
 
-    def record_settlement_transfer(self, amount_vnd: int | None = None):
-        amount_vnd = amount_vnd or self._ctx.get("amount_vnd", DEFAULT_AMOUNT_VND)
+    def record_settlement(self):
         recorder = self.seed.management_memberships[0]
         proof = self.seed.document(
             Document.Kind.PAYMENT_PROOF, recorder.user, "settlement-transfer"
         )
-        settlement = record_transfer(
+        settlement = settle_proposal(
             self.seed.proposal or self._ctx["proposal"],
             recorder,
-            amount_vnd=amount_vnd,
-            payee_name="Pilot Contractor Co",
-            bank_reference=f"BANK-PILOT-{new_event_id()[-12:]}",
             transfer=proof,
-        )
-        self._ctx["settlement"] = settlement
-        return settlement
-
-    def record_settlement_ack(self):
-        settlement = self._ctx["settlement"]
-        recorder = self.seed.management_memberships[0]
-        proof = self.seed.document(
-            Document.Kind.PAYMENT_PROOF, recorder.user, "settlement-ack"
-        )
-        settlement = record_acknowledgement(
-            settlement,
-            recorder,
-            ack=proof,
             event_id=new_event_id(),
         )
         if not self.seed.chain_paused:
@@ -532,7 +542,7 @@ class PilotDomainDriver:
         """Bring a normal paid case through proposal submission."""
         self.page = page
         self.submit_report(
-            "Elevator shakes heavily", "Building B / Lift 2", None
+            "Elevator shakes heavily", "Goldmark City / Tầng 1 / Thang máy A", None
         )
         self.confirm_triage_case()
         self.publish_proposal(amount_vnd=DEFAULT_AMOUNT_VND)

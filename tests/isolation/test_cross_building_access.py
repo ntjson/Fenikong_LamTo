@@ -51,8 +51,7 @@ STAFF_CASES = {
     "web:case-detail": ("case_pk", "GET"),
     "web:proposal-detail": ("proposal_pk", "GET"),
     "web:proposal-create": ("case_pk", "POST"),
-    "web:settlement-record-transfer": ("proposal_pk", "POST"),
-    "web:settlement-record-ack": ("settlement_pk", "POST"),
+    "web:settlement-record": ("proposal_pk", "POST"),
     "web:settlement-detail": ("settlement_pk", "GET"),
     "web:fund-verify": ("fund_entry_pk", "POST"),
     "web:gate-face-photo": ("face_pk", "GET"),
@@ -189,8 +188,7 @@ class CrossBuildingAccessTests(TestCase):
         driver.confirm_triage_case()
         driver.publish_proposal()
         driver.complete_assigned_work()
-        driver.record_settlement_transfer()
-        driver.record_settlement_ack()
+        driver.record_settlement()
         driver.confirm_all_chain_events()
         driver.publish_settlement_entry()
         driver.confirm_all_chain_events()

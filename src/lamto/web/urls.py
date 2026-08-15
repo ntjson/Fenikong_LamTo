@@ -97,13 +97,8 @@ urlpatterns = [
     path("s/settlements/", settlements.settlement_list, name="settlement-list"),
     path(
         "s/settlements/record/<int:pk>/",
-        settlements.settlement_record_transfer,
-        name="settlement-record-transfer",
-    ),
-    path(
-        "s/settlements/<int:pk>/ack/",
-        settlements.settlement_record_ack,
-        name="settlement-record-ack",
+        settlements.settlement_record,
+        name="settlement-record",
     ),
     path(
         "s/settlements/<int:pk>/",

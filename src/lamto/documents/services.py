@@ -39,11 +39,7 @@ MIME_SIGNATURES = {
     "image/jpeg": b"\xff\xd8\xff",
     "image/png": b"\x89PNG\r\n\x1a\n",
 }
-PHOTO_KINDS = {
-    Document.Kind.REPORT_PHOTO,
-    Document.Kind.BEFORE_PHOTO,
-    Document.Kind.AFTER_PHOTO,
-}
+PHOTO_KINDS = {Document.Kind.REPORT_PHOTO}
 BILL_KINDS = {Document.Kind.RESIDENT_BILL}
 
 

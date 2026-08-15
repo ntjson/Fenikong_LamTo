@@ -85,7 +85,6 @@ export 'package:lamto_api/src/model/report_detail.dart';
 export 'package:lamto_api/src/model/report_photo.dart';
 export 'package:lamto_api/src/model/report_summary.dart';
 export 'package:lamto_api/src/model/report_work_update.dart';
-export 'package:lamto_api/src/model/report_work_update_photo.dart';
 export 'package:lamto_api/src/model/status_enum.dart';
 export 'package:lamto_api/src/model/token_response.dart';
 export 'package:lamto_api/src/model/vehicle_plate.dart';

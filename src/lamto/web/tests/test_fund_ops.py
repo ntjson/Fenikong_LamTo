@@ -25,8 +25,7 @@ def _full_publish(seed):
     d.confirm_triage_case()
     d.publish_proposal()
     d.complete_assigned_work()
-    d.record_settlement_transfer()
-    d.record_settlement_ack()
+    d.record_settlement()
     d.confirm_all_chain_events()
     return d
 
@@ -86,9 +85,8 @@ class FundHomeTests(TestCase):
         driver.confirm_triage_case()
         driver.publish_proposal()
         driver.complete_assigned_work()
-        driver.record_settlement_transfer()
         with patch("lamto.finance.publication.publish_settlement_entry"):
-            driver.record_settlement_ack()
+            driver.record_settlement()
         driver.confirm_all_chain_events()
         self._login(seed, "fund_recorder")
 

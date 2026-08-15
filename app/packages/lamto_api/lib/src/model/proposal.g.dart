@@ -26,8 +26,6 @@ class _$Proposal extends Proposal {
   @override
   final int amountVnd;
   @override
-  final String fundCode;
-  @override
   final String contractorName;
   @override
   final String expectedSchedule;
@@ -53,7 +51,6 @@ class _$Proposal extends Proposal {
       required this.purpose,
       required this.proposedAction,
       required this.amountVnd,
-      required this.fundCode,
       required this.contractorName,
       required this.expectedSchedule,
       required this.versions,
@@ -81,7 +78,6 @@ class _$Proposal extends Proposal {
         purpose == other.purpose &&
         proposedAction == other.proposedAction &&
         amountVnd == other.amountVnd &&
-        fundCode == other.fundCode &&
         contractorName == other.contractorName &&
         expectedSchedule == other.expectedSchedule &&
         versions == other.versions &&
@@ -102,7 +98,6 @@ class _$Proposal extends Proposal {
     _$hash = $jc(_$hash, purpose.hashCode);
     _$hash = $jc(_$hash, proposedAction.hashCode);
     _$hash = $jc(_$hash, amountVnd.hashCode);
-    _$hash = $jc(_$hash, fundCode.hashCode);
     _$hash = $jc(_$hash, contractorName.hashCode);
     _$hash = $jc(_$hash, expectedSchedule.hashCode);
     _$hash = $jc(_$hash, versions.hashCode);
@@ -125,7 +120,6 @@ class _$Proposal extends Proposal {
           ..add('purpose', purpose)
           ..add('proposedAction', proposedAction)
           ..add('amountVnd', amountVnd)
-          ..add('fundCode', fundCode)
           ..add('contractorName', contractorName)
           ..add('expectedSchedule', expectedSchedule)
           ..add('versions', versions)
@@ -176,10 +170,6 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
   int? get amountVnd => _$this._amountVnd;
   set amountVnd(int? amountVnd) => _$this._amountVnd = amountVnd;
 
-  String? _fundCode;
-  String? get fundCode => _$this._fundCode;
-  set fundCode(String? fundCode) => _$this._fundCode = fundCode;
-
   String? _contractorName;
   String? get contractorName => _$this._contractorName;
   set contractorName(String? contractorName) =>
@@ -228,7 +218,6 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
       _purpose = $v.purpose;
       _proposedAction = $v.proposedAction;
       _amountVnd = $v.amountVnd;
-      _fundCode = $v.fundCode;
       _contractorName = $v.contractorName;
       _expectedSchedule = $v.expectedSchedule;
       _versions = $v.versions.toBuilder();
@@ -272,8 +261,6 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
                 proposedAction, r'Proposal', 'proposedAction'),
             amountVnd: BuiltValueNullFieldError.checkNotNull(
                 amountVnd, r'Proposal', 'amountVnd'),
-            fundCode: BuiltValueNullFieldError.checkNotNull(
-                fundCode, r'Proposal', 'fundCode'),
             contractorName: BuiltValueNullFieldError.checkNotNull(
                 contractorName, r'Proposal', 'contractorName'),
             expectedSchedule: BuiltValueNullFieldError.checkNotNull(

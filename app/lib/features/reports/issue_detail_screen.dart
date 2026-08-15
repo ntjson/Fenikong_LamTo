@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:built_collection/built_collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -238,7 +237,6 @@ class _IssueDetailScreenState extends ConsumerState<IssueDetailScreen> {
               createdAt: update.createdAt,
               cause: update.cause,
               result: update.result,
-              photos: update.photos,
             ),
           if (caseItem.completedAt != null)
             _CompletedMarker(at: caseItem.completedAt!),
@@ -359,13 +357,11 @@ class _ProgressTile extends StatelessWidget {
     required this.createdAt,
     required this.cause,
     required this.result,
-    required this.photos,
   });
 
   final DateTime createdAt;
   final String cause;
   final String result;
-  final BuiltList<ReportWorkUpdatePhoto> photos;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -386,36 +382,6 @@ class _ProgressTile extends StatelessWidget {
               const SizedBox(height: 4),
               Text(result),
               Text(_date(createdAt)),
-              if (photos.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 96,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      for (final photo in photos)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: AuthenticatedImage(
-                              photo.downloadUrl,
-                              width: 96,
-                              height: 96,
-                              semanticLabel: photo.kind == KindEnum.BEFORE
-                                  ? AppLocalizations.of(
-                                      context,
-                                    )!.photoBeforeRepair
-                                  : AppLocalizations.of(
-                                      context,
-                                    )!.photoAfterRepair,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
             ],
           ),
         ),

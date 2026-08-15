@@ -167,7 +167,6 @@ Class | Method | HTTP request | Description
  - [ReportPhoto](doc/ReportPhoto.md)
  - [ReportSummary](doc/ReportSummary.md)
  - [ReportWorkUpdate](doc/ReportWorkUpdate.md)
- - [ReportWorkUpdatePhoto](doc/ReportWorkUpdatePhoto.md)
  - [StatusEnum](doc/StatusEnum.md)
  - [TokenResponse](doc/TokenResponse.md)
  - [VehiclePlate](doc/VehiclePlate.md)

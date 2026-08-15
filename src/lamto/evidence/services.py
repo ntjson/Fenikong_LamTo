@@ -33,11 +33,9 @@ EVIDENCE_PAYLOAD_SCHEMAS = {
         "report_snapshot_hash": "hash", "estimated_amount_vnd": "money",
         "photo_hash": "hash", "photo_hashes": "hashes"}),
     EvidenceType.SETTLEMENT: ({
-        "schema": frozenset({"settlement.v1"}), "settlement_id": "id",
+        "schema": frozenset({"settlement.v2"}), "settlement_id": "id",
         "proposal_id": "id", "proposal_version": "positive_int", "amount_vnd": "money",
-        "payee_name": "text", "bank_reference": "text",
-        "transfer_sha256": "hash", "ack_sha256": "hash",
-        "transfer_recorded_at": "timestamp", "ack_recorded_at": "timestamp",
+        "transfer_sha256": "hash", "settled_at": "timestamp",
     }, {}),
 }
 
