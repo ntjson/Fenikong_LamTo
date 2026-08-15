@@ -1,28 +1,18 @@
-"""Management workspace middleware: session renewal and reauth redirect."""
+"""Management workspace middleware: session renewal."""
 
 from __future__ import annotations
 
-from urllib.parse import urlencode
-
-from django.shortcuts import redirect
-from django.urls import reverse
-
 from lamto.accounts.models import ManagementMembership
-from lamto.accounts.security import (
-    RecentAuthRequired,
-    renew_management_session,
-    stash_post_for_reauth,
-)
+from lamto.accounts.security import renew_management_session
 
 
 class ManagementSessionMiddleware:
     """Renew Management sessions on every authenticated /s/ request.
 
-    - An authenticated Management account requesting /s/ renews the session's
-      server-side expiry and persistent cookie to 400 days from that request,
-      so the session survives inactivity and browser restarts (ADR 0001).
-      Non-members are left to the views' membership checks.
-    - RecentAuthRequired → redirect to reauth with next=.
+    An authenticated Management account requesting /s/ renews the session's
+    server-side expiry and persistent cookie to 400 days from that request,
+    so the session survives inactivity and browser restarts (ADR 0001).
+    Non-members are left to the views' membership checks.
     """
 
     def __init__(self, get_response):
@@ -43,11 +33,4 @@ class ManagementSessionMiddleware:
             return None
 
         renew_management_session(request)
-        return None
-
-    def process_exception(self, request, exception):
-        if isinstance(exception, RecentAuthRequired):
-            stash_post_for_reauth(request)
-            next_url = request.get_full_path()
-            return redirect(f"{reverse('web:reauth')}?{urlencode({'next': next_url})}")
         return None

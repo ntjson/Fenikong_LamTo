@@ -8,7 +8,6 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_GET, require_http_methods
 
-from lamto.accounts.security import pop_stashed_post, require_recent_auth
 from lamto.documents.models import Document
 from lamto.finance.fund import (
     fund_balance,
@@ -109,14 +108,11 @@ def fund_record(request):
     """Two-phase record of an opening-balance/inflow fund source (spec 4.3.2)."""
     membership, memberships = require_management_context(request)
     building = membership.building
-    # Recent auth before the form renders: the five-minute window starts with typing.
-    require_recent_auth(request)
     fund = get_or_create_fund(building)
 
     record_form = RecordFundSourceForm(
         request.POST or None,
         request.FILES or None,
-        initial=pop_stashed_post(request) if request.method == "GET" else None,
     )
     if request.method == "POST" and record_form.is_valid():
         try:
@@ -168,10 +164,6 @@ def fund_verify(request, pk):
         fund__building_id=building_id,
     )
     already_verified = hasattr(entry, "verification")
-    if not already_verified:
-        # The verify screen re-presents the frozen record; demanding recent auth
-        # on render keeps review and sign-off inside one five-minute window.
-        require_recent_auth(request)
     if request.method == "POST" and not already_verified:
         try:
             verify_fund_source(entry, membership)

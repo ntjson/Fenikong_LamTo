@@ -8,7 +8,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext, gettext_lazy as _
 from django.views.decorators.http import require_GET, require_http_methods
 
-from lamto.accounts.security import pop_stashed_post, require_recent_auth
 from lamto.audit.services import record_audit
 from lamto.documents.models import Document, DocumentVersion
 from lamto.finance.models import (
@@ -146,23 +145,20 @@ def proposal_detail(request, pk):
     can_publish = _proposal_publishable(proposal)
     version = proposal.current_version
     action = request.POST.get("action") if request.method == "POST" else None
-    stashed = pop_stashed_post(request) if request.method == "GET" else None
     progress_form = ProgressUpdateForm(
         request.POST if action in {"progress", "complete"} else None,
         request.FILES if action in {"progress", "complete"} else None,
         building_id=membership.building_id,
         uploader_id=request.user.pk,
-        initial=stashed,
     )
     publish_form = PublishLedgerEntryForm(request.POST if action == "publish" else None)
     decision_form = ProposalDecisionForm(
-        request.POST if action == "decide" else None, initial=stashed
+        request.POST if action == "decide" else None
     )
 
     if request.method == "POST":
         action = action or "publish"
         if action == "publish":
-            require_recent_auth(request)
             if not can_publish:
                 messages.error(request, _("This proposal is not eligible for publication."))
                 return redirect("web:proposal-detail", pk=proposal.pk)
@@ -175,7 +171,6 @@ def proposal_detail(request, pk):
                     messages.success(request, _("Settled expense published to the resident ledger."))
                     return redirect("web:proposal-detail", pk=proposal.pk)
         elif action == "decide":
-            require_recent_auth(request)
             if decision_form.is_valid():
                 proceed = decision_form.proceed
                 try:
@@ -195,7 +190,6 @@ def proposal_detail(request, pk):
                         messages.success(request, _("Decision recorded. This proposal is closed as not proceeding."))
                 return redirect("web:proposal-detail", pk=proposal.pk)
         elif action in {"progress", "complete"}:
-            require_recent_auth(request)
             uploaded = []
             try:
                 if not progress_form.is_valid():
@@ -278,9 +272,6 @@ def proposal_create(request, pk):
         pk=pk,
         building_id=building_id,
     )
-    # Recent auth is demanded before the form renders, so the five-minute
-    # window starts when the manager starts typing, not when they submit.
-    require_recent_auth(request)
     if not spending_proposal_cases().filter(pk=case.pk).exists():
         messages.error(request, _("This case is not eligible for a spending proposal."))
         return redirect("web:case-detail", pk=case.pk)
@@ -296,7 +287,6 @@ def proposal_create(request, pk):
     create_form = CreateProposalForm(
         request.POST or None,
         request.FILES or None,
-        initial=pop_stashed_post(request) if request.method == "GET" else None,
     )
     if request.method == "POST" and create_form.is_valid():
         original = None
@@ -343,11 +333,9 @@ def proposal_create(request, pk):
 @require_http_methods(["GET", "POST"])
 def standalone_proposal_create(request):
     membership, memberships = require_management_context(request)
-    require_recent_auth(request)
     form = StandaloneProposalForm(
         request.POST or None,
         request.FILES or None,
-        initial=pop_stashed_post(request) if request.method == "GET" else None,
     )
     if request.method == "POST":
         if form.is_valid():

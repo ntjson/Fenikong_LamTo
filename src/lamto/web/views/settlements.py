@@ -6,7 +6,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
 
-from lamto.accounts.security import pop_stashed_post, require_recent_auth
 from lamto.documents.models import Document
 from lamto.finance.models import Proposal, Settlement
 from lamto.finance.settlements import record_acknowledgement, record_transfer
@@ -38,8 +37,6 @@ def settlement_list(request):
 @require_http_methods(["GET", "POST"])
 def settlement_record_transfer(request, pk):
     membership, memberships = require_management_context(request)
-    # Recent auth before the form renders: the five-minute window starts with typing.
-    require_recent_auth(request)
     proposal = get_object_or_404(
         Proposal.objects.select_related("current_version"),
         pk=pk,
@@ -50,7 +47,6 @@ def settlement_record_transfer(request, pk):
         request.POST or None,
         request.FILES or None,
         proof_choices=[(value, label) for value, label, _ in options],
-        initial=pop_stashed_post(request) if request.method == "GET" else None,
     )
     if request.method == "POST" and form.is_valid():
         uploaded = False
@@ -78,13 +74,9 @@ def settlement_record_transfer(request, pk):
 @require_http_methods(["GET", "POST"])
 def settlement_record_ack(request, pk):
     membership, memberships = require_management_context(request)
-    require_recent_auth(request)
     settlement = get_object_or_404(Settlement, pk=pk, proposal__building_id=membership.building_id)
     options = document_options(membership.building_id, Document.Kind.PAYMENT_PROOF)
     initial = {"event_id": new_event_id()}
-    if request.method == "GET":
-        initial = {**initial, **(pop_stashed_post(request) or {})}
-        initial["event_id"] = initial["event_id"] or new_event_id()
     form = RecordSettlementAcknowledgementForm(request.POST or None, request.FILES or None, initial=initial, proof_choices=[(value, label) for value, label, _ in options])
     if request.method == "POST" and form.is_valid():
         uploaded = False

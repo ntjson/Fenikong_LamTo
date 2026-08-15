@@ -1,12 +1,10 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from django.test import override_settings
-from django.core.exceptions import PermissionDenied
-from django.test import RequestFactory
 from django.urls import reverse
 
-from lamto.gate.models import GateDevice
+from lamto.gate.models import GateDevice, GateDeviceCredential
 from lamto.gate.tests.conftest import (
     building,
     clean_scanner,
@@ -16,22 +14,29 @@ from lamto.gate.tests.conftest import (
     use_fake_embedder,
 )  # noqa: F401
 from lamto.gate.tests.test_review import _enrol
-from lamto.web.views.gate import gate_devices
 
 
-def test_device_credential_actions_require_recent_reauthentication():
-    request = RequestFactory().post(
-        "/s/gate/devices", {"action": "rotate", "device": "1"}
+@pytest.mark.django_db
+def test_device_credential_rotation_proceeds_without_reauthentication(
+    client, management
+):
+    client.force_login(management.user)
+    client.post(
+        reverse("web:gate-devices"),
+        {"action": "create", "label": "North", "direction": GateDevice.Direction.ENTRY},
     )
-    request.user = Mock(is_authenticated=True)
-    with (
-        patch(
-            "lamto.web.views.gate.require_management_context", return_value=(Mock(), [])
-        ),
-        patch("lamto.web.views.gate.require_recent_auth", side_effect=PermissionDenied),
-        pytest.raises(PermissionDenied),
-    ):
-        gate_devices(request)
+    device = GateDevice.objects.get(label="North")
+    before = GateDeviceCredential.objects.filter(device=device).count()
+
+    response = client.post(
+        reverse("web:gate-devices"), {"action": "rotate", "device": device.pk}
+    )
+
+    assert response.status_code == 302
+    assert response["Location"] == reverse("web:gate-devices")
+    assert GateDeviceCredential.objects.filter(device=device).count() == before + 1
+    followed = client.get(response["Location"])
+    assert followed.status_code == 200
 
 
 @pytest.mark.django_db
@@ -92,12 +97,11 @@ def test_invalid_reader_is_not_created_and_reports_error(
     client, management, label, direction
 ):
     client.force_login(management.user)
-    with patch("lamto.web.views.gate.require_recent_auth"):
-        response = client.post(
-            reverse("web:gate-devices"),
-            {"action": "create", "label": label, "direction": direction},
-            follow=True,
-        )
+    response = client.post(
+        reverse("web:gate-devices"),
+        {"action": "create", "label": label, "direction": direction},
+        follow=True,
+    )
     assert response.redirect_chain == [(reverse("web:gate-devices"), 302)]
     assert GateDevice.objects.count() == 0
     assert b'aria-labelledby="messages-heading"' in response.content
@@ -110,17 +114,16 @@ def test_reader_creation_redirects_and_shows_token_once(client, management):
     # PRG: the POST redirects (refresh never re-submits) and the one-time
     # credential is popped from the session, so it renders exactly once.
     client.force_login(management.user)
-    with patch("lamto.web.views.gate.require_recent_auth"):
-        response = client.post(
-            reverse("web:gate-devices"),
-            {
-                "action": "create",
-                "label": "North",
-                "direction": GateDevice.Direction.ENTRY,
-            },
-            follow=True,
-        )
-        second = client.get(reverse("web:gate-devices"))
+    response = client.post(
+        reverse("web:gate-devices"),
+        {
+            "action": "create",
+            "label": "North",
+            "direction": GateDevice.Direction.ENTRY,
+        },
+        follow=True,
+    )
+    second = client.get(reverse("web:gate-devices"))
 
     assert response.redirect_chain == [(reverse("web:gate-devices"), 302)]
     html = response.content.decode()

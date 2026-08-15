@@ -101,26 +101,6 @@ class SecurityTests(TestCase):
         session.save()
         return device
 
-    def test_privileged_action_requires_verified_otp_and_recent_reauth(self):
-        board = self.make_manager()
-        self.client.force_login(board.user)
-        response = self.client.post(
-            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}),
-            self.valid_payment_payload(),
-        )
-        self.assertEqual(response.status_code, 403)
-
-    def test_privileged_action_allowed_with_otp_and_recent_reauth_gate_passes(self):
-        board = self.make_manager()
-        self.client.force_login(board.user)
-        self.enroll_and_bind(self.client, board.user)
-        # Gate should not 403 for MFA/reauth; may 404/400 for missing settlement.
-        response = self.client.post(
-            reverse("web:settlement-record-transfer", kwargs={"pk": 999999}),
-            self.valid_payment_payload(),
-        )
-        self.assertNotEqual(response.status_code, 403)
-
     def test_management_can_export_document_history(self):
         operator, auditor = self.make_operator_and_auditor()
         self.client.force_login(operator.user)
@@ -308,12 +288,12 @@ class SecurityTests(TestCase):
                     msg=f"password-only session must reach {url_name}",
                 )
 
-    def test_signed_financial_post_requires_recent_reauth(self):
-        """Signed financial POSTs redirect to reauth when stale (Finding 2)."""
+    def test_sensitive_financial_post_proceeds_without_reauth(self):
+        """A password-only session posts sensitive work straight to its normal
+        domain result (404 for a missing settlement): no MFA denial and, even
+        with a stale former re-authentication marker, no redirect there."""
         board = self.make_manager()
         self.client.force_login(board.user)
-        self.enroll_and_bind(self.client, board.user)
-        # Stale reauth window.
         session = self.client.session
         session[RECENT_REAUTH_KEY] = time.time() - 400
         session.save()
@@ -322,6 +302,5 @@ class SecurityTests(TestCase):
             reverse("web:settlement-record-transfer", kwargs={"pk": 999999}),
             self.valid_payment_payload(),
         )
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/s/security/reauth/", response["Location"])
-        self.assertIn("next=", response["Location"])
+        self.assertEqual(response.status_code, 404)
+        self.assertNotIn("/s/security/reauth/", response.get("Location", ""))
