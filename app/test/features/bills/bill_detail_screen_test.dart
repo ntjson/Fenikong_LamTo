@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,10 @@ import 'package:lamto/features/bills/bills_repository.dart';
 import 'package:lamto/l10n/app_localizations.dart';
 import 'package:lamto/theme.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:pdfrx/pdfrx.dart';
+
+import '../documents/document_fixtures.dart';
+import '../documents/fake_share_platform.dart';
 
 class _FakeRepo implements BillsRepository {
   _FakeRepo({this.dueDate});
@@ -43,7 +49,50 @@ class _FakeRepo implements BillsRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Serves a PDF, so the document row reaches its viewer.
+class _PdfRepo extends _FakeRepo {
+  @override
+  Future<Uint8List> fetchDocument(String downloadUrl) async => minimalPdfBytes;
+}
+
+late FakeSharePlatform share;
+
 void main() {
+  // Installed once: SharePlus latches the platform on first use.
+  setUpAll(() => share = FakeSharePlatform.install());
+  setUp(() => share.reset());
+
+  testWidgets('the bill document opens in the app, never in a share sheet', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [billsRepositoryProvider.overrideWithValue(_PdfRepo())],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: [Locale('en'), Locale('vi')],
+          home: BillDetailScreen(billId: 1),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('b.pdf'));
+    await tester.tap(find.text('b.pdf'));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Where the bytes go, not whether pages paint: `flutter test` has no
+    // PDFium. Rendering is asserted in integration_test/document_viewer_test.dart.
+    expect(find.byType(PdfViewer), findsOneWidget);
+    expect(share.shared, isEmpty);
+  });
+
   testWidgets('issued bill shows its amount, status, and payment action', (
     tester,
   ) async {

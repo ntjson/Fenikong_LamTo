@@ -160,3 +160,42 @@ class AdaptiveTextButton extends StatelessWidget {
     );
   }
 }
+
+/// Bar-level icon action: plain [CupertinoButton] on iOS, [IconButton]
+/// elsewhere. [label] names the action for assistive technology, and is the
+/// Material tooltip. Pass [cupertinoIcon] where the two platforms draw the
+/// action differently — the glyph is part of the native vocabulary too.
+class AdaptiveIconButton extends StatelessWidget {
+  const AdaptiveIconButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+    this.cupertinoIcon,
+    super.key,
+  });
+
+  final VoidCallback? onPressed;
+  final IconData icon;
+  final IconData? cupertinoIcon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isCupertino) {
+      return CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: onPressed,
+        child: Semantics(
+          label: label,
+          button: true,
+          child: Icon(cupertinoIcon ?? icon),
+        ),
+      );
+    }
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      tooltip: label,
+    );
+  }
+}

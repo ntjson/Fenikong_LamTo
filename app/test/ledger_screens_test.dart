@@ -16,8 +16,12 @@ import 'package:lamto/features/transparency/transparency_repository.dart';
 import 'package:lamto/l10n/app_localizations.dart';
 import 'package:lamto/theme.dart';
 import 'package:lamto_api/lamto_api.dart';
+import 'package:pdfrx/pdfrx.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
+
+import 'features/documents/document_fixtures.dart';
+import 'features/documents/fake_share_platform.dart';
 
 LedgerEntryList _entry(
   int id,
@@ -193,6 +197,16 @@ class _IntegrityRepo extends _FakeRepo {
       _detail().rebuild((b) => b..integrityStatus = status);
 }
 
+/// Serves a PDF, so the document tile reaches its viewer.
+class _PdfDocumentRepo extends _FakeRepo {
+
+  @override
+  Future<Uint8List> fetchDocument(String downloadUrl) async {
+    documentCalls++;
+    return minimalPdfBytes;
+  }
+}
+
 class _ExplorerRepo extends _FakeRepo {
   _ExplorerRepo(this.url);
   final String? url;
@@ -244,7 +258,13 @@ Widget _host(
   ),
 );
 
+late FakeSharePlatform share;
+
 void main() {
+  // Installed once: SharePlus latches the platform on first use.
+  setUpAll(() => share = FakeSharePlatform.install());
+  setUp(() => share.reset());
+
   testWidgets('ledger tab switches between ledger and proposals segments', (
     tester,
   ) async {
@@ -470,6 +490,38 @@ void main() {
       LamToColors.warning,
     );
     expect(find.byIcon(Icons.pending_outlined), findsOneWidget);
+  });
+
+  testWidgets('a downloaded PDF opens in the app, never in a share sheet', (
+    tester,
+  ) async {
+    final repo = _PdfDocumentRepo();
+    await tester.pumpWidget(_host(const LedgerDetailScreen(entryId: 42), repo));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Chuỗi trách nhiệm'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('hoa-don.pdf'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.ensureVisible(find.text('hoa-don.pdf'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('hoa-don.pdf'));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // `flutter test` has no PDFium, so this asserts where the bytes go — into
+    // an in-app viewer, never the OS share sheet. That the pages actually
+    // render is a device-level fact, asserted in
+    // integration_test/document_viewer_test.dart.
+    expect(find.byType(PdfViewer), findsOneWidget);
+    expect(share.shared, isEmpty);
+    // The filename titles the viewer; the ledger row behind it still shows it.
+    expect(find.text('hoa-don.pdf'), findsWidgets);
   });
 
   testWidgets('document row covers loading, offline, authorization and retry', (

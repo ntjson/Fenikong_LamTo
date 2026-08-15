@@ -1,12 +1,10 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:built_value/json_object.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lamto_api/lamto_api.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/error_retry.dart';
 import '../../core/adaptive_buttons.dart';
@@ -17,6 +15,7 @@ import '../../core/format.dart';
 import '../../core/page_body.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme.dart';
+import '../documents/document_viewer_screen.dart';
 import '../proposals/proposal_detail_screen.dart';
 import '../transparency/transparency_repository.dart';
 import 'evidence_explorer_tile.dart';
@@ -316,38 +315,26 @@ class _DocumentTileState extends ConsumerState<_DocumentTile> {
       _loading = true;
       _error = null;
     });
-    File? file;
+    final Uint8List bytes;
     try {
-      final bytes = await ref
+      bytes = await ref
           .read(transparencyRepositoryProvider)
           .fetchDocument(widget.document.downloadUrl);
-      final directory = await getTemporaryDirectory();
-      final safeName = widget.document.filename.replaceAll(
-        RegExp(r'[/\\]|\.\.'),
-        '_',
-      );
-      file = File(
-        '${directory.path}/${safeName.isEmpty ? 'document' : safeName}',
-      );
-      await file.writeAsBytes(bytes, flush: true);
-      if (!mounted) return;
-      final box = context.findRenderObject() as RenderBox?;
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          sharePositionOrigin: box != null && box.hasSize
-              ? box.localToGlobal(Offset.zero) & box.size
-              : null,
-        ),
-      );
     } catch (error) {
+      // Fetch failures belong to this row, with a retry. Render failures
+      // belong to the viewer, so it is opened outside this try.
       if (mounted) setState(() => _error = error);
+      return;
     } finally {
-      try {
-        if (await file?.exists() ?? false) await file!.delete();
-      } catch (_) {}
       if (mounted) setState(() => _loading = false);
     }
+    if (!mounted) return;
+    await showDocumentViewer(
+      context,
+      bytes: bytes,
+      filename: widget.document.filename,
+      contentType: widget.document.contentType,
+    );
   }
 
   @override
@@ -379,7 +366,7 @@ class _DocumentTileState extends ConsumerState<_DocumentTile> {
               child: CircularProgressIndicator.adaptive(strokeWidth: 2),
             )
           : _error == null
-          ? const Icon(Icons.open_in_new)
+          ? const Icon(Icons.chevron_right)
           : null,
       onTap: _loading ? null : _open,
     );

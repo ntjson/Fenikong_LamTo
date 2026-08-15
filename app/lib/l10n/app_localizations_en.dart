@@ -647,6 +647,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'The document could not be opened. No file was downloaded; please try again.';
 
   @override
+  String get documentShare => 'Share or save';
+
+  @override
+  String get documentShareFailed =>
+      'The file could not be shared. The document is still open — try again.';
+
+  @override
+  String get documentNoPreview =>
+      'This file cannot be previewed here. Share it to open it in another app.';
+
+  @override
   String get ledgerProofTitle => 'Verification details';
 
   @override

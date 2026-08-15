@@ -1268,6 +1268,24 @@ abstract class AppLocalizations {
   /// **'The document could not be opened. No file was downloaded; please try again.'**
   String get ledgerDocumentFailure;
 
+  /// No description provided for @documentShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share or save'**
+  String get documentShare;
+
+  /// No description provided for @documentShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The file could not be shared. The document is still open — try again.'**
+  String get documentShareFailed;
+
+  /// No description provided for @documentNoPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'This file cannot be previewed here. Share it to open it in another app.'**
+  String get documentNoPreview;
+
   /// No description provided for @ledgerProofTitle.
   ///
   /// In en, this message translates to:

@@ -1,11 +1,9 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lamto_api/lamto_api.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/adaptive_buttons.dart';
 import '../../core/adaptive_page_route.dart';
@@ -15,6 +13,7 @@ import '../../core/format.dart';
 import '../../core/page_body.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme.dart';
+import '../documents/document_viewer_screen.dart';
 import 'bill_scan_screen.dart';
 import 'bills_repository.dart';
 
@@ -43,36 +42,25 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
       _openingDocument = true;
       _documentFailed = false;
     });
-    File? file;
+    final Uint8List bytes;
     try {
-      final bytes = await ref
+      bytes = await ref
           .read(billsRepositoryProvider)
           .fetchDocument(bill.documentDownloadUrl);
-      final directory = await getTemporaryDirectory();
-      final filename = bill.documentFilename.replaceAll(
-        RegExp(r'[/\\]|\.\.'),
-        '_',
-      );
-      file = File('${directory.path}/${filename.isEmpty ? 'bill' : filename}');
-      await file.writeAsBytes(bytes, flush: true);
-      if (!mounted) return;
-      final box = context.findRenderObject() as RenderBox?;
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          sharePositionOrigin: box != null && box.hasSize
-              ? box.localToGlobal(Offset.zero) & box.size
-              : null,
-        ),
-      );
     } catch (_) {
+      // Fetch failures belong to this row. Render failures belong to the
+      // viewer, so it is opened outside this try.
       if (mounted) setState(() => _documentFailed = true);
+      return;
     } finally {
-      try {
-        if (await file?.exists() ?? false) await file!.delete();
-      } catch (_) {}
       if (mounted) setState(() => _openingDocument = false);
     }
+    if (!mounted) return;
+    await showDocumentViewer(
+      context,
+      bytes: bytes,
+      filename: bill.documentFilename,
+    );
   }
 
   Future<void> _scanPayment() async {
@@ -197,7 +185,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                   dimension: 24,
                   child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                 )
-              : const Icon(Icons.open_in_new),
+              : const Icon(Icons.chevron_right),
           onTap: _openingDocument ? null : () => _openDocument(bill),
         ),
         if (_documentFailed) ...[

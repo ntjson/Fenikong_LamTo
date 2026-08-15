@@ -648,6 +648,17 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không mở được tài liệu. Tệp chưa được tải xuống; vui lòng thử lại.';
 
   @override
+  String get documentShare => 'Chia sẻ hoặc lưu';
+
+  @override
+  String get documentShareFailed =>
+      'Chưa chia sẻ được tệp. Tài liệu vẫn đang mở — hãy thử lại.';
+
+  @override
+  String get documentNoPreview =>
+      'Không xem trước được tệp này tại đây. Hãy chia sẻ để mở bằng ứng dụng khác.';
+
+  @override
   String get ledgerProofTitle => 'Chi tiết xác thực';
 
   @override
