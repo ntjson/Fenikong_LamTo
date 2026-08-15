@@ -129,11 +129,45 @@ class ProposalCreateTests(TestCase):
 
         response = self.client.get(reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
 
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["action_panel"], "decide")
         self.assertContains(response, 'name="action" value="decide"', html=False)
+        self.assertContains(response, "Decide whether to proceed")
         self.assertContains(response, "The amount, contractor, scope, schedule, and quotation evidence are frozen.")
         self.assertContains(response, "Pending")
         self.assertTrue(response.context["publication_pending"])
         self.assertEqual(response.context["publication_snapshot"], proposal.current_version)
+        self.assertNotContains(response, "Publication awaiting confirmation")
+        self.assertNotContains(response, "No further action is required from this membership")
+        self.assertNotContains(response, "No action is assigned to this membership")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_published_proposal_decline_decision_closes_proposal_and_shows_empty_action_state(self):
+        self._login_operator()
+        self.client.post(reverse("web:proposal-create", kwargs={"pk": self.work.pk}), {
+            "action": "prepare", "amount_vnd": 5_000_000, "contractor_name": "Acme Co",
+            "purpose": "Lift jerks",
+            "proposed_action": "Replace bearings", "expected_schedule": "August 2026",
+            "quotation": _pdf("q.pdf", b"orig"),
+            "confirm": "on",
+        })
+        proposal = Proposal.objects.get(case=self.work)
+
+        response = self.client.post(
+            reverse("web:proposal-detail", kwargs={"pk": proposal.pk}),
+            {"action": "decide", "decision": "decline", "note": "Budget exceeded"},
+        )
+        self.assertRedirects(response, reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
+        proposal.refresh_from_db()
+        self.assertEqual(proposal.status, Proposal.Status.NOT_PROCEEDING)
+
+        detail_response = self.client.get(reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIsNone(detail_response.context["action_panel"])
+        self.assertContains(detail_response, "No action is assigned to this membership")
+        self.assertNotContains(detail_response, 'name="action" value="decide"')
+        self.assertNotContains(detail_response, "Publication awaiting confirmation")
+
 
     def test_standalone_proposal_detail_does_not_link_to_missing_case(self):
         self._login_operator()

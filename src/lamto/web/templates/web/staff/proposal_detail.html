@@ -107,22 +107,6 @@
         <h2>{% trans "Publish work progress" %}</h2>
         <form method="post" enctype="multipart/form-data" class="stack-form" data-busy-on-submit>{% csrf_token %}{{ progress_form.as_p }}<button name="action" value="progress" class="button button-primary">{% trans "Publish progress" %}</button><button name="action" value="complete" class="button button-secondary">{% trans "Complete work" %}</button></form>
       </div>
-      {% elif action_panel == "pending" %}
-      <div class="workflow-section">
-        <h2>{% trans "Publication awaiting confirmation" %}</h2>
-        <p>
-          {% blocktrans with id=proposal.pk %}You signed preparation for proposal #{{ id }}. A publication snapshot is on record, but independent confirmation has not finished yet.{% endblocktrans %}
-        </p>
-        <p class="hint">
-          {% trans "No further action is required from this membership while confirmation is pending. The accountability chain above shows the same state." %}
-        </p>
-        {% if publication_snapshot and publication_snapshot.outbox_event %}
-        <dl class="detail-list">
-          <div><dt>{% trans "Evidence level" %}</dt><dd>{% include "web/staff/_evidence_level.html" with event=publication_snapshot.outbox_event %}</dd></div>
-          <div><dt>{% trans "Delivery status" %}</dt><dd>{{ publication_snapshot.outbox_event.get_status_display }}</dd></div>
-        </dl>
-        {% endif %}
-      </div>
       {% elif action_panel == "failed" %}
       <div class="workflow-section"><h2>{% trans "Evidence anchoring failed" %}</h2><p class="status status-mismatch"><span class="status-icon" aria-hidden="true">●</span> {% trans "The signed proposal is saved, but anchoring failed. Review Operations health before retrying any action." %}</p><a class="button button-secondary" href="{% url 'web:ops-health' %}">{% trans "Review Operations health" %}</a></div>
       {% elif action_panel == "mismatch" %}

@@ -62,7 +62,6 @@ def _resolve_proposal_action_panel(
     *,
     can_publish: bool,
     publication_problem: str | None,
-    publication_pending: bool,
 ) -> str | None:
     """Resolve the single action panel to render for a Management account."""
     if can_publish:
@@ -77,8 +76,6 @@ def _resolve_proposal_action_panel(
         if proposal.case_id:
             return "case"
         return "progress"
-    if publication_pending:
-        return "pending"
     return None
 
 
@@ -258,7 +255,6 @@ def proposal_detail(request, pk):
         proposal,
         can_publish=can_publish,
         publication_problem=publication_problem,
-        publication_pending=publication_pending,
     )
 
     return render(
