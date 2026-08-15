@@ -29,7 +29,7 @@ Use this list before promoting a pilot environment. Every item is required unles
 - [ ] Secret-manager injection for blockchain relayer private key
 - [ ] Secret-manager injection for contract-owner private key
 - [ ] No secrets in git, images, or CI logs
-- [ ] Log redaction for Authorization headers, cookies, OTP codes, passwords
+- [ ] Log redaction for Authorization headers, cookies, passwords
 
 ## Blockchain / RPC
 
@@ -40,10 +40,11 @@ Use this list before promoting a pilot environment. Every item is required unles
 ## Identity and privileged access
 
 - [ ] Argon2 password hasher preferred
-- [ ] Staff MFA (TOTP) enrolled before staff workspace access
-- [ ] Recent re-authentication (password + OTP, ≤300s) for signed financial actions
+- [ ] Management access is password-only in every deployment (ADR 0001): no TOTP enrollment, authenticator, or re-authentication step exists
 - [ ] Auth throttle: 5 failures / 15 minutes across workers
-- [ ] Session rotation on login/MFA; full revocation on logout
+- [ ] Session rotation on login; full revocation on logout
+- [ ] Management sessions are persistent and rolling: every authenticated `/s/` request renews the 400-day lifetime and cookie, with no inactivity timeout and no browser-close expiry
+- [ ] Logout is documented as the normal termination path; password changes, account disablement, cookie loss, server-side session deletion, and secret-key rotation may still end a session
 - [ ] Every staff user has an active building-scoped Management membership
 - [ ] Cross-building object access returns 404; inactive or missing Management access returns 403
 
@@ -61,7 +62,7 @@ Use this list before promoting a pilot environment. Every item is required unles
 - [ ] Object version backup + signed marker after each successful DB backup
 - [ ] Restore-drill cadence documented and executed (`ops/backup/restore-drill.sh`)
 - [ ] Drill report retained; isolated DB/prefix destroyed after report export
-- [ ] Documented key and session revocation runbook (staff password reset, TOTP revoke, wallet revoke)
+- [ ] Documented key and session revocation runbook (staff password reset, wallet revoke)
 
 ## Application config reminders
 

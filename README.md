@@ -77,6 +77,14 @@ sign off offline and the workspace records the agreed result rather than re-runn
 the review. This is a deliberate choice, documented so nobody mistakes the workspace
 for a four-eyes control.
 
+**Management access is password-only in every deployment** (ADR 0001): there is no MFA
+enrollment, authenticator, or re-authentication step, and no deployment switch to
+restore one. A successful password login opens the workspace directly. Each authenticated
+`/s/` request renews a persistent 400-day rolling session that survives closing the
+browser and has no inactivity timeout. Selecting **Logout** is the normal way to end the
+session; a password change, account disablement, browser cookie loss, server-side session
+deletion, or secret-key rotation may also end it.
+
 ---
 
 ## How evidence works
@@ -176,7 +184,7 @@ keys, `.env.network`, and `Node-*` data directories are never committed.
 
 ```
 src/lamto/
-├── accounts/        buildings, units, memberships, occupancy, MFA, tenancy guards
+├── accounts/        buildings, units, memberships, occupancy, password-only sessions, tenancy guards
 ├── maintenance/     reports, AI triage + recorded decisions, cases, work, ratings
 ├── finance/         proposals, settlements, fund balance, integrity checks
 ├── evidence/        canonicalization, local signing, outbox, chain adapter
@@ -336,7 +344,7 @@ acknowledgement; fund balance, series, and per-record verification; a resident-f
 published ledger; virus-scanned insert-only documents with hash-checked download;
 announcements; resident bills; push notifications; registration requests; gate face and
 plate enrolment with manager review and retention purge; audit log and export;
-management MFA and re-authentication.
+password-only Management access with persistent 400-day rolling sessions (ADR 0001).
 
 **Not in scope, by design:** payment initiation, custody of funds, resident crypto
 wallets, general property management, accounting, and building operations. LamTo owns

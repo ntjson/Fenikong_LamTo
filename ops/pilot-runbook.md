@@ -10,7 +10,7 @@ publication → resident ledger → integrity verification.
 
 - Non-production or controlled pilot environment only.
 - `PILOT_ALLOW_FIXTURES=1` only when loading seed data; production must keep it false.
-- PostgreSQL migrated; private object storage reachable; manager MFA enrolled.
+- PostgreSQL migrated; private object storage reachable.
 - Gate face threshold and sharpness are explicitly set from a committed reader-capture calibration report. If FMR=0 and FNMR<=5% cannot both be met, run plate recognition only. See `docs/ops/gate-threshold-calibration.md`.
 - Optional: Besu/outbox worker for live chain confirmation. If chain is paused or
   unavailable, a local signature still permits work start with
@@ -43,6 +43,14 @@ One Management user performs the whole staff path. Managers meet, review, and
 sign off offline before data entry; the application records the agreed result
 rather than re-running the review. A building may have several Management
 users, but no step requires a second person.
+
+Management access is password-only in every deployment (ADR 0001): a successful
+password login opens the workspace directly — there is no authenticator
+enrollment or re-authentication step. Each authenticated `/s/` request renews a
+persistent 400-day rolling session with no inactivity timeout and no
+browser-close expiry. Selecting **Logout** is the normal way to end the session;
+a password change, account disablement, browser cookie loss, server-side session
+deletion, or secret-key rotation may also end it.
 
 ## Procedure (normal path)
 
@@ -115,6 +123,6 @@ transport: `besu` (default, chain round-trip) or `disabled` (local settlement,
 
 The command creates missing manager users with unusable passwords and gives
 existing or new users a Management membership for the building. Then, per the
-printed next steps: set manager passwords and TOTP, register signer wallets,
+printed next steps: set manager passwords, register signer wallets,
 add resident occupancies (with phone numbers), and record and confirm the fund
 opening balance. Run `manage.py tenant_integrity` afterwards.
