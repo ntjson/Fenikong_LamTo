@@ -1,6 +1,7 @@
 """
 URL configuration for config project.
 """
+
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
@@ -22,5 +23,9 @@ urlpatterns = [
         name="logout",
     ),
     path("api/v1/", include("lamto.api.urls")),
+    path(
+        "e/<str:public_token>/",
+        include("lamto.explorer.urls"),
+    ),
     path("", include("lamto.web.urls")),
 ]

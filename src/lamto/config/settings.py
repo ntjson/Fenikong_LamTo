@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "lamto.finance",
     "lamto.gate",
     "lamto.evidence",
+    "lamto.explorer",
     "lamto.maintenance",
     "lamto.web",
     "lamto.notifications",
