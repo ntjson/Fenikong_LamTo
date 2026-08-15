@@ -286,7 +286,7 @@
               </div>
               <div>
                 <dt>Mã giao dịch blockchain</dt>
-                <dd>{% if step.chain.transaction_hash %}<code class="mono">{{ step.chain.transaction_hash }}</code>{% else %}<span style="color: var(--color-muted);">—</span>{% endif %}</dd>
+                <dd>{% if step.chain.transaction_url %}<a href="{{ step.chain.transaction_url }}" target="_blank" rel="noopener noreferrer"><code class="mono">{{ step.chain.transaction_hash }}</code></a>{% elif step.chain.transaction_hash %}<code class="mono">{{ step.chain.transaction_hash }}</code>{% else %}<span style="color: var(--color-muted);">—</span>{% endif %}</dd>
               </div>
               <div>
                 <dt>Thời gian xác nhận</dt>

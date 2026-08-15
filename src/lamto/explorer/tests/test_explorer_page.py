@@ -315,3 +315,49 @@ class EvidenceExplorerPageTests(TestCase):
         self.assertIn("Chuỗi bằng chứng trách nhiệm", content)
         self.assertIn("Bằng chứng kỹ thuật", content)
         self.assertIn("details class=\"technical-proof\"", content)
+
+    def test_transaction_hash_renders_as_link_when_chain_explorer_url_configured(self):
+        proposal = self.published_proposal()
+        tx_hash = "0x" + "aa" * 32
+        BlockchainOutboxEvent.objects.filter(
+            pk=proposal.current_version.outbox_event_id
+        ).update(transaction_hash=tx_hash)
+
+        with override_settings(CHAIN_EXPLORER_URL="https://explorer.sen-vang.vn/"):
+            response = self.client.get(self.explorer_url(proposal.public_token))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+        expected_url = f"https://explorer.sen-vang.vn/tx/{tx_hash}"
+        self.assertIn(f'href="{expected_url}"', content)
+        self.assertIn(tx_hash, content)
+
+    def test_transaction_hash_renders_as_plain_text_without_chain_explorer_url(self):
+        proposal = self.published_proposal()
+        tx_hash = "0x" + "bb" * 32
+        BlockchainOutboxEvent.objects.filter(
+            pk=proposal.current_version.outbox_event_id
+        ).update(transaction_hash=tx_hash)
+
+        with override_settings(CHAIN_EXPLORER_URL=""):
+            response = self.client.get(self.explorer_url(proposal.public_token))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+        self.assertIn(tx_hash, content)
+        self.assertNotIn(f"/tx/{tx_hash}", content)
+        self.assertNotIn('<a href=""', content)
+
+    def test_step_without_transaction_hash_renders_no_broken_link(self):
+        proposal = self.published_proposal()
+        BlockchainOutboxEvent.objects.filter(
+            pk=proposal.current_version.outbox_event_id
+        ).update(transaction_hash="")
+
+        with override_settings(CHAIN_EXPLORER_URL="https://explorer.sen-vang.vn"):
+            response = self.client.get(self.explorer_url(proposal.public_token))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+        self.assertNotIn("https://explorer.sen-vang.vn", content)
+

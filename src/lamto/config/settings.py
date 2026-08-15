@@ -257,6 +257,11 @@ if EVIDENCE_ANCHORING_BACKEND not in {"besu", "disabled"}:
         f"{EVIDENCE_ANCHORING_BACKEND!r}."
     )
 
+# Optional external chain explorer (e.g. Blockscout deployment). When configured,
+# transaction hashes on the Evidence explorer page link out to it; when unset,
+# they render as plain text.
+CHAIN_EXPLORER_URL = os.getenv("CHAIN_EXPLORER_URL", "").rstrip("/")
+
 STORAGES = {
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",

@@ -51,44 +51,69 @@ INTEGRITY_STATUS_TONES = {
 }
 
 
+def _chain_explorer_tx_url(tx_hash: str) -> str:
+    """Build a link to a transaction in the external chain explorer, if configured."""
+    base_url = (getattr(settings, "CHAIN_EXPLORER_URL", "") or "").rstrip("/")
+    if not base_url or not tx_hash:
+        return ""
+    return f"{base_url}/tx/{tx_hash}"
+
+
+def _make_chain_step(
+    level=EvidenceLevel.PENDING,
+    payload_hash="",
+    transaction_hash="",
+    transaction_url="",
+    confirmation_time=None,
+):
+    return {
+        "evidence_level": level,
+        "evidence_label": EVIDENCE_LEVEL_LABELS.get(
+            level, EVIDENCE_LEVEL_LABELS[EvidenceLevel.PENDING]
+        ),
+        "evidence_tone": EVIDENCE_LEVEL_TONES.get(
+            level, EVIDENCE_LEVEL_TONES[EvidenceLevel.PENDING]
+        ),
+        "payload_hash": payload_hash,
+        "transaction_hash": transaction_hash,
+        "transaction_url": transaction_url,
+        "confirmation_time": confirmation_time,
+    }
+
+
 def _read_chain_step(event):
     """Read one outbox event against the chain live at page load.
 
     Returns (step_dict, chain_unreachable_bool).
     """
     if event is None:
-        return {
-            "evidence_level": EvidenceLevel.PENDING,
-            "evidence_label": EVIDENCE_LEVEL_LABELS[EvidenceLevel.PENDING],
-            "evidence_tone": EVIDENCE_LEVEL_TONES[EvidenceLevel.PENDING],
-            "payload_hash": "",
-            "transaction_hash": "",
-            "confirmation_time": None,
-        }, False
+        return _make_chain_step(), False
+
+    tx_hash = event.transaction_hash or ""
+    tx_url = _chain_explorer_tx_url(tx_hash)
+    conf_time = event.chain_block_timestamp or event.confirmed_at
 
     # Anchoring disabled or local settlement: pure local truth
     if (
         settings.EVIDENCE_ANCHORING_BACKEND == "disabled"
         or event.status == BlockchainOutboxEvent.Status.LOCAL
     ):
-        return {
-            "evidence_level": EvidenceLevel.LOCAL_SIGNED,
-            "evidence_label": EVIDENCE_LEVEL_LABELS[EvidenceLevel.LOCAL_SIGNED],
-            "evidence_tone": EVIDENCE_LEVEL_TONES[EvidenceLevel.LOCAL_SIGNED],
-            "payload_hash": event.payload_hash,
-            "transaction_hash": event.transaction_hash,
-            "confirmation_time": event.chain_block_timestamp or event.confirmed_at,
-        }, False
+        return _make_chain_step(
+            level=EvidenceLevel.LOCAL_SIGNED,
+            payload_hash=event.payload_hash,
+            transaction_hash=tx_hash,
+            transaction_url=tx_url,
+            confirmation_time=conf_time,
+        ), False
 
     if event.status == BlockchainOutboxEvent.Status.MISMATCH:
-        return {
-            "evidence_level": EvidenceLevel.MISMATCH,
-            "evidence_label": EVIDENCE_LEVEL_LABELS[EvidenceLevel.MISMATCH],
-            "evidence_tone": EVIDENCE_LEVEL_TONES[EvidenceLevel.MISMATCH],
-            "payload_hash": event.payload_hash,
-            "transaction_hash": event.transaction_hash,
-            "confirmation_time": event.chain_block_timestamp or event.confirmed_at,
-        }, False
+        return _make_chain_step(
+            level=EvidenceLevel.MISMATCH,
+            payload_hash=event.payload_hash,
+            transaction_hash=tx_hash,
+            transaction_url=tx_url,
+            confirmation_time=conf_time,
+        ), False
 
     try:
         from lamto.evidence.chain import EvidenceRegistryClient
@@ -98,33 +123,23 @@ def _read_chain_step(event):
     except Exception as exc:
         logger.warning("Explorer live chain read failed for %s: %s", event.event_id, exc)
         stored_level = evidence_level(event.status)
-        return {
-            "evidence_level": stored_level,
-            "evidence_label": EVIDENCE_LEVEL_LABELS.get(
-                stored_level, EVIDENCE_LEVEL_LABELS[EvidenceLevel.PENDING]
-            ),
-            "evidence_tone": EVIDENCE_LEVEL_TONES.get(
-                stored_level, EVIDENCE_LEVEL_TONES[EvidenceLevel.PENDING]
-            ),
-            "payload_hash": event.payload_hash,
-            "transaction_hash": event.transaction_hash,
-            "confirmation_time": event.chain_block_timestamp or event.confirmed_at,
-        }, True
+        return _make_chain_step(
+            level=stored_level,
+            payload_hash=event.payload_hash,
+            transaction_hash=tx_hash,
+            transaction_url=tx_url,
+            confirmation_time=conf_time,
+        ), True
 
     if record is None:
         stored_level = evidence_level(event.status)
-        return {
-            "evidence_level": stored_level,
-            "evidence_label": EVIDENCE_LEVEL_LABELS.get(
-                stored_level, EVIDENCE_LEVEL_LABELS[EvidenceLevel.PENDING]
-            ),
-            "evidence_tone": EVIDENCE_LEVEL_TONES.get(
-                stored_level, EVIDENCE_LEVEL_TONES[EvidenceLevel.PENDING]
-            ),
-            "payload_hash": event.payload_hash,
-            "transaction_hash": event.transaction_hash,
-            "confirmation_time": event.chain_block_timestamp or event.confirmed_at,
-        }, False
+        return _make_chain_step(
+            level=stored_level,
+            payload_hash=event.payload_hash,
+            transaction_hash=tx_hash,
+            transaction_url=tx_url,
+            confirmation_time=conf_time,
+        ), False
 
     on_chain_hash = record.payload_hash.removeprefix("0x").lower()
     local_hash = event.payload_hash.removeprefix("0x").lower()
@@ -133,20 +148,18 @@ def _read_chain_step(event):
     else:
         level = EvidenceLevel.CHAIN_CONFIRMED
 
-    conf_time = (
-        datetime.datetime.fromtimestamp(record.recorded_at, tz=datetime.timezone.utc)
-        if record.recorded_at > 0
-        else (event.chain_block_timestamp or event.confirmed_at)
-    )
+    if record.recorded_at > 0:
+        conf_time = datetime.datetime.fromtimestamp(
+            record.recorded_at, tz=datetime.timezone.utc
+        )
 
-    return {
-        "evidence_level": level,
-        "evidence_label": EVIDENCE_LEVEL_LABELS[level],
-        "evidence_tone": EVIDENCE_LEVEL_TONES[level],
-        "payload_hash": event.payload_hash,
-        "transaction_hash": event.transaction_hash,
-        "confirmation_time": conf_time,
-    }, False
+    return _make_chain_step(
+        level=level,
+        payload_hash=event.payload_hash,
+        transaction_hash=tx_hash,
+        transaction_url=tx_url,
+        confirmation_time=conf_time,
+    ), False
 
 
 @require_GET
@@ -245,6 +258,7 @@ def explorer_page(request, public_token):
                     "evidence_tone": EVIDENCE_LEVEL_TONES[EvidenceLevel.PENDING],
                     "payload_hash": "",
                     "transaction_hash": "",
+                    "transaction_url": "",
                     "confirmation_time": None,
                 },
             }
