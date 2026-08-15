@@ -656,6 +656,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledgerProofEvents => 'Signed events';
 
   @override
+  String get evidenceExplorer => 'Evidence explorer';
+
+  @override
   String get evidenceChain => 'Anchored on the blockchain';
 
   @override

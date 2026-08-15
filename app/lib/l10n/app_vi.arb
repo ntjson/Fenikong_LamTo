@@ -211,6 +211,7 @@
   "ledgerProofTitle": "Chi tiết xác thực",
   "ledgerProofHash": "Mã băm bản ghi",
   "ledgerProofEvents": "Sự kiện đã ký",
+  "evidenceExplorer": "Trình khám phá bằng chứng",
   "evidenceChain": "Đã neo trên blockchain",
   "evidenceLocal": "Đã ký — chưa bật neo blockchain",
   "evidencePending": "Đang chờ neo blockchain",

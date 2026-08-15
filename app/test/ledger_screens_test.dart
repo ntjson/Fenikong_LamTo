@@ -16,6 +16,8 @@ import 'package:lamto/features/transparency/transparency_repository.dart';
 import 'package:lamto/l10n/app_localizations.dart';
 import 'package:lamto/theme.dart';
 import 'package:lamto_api/lamto_api.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 LedgerEntryList _entry(
   int id,
@@ -47,7 +49,7 @@ FundSeries _series(String range) => FundSeries(
     ]),
 );
 
-LedgerEntryDetail _detail() => LedgerEntryDetail(
+LedgerEntryDetail _detail({String? explorerUrl}) => LedgerEntryDetail(
   (b) => b
     ..id = 42
     ..contractorName = 'Acme Co'
@@ -57,6 +59,7 @@ LedgerEntryDetail _detail() => LedgerEntryDetail(
     ..integrityStatus = 'VERIFIED'
     ..whatWasFixed = 'Cable secured'
     ..why = 'Worn cable'
+    ..explorerUrl = explorerUrl
     ..payload = JsonObject({'proposal_id': 7})
     ..approvers = ListBuilder<JsonObject?>([
       JsonObject({'role': 'board', 'name': 'Ông Minh', 'decision': 'APPROVE'}),
@@ -99,6 +102,20 @@ LedgerEntryDetail _detail() => LedgerEntryDetail(
         ]),
     ).toBuilder(),
 );
+
+class _MockUrlLauncher extends Fake
+    with MockPlatformInterfaceMixin
+    implements UrlLauncherPlatform {
+  String? launchedUrl;
+  LaunchOptions? launchOptions;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrl = url;
+    launchOptions = options;
+    return true;
+  }
+}
 
 class _FakeRepo implements TransparencyRepository {
   final periods = <(int?, int?)>[];
@@ -173,6 +190,15 @@ class _IntegrityRepo extends _FakeRepo {
   @override
   Future<LedgerEntryDetail> fetchLedgerEntry(int id) async =>
       _detail().rebuild((b) => b..integrityStatus = status);
+}
+
+class _ExplorerRepo extends _FakeRepo {
+  _ExplorerRepo(this.url);
+  final String? url;
+
+  @override
+  Future<LedgerEntryDetail> fetchLedgerEntry(int id) async =>
+      _detail(explorerUrl: url);
 }
 
 class _EmptyProposalsRepository implements ProposalsRepository {
@@ -476,4 +502,93 @@ void main() {
     expect(find.textContaining('Không mở được tài liệu'), findsOneWidget);
     expect(repo.documentCalls, 3);
   });
+
+  testWidgets(
+    'with explorer URL, link row renders and opens browser; ExpansionTile is gone and step 5 badge remains',
+    (tester) async {
+      final mockLauncher = _MockUrlLauncher();
+      UrlLauncherPlatform.instance = mockLauncher;
+
+      const explorerUrl = 'https://lamto.example/e/pub-token-123/';
+      final repo = _ExplorerRepo(explorerUrl);
+      await tester.pumpWidget(
+        _host(const LedgerDetailScreen(entryId: 42), repo),
+      );
+      await tester.pumpAndSettle();
+
+      // Step 5 verification badge remains visible
+      await tester.scrollUntilVisible(
+        find.text('Xác minh độc lập'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Xác minh độc lập'), findsOneWidget);
+      expect(
+        find.textContaining('Đã ký — chưa bật neo'),
+        findsOneWidget,
+      );
+
+      // Raw-hash ExpansionTile is gone
+      expect(find.text('Chi tiết xác thực'), findsNothing);
+      expect(find.text('ab12cd34'), findsNothing);
+
+      // Explorer link row is rendered
+      await tester.scrollUntilVisible(
+        find.text('Trình khám phá bằng chứng'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Trình khám phá bằng chứng'), findsOneWidget);
+      expect(find.byIcon(Icons.open_in_new), findsWidgets);
+
+      // Tapping launches the external browser with exact URL
+      await tester.tap(find.text('Trình khám phá bằng chứng'));
+      await tester.pumpAndSettle();
+
+      expect(mockLauncher.launchedUrl, explorerUrl);
+      expect(
+        mockLauncher.launchOptions?.mode,
+        PreferredLaunchMode.externalApplication,
+      );
+    },
+  );
+
+  testWidgets(
+    'without explorer URL, the old raw-hash ExpansionTile renders as before',
+    (tester) async {
+      final repo = _ExplorerRepo(null);
+      await tester.pumpWidget(
+        _host(const LedgerDetailScreen(entryId: 42), repo),
+      );
+      await tester.pumpAndSettle();
+
+      // Link row is NOT present
+      expect(find.text('Trình khám phá bằng chứng'), findsNothing);
+
+      // Step 5 badge remains visible
+      await tester.scrollUntilVisible(
+        find.text('Xác minh độc lập'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Xác minh độc lập'), findsOneWidget);
+      expect(
+        find.textContaining('Đã ký — chưa bật neo'),
+        findsOneWidget,
+      );
+
+      // ExpansionTile is present
+      await tester.scrollUntilVisible(
+        find.text('Chi tiết xác thực'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Chi tiết xác thực'), findsOneWidget);
+
+      await tester.tap(find.text('Chi tiết xác thực'));
+      await tester.pumpAndSettle();
+      expect(find.text('ab12cd34'), findsOneWidget);
+      expect(find.textContaining('0xfeed'), findsOneWidget);
+    },
+  );
 }

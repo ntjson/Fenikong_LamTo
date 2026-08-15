@@ -657,6 +657,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ledgerProofEvents => 'Sự kiện đã ký';
 
   @override
+  String get evidenceExplorer => 'Trình khám phá bằng chứng';
+
+  @override
   String get evidenceChain => 'Đã neo trên blockchain';
 
   @override

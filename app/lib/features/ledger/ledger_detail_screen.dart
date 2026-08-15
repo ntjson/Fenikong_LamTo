@@ -19,6 +19,7 @@ import '../../l10n/app_localizations.dart';
 import '../../theme.dart';
 import '../proposals/proposal_detail_screen.dart';
 import '../transparency/transparency_repository.dart';
+import 'evidence_explorer_tile.dart';
 import 'evidence_labels.dart';
 
 String _jsonField(JsonObject? object, String key) =>
@@ -191,39 +192,42 @@ class LedgerDetailScreen extends ConsumerWidget {
         if (entry.documents.isNotEmpty)
           for (final doc in entry.documents) _DocumentTile(document: doc),
         const Divider(height: 32),
-        ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          childrenPadding: const EdgeInsets.only(bottom: 16),
-          title: Text(l10n.ledgerProofTitle, style: titleStyle),
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.ledgerProofHash),
-              subtitle: Text(entry.proof.payloadHash, style: mono),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l10n.ledgerProofEvents,
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-            ),
-            for (final event in entry.proof.events)
+        if (entry.explorerUrl != null && entry.explorerUrl!.isNotEmpty)
+          EvidenceExplorerTile(url: entry.explorerUrl!)
+        else
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(bottom: 16),
+            title: Text(l10n.ledgerProofTitle, style: titleStyle),
+            children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(event.eventId, style: mono),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (event.transactionHash.isNotEmpty)
-                      Text(event.transactionHash, style: mono),
-                    const SizedBox(height: 4),
-                    EvidenceBadge(level: event.evidenceLevel),
-                  ],
+                title: Text(l10n.ledgerProofHash),
+                subtitle: Text(entry.proof.payloadHash, style: mono),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  l10n.ledgerProofEvents,
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
               ),
-          ],
-        ),
+              for (final event in entry.proof.events)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(event.eventId, style: mono),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (event.transactionHash.isNotEmpty)
+                        Text(event.transactionHash, style: mono),
+                      const SizedBox(height: 4),
+                      EvidenceBadge(level: event.evidenceLevel),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         if (entry.corrections.isNotEmpty) ...[
           const SizedBox(height: 24),
           Text(l10n.ledgerCorrections, style: titleStyle),

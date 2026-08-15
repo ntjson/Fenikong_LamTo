@@ -1286,6 +1286,12 @@ abstract class AppLocalizations {
   /// **'Signed events'**
   String get ledgerProofEvents;
 
+  /// No description provided for @evidenceExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence explorer'**
+  String get evidenceExplorer;
+
   /// No description provided for @evidenceChain.
   ///
   /// In en, this message translates to:

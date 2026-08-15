@@ -210,6 +210,7 @@
   "ledgerProofTitle": "Verification details",
   "ledgerProofHash": "Record hash",
   "ledgerProofEvents": "Signed events",
+  "evidenceExplorer": "Evidence explorer",
   "evidenceChain": "Anchored on the blockchain",
   "evidenceLocal": "Signed — blockchain anchoring off",
   "evidencePending": "Waiting for blockchain anchoring",
