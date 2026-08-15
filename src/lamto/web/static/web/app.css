@@ -180,16 +180,20 @@ summary:focus-visible {
   margin-bottom: var(--space-4);
 }
 
-.staff {
+.staff,
+.public {
   padding-bottom: var(--space-4);
 }
 
 .staff .site-main,
-.staff .messages {
+.staff .messages,
+.public .site-main,
+.public .messages {
   width: min(72rem, 100%);
 }
 
-.staff .panel {
+.staff .panel,
+.public .panel {
   box-shadow: none;
   padding: var(--space-5);
   margin-bottom: var(--space-5);
@@ -197,9 +201,13 @@ summary:focus-visible {
 
 .staff .panel > :last-child,
 .staff .workflow-section > :last-child,
-.staff .stack-form > :last-child {
+.staff .stack-form > :last-child,
+.public .panel > :last-child,
+.public .workflow-section > :last-child,
+.public .stack-form > :last-child {
   margin-bottom: 0;
 }
+
 
 .panel-header {
   display: flex;
@@ -1164,4 +1172,91 @@ code {
 .brand-name { font-weight: 700; letter-spacing: 0.02em; }
 .flash-messages { margin-bottom: var(--space-4); }
 
+
+
+/* Evidence explorer */
+.evidence-observation-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.evidence-observation-panel h2 {
+  font-size: 1.15rem;
+  margin-top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.evidence-timeline {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-5) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.evidence-timeline-step {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+}
+
+
+.evidence-timeline-step-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.evidence-timeline-step-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.evidence-timeline-step-body {
+  margin-top: var(--space-2);
+}
+
+.evidence-doc-section {
+  margin-top: var(--space-3);
+}
+
+.evidence-doc-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.evidence-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-muted);
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--color-brand);
+}
+
+.evidence-doc-link:hover {
+  background: var(--color-bg);
+}
+
 /* dark-* tokens are resident-app only; web staff has no prefers-color-scheme theme. */
+

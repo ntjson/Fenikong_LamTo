@@ -54,9 +54,12 @@ class StaffExplorerLinkTests(TestCase):
         response = self.client.get(reverse("web:proposal-detail", kwargs={"pk": self.proposal.pk}))
         self.assertEqual(response.status_code, 200)
 
-        # Explorer link is present with Vietnamese copy
+        # Explorer link is present as a secondary button opening in a new tab
         self.assertContains(response, f'href="{explorer_url}"')
         self.assertContains(response, "Trình khám phá bằng chứng")
+        self.assertContains(response, 'class="button button-secondary"')
+        self.assertContains(response, 'target="_blank"')
+        self.assertContains(response, 'rel="noopener"')
 
         # Anchoring badge is present
         self.assertContains(response, "status-")
@@ -71,6 +74,9 @@ class StaffExplorerLinkTests(TestCase):
             html_en = render_to_string("web/staff/proposal_detail.html", response.context[0].flatten())
             self.assertIn(f'href="{explorer_url}"', html_en)
             self.assertIn("Evidence explorer", html_en)
+            self.assertIn('class="button button-secondary"', html_en)
+            self.assertIn('target="_blank"', html_en)
+            self.assertIn('rel="noopener"', html_en)
             self.assertNotIn('class="technical-proof"', html_en)
             self.assertNotIn("Technical proof", html_en)
 
@@ -97,9 +103,12 @@ class StaffExplorerLinkTests(TestCase):
         response = self.client.get(reverse("web:settlement-detail", kwargs={"pk": self.settlement.pk}))
         self.assertEqual(response.status_code, 200)
 
-        # Explorer link is present with Vietnamese copy, pointing to the same explorer URL
+        # Explorer link is present as a secondary button opening in a new tab
         self.assertContains(response, f'href="{explorer_url}"')
         self.assertContains(response, "Trình khám phá bằng chứng")
+        self.assertContains(response, 'class="button button-secondary"')
+        self.assertContains(response, 'target="_blank"')
+        self.assertContains(response, 'rel="noopener"')
 
         # Anchoring badge is present
         self.assertContains(response, "status-")
@@ -113,6 +122,9 @@ class StaffExplorerLinkTests(TestCase):
             html_en = render_to_string("web/staff/settlement_detail.html", response.context[0].flatten())
             self.assertIn(f'href="{explorer_url}"', html_en)
             self.assertIn("Evidence explorer", html_en)
+            self.assertIn('class="button button-secondary"', html_en)
+            self.assertIn('target="_blank"', html_en)
+            self.assertIn('rel="noopener"', html_en)
             self.assertNotIn('class="technical-proof"', html_en)
             self.assertNotIn("Technical proof", html_en)
 

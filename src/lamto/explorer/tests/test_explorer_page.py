@@ -387,3 +387,59 @@ class EvidenceExplorerPageTests(TestCase):
         content = response.content.decode("utf-8")
         self.assertNotIn("https://explorer.sen-vang.vn", content)
 
+    def test_explorer_extends_public_shell_with_branded_header_and_body_class(self):
+        proposal = self.published_proposal()
+        response = self.client.get(self.explorer_url(proposal.public_token))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+
+        self.assertIn('<header class="site-header" role="banner">', content)
+        self.assertIn('class="brand-mark"', content)
+        self.assertIn('class="brand-name"', content)
+        self.assertIn('Làm Tổ', content)
+        self.assertIn('<body class="public">', content)
+        self.assertIn('<main id="main" class="site-main" role="main">', content)
+
+    def test_explorer_has_no_inline_style_blocks_or_inline_style_attributes(self):
+        proposal, proof = self.settled_proposal()
+        entry = publish_settlement_entry(proposal.settlement)
+        VerificationObservation.objects.create(
+            published_entry=entry,
+            result=VerificationObservation.Result.VERIFIED,
+            details={"verifier": "Đoàn Kiểm Toán Độc Lập ABC"},
+            checked_document_hashes=[proof.sha256],
+            checked_chain_event_ids=[proposal.current_version.outbox_event.event_id],
+            observed_at=timezone.now(),
+        )
+
+        response = self.client.get(self.explorer_url(proposal.public_token))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+
+        self.assertNotIn("<style>", content)
+        self.assertNotIn("style=", content)
+
+    def test_explorer_title_is_wrapped_in_panel(self):
+        proposal = self.published_proposal()
+        response = self.client.get(self.explorer_url(proposal.public_token))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+
+        # The title sits inside a panel section
+        self.assertIn('<section class="panel', content)
+        self.assertRegex(content, r'<section class="panel[^"]*">\s*<h1>Hồ sơ minh bạch chi tiêu</h1>')
+
+    def test_explorer_uses_evidence_prefixed_classes_for_timeline_and_documents(self):
+        proposal, proof = self.settled_proposal()
+        response = self.client.get(self.explorer_url(proposal.public_token))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+
+        self.assertIn('class="evidence-timeline"', content)
+        self.assertIn('class="evidence-timeline-step"', content)
+        self.assertIn('class="evidence-timeline-step-header"', content)
+        self.assertIn('class="evidence-timeline-step-title"', content)
+        self.assertIn('class="evidence-doc-link"', content)
+        self.assertIn('class="evidence-doc-list"', content)
+
+

@@ -1,304 +1,200 @@
-{% load static humanize %}
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#2f3a8f">
-  <title>Trình khám phá bằng chứng · {{ building.name }} · LamTo</title>
-  <link rel="icon" type="image/png" href="{% static 'web/brand/favicon.png' %}">
-  <link rel="stylesheet" href="{% static 'web/app.css' %}">
-  <style>
-    .explorer-container {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: var(--space-4);
-    }
-    .explorer-header {
-      margin-bottom: var(--space-5);
-    }
-    .explorer-brand {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      margin-bottom: var(--space-2);
-      font-weight: 700;
-      color: var(--color-brand);
-      text-decoration: none;
-    }
-    .explorer-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      line-height: 1.25;
-      margin: 0 0 var(--space-2);
-    }
-    .explorer-subtitle {
-      color: var(--color-muted);
-      margin: 0;
-    }
-    .timeline {
-      list-style: none;
-      padding: 0;
-      margin: var(--space-5) 0;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-    }
-    .timeline-step {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: var(--space-4);
-    }
-    .timeline-step-header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--space-2);
-      margin-bottom: var(--space-3);
-    }
-    .timeline-step-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      margin: 0;
-    }
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.85rem;
-      word-break: break-all;
-    }
-    .doc-list {
-      list-style: none;
-      padding: 0;
-      margin: var(--space-2) 0;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-    }
-    .doc-link {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      padding: var(--space-2) var(--space-3);
-      background: var(--color-surface-muted);
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .doc-link:hover {
-      background: var(--color-bg);
-    }
-    .observation-panel {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: var(--space-4);
-      margin-bottom: var(--space-5);
-    }
-  </style>
-</head>
-<body>
-  <div class="explorer-container">
-    <header class="explorer-header">
-      <div class="explorer-brand">
-        <img class="brand-mark" src="{% static 'web/brand/lamto-mark.png' %}" alt="">
-        <span>Làm Tổ · Trình khám phá bằng chứng</span>
-      </div>
-      <h1 class="explorer-title">Hồ sơ minh bạch chi tiêu</h1>
-      <p class="explorer-subtitle">{{ building.name }} · Đề xuất #{{ proposal.pk }}{% if published_at %} · {{ published_at|date:"d/m/Y" }}{% endif %}</p>
-    </header>
+{% extends "web/public/shell.html" %}
+{% load humanize %}
+{% block title %}Trình khám phá bằng chứng · {{ building.name }} · LamTo{% endblock %}
+{% block content %}
+{% if chain_unreachable %}
+<div class="message message-warning" role="alert">
+  <span class="status-icon" aria-hidden="true">●</span> <strong>Lưu ý:</strong> Không thể kết nối với blockchain. Đang hiển thị trạng thái đã lưu.
+</div>
+{% endif %}
 
-    {% if chain_unreachable %}
-    <div class="message message-warning" role="alert" style="margin-bottom: var(--space-4); padding: var(--space-3); border-radius: var(--radius); background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-border);">
-      <span class="status-icon" aria-hidden="true">●</span> <strong>Lưu ý:</strong> Không thể kết nối với blockchain. Đang hiển thị trạng thái đã lưu.
+<section class="panel">
+  <h1>Hồ sơ minh bạch chi tiêu</h1>
+  <p class="hint">{{ building.name }} · Đề xuất #{{ proposal.pk }}{% if published_at %} · {{ published_at|date:"d/m/Y" }}{% endif %}</p>
+</section>
+
+<section class="panel">
+  <h2>Thông tin tổng quan khoản chi</h2>
+  <dl class="detail-list detail-list-wide">
+    <div>
+      <dt>Số tiền</dt>
+      <dd><strong>{% if proposal.current_version %}{{ proposal.current_version.amount_vnd|intcomma }} VND{% else %}—{% endif %}</strong></dd>
+    </div>
+    <div>
+      <dt>Đơn vị thực hiện</dt>
+      <dd>{% if proposal.current_version %}{{ proposal.current_version.contractor_name }}{% else %}—{% endif %}</dd>
+    </div>
+    <div>
+      <dt>Báo cáo &amp; nhu cầu</dt>
+      <dd>{{ why|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt>Công việc thực hiện</dt>
+      <dd>{{ what_was_fixed|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt>Người phê duyệt</dt>
+      <dd>
+        {% if approvers %}
+          {{ approvers|join:", " }}
+        {% else %}
+          Ban quản lý
+        {% endif %}
+      </dd>
+    </div>
+    {% if published_at %}
+    <div>
+      <dt>Ngày công bố sổ quỹ</dt>
+      <dd>{{ published_at|date:"d/m/Y" }}</dd>
     </div>
     {% endif %}
+  </dl>
+</section>
 
-    <section class="panel" style="margin-bottom: var(--space-5);">
-      <h2 style="font-size: 1.15rem; margin-top: 0;">Thông tin tổng quan khoản chi</h2>
-      <dl class="detail-list detail-list-wide">
-        <div>
-          <dt>Số tiền</dt>
-          <dd><strong>{% if proposal.current_version %}{{ proposal.current_version.amount_vnd|intcomma }} VND{% else %}—{% endif %}</strong></dd>
-        </div>
-        <div>
-          <dt>Đơn vị thực hiện</dt>
-          <dd>{% if proposal.current_version %}{{ proposal.current_version.contractor_name }}{% else %}—{% endif %}</dd>
-        </div>
-        <div>
-          <dt>Báo cáo &amp; nhu cầu</dt>
-          <dd>{{ why|default:"—" }}</dd>
-        </div>
-        <div>
-          <dt>Công việc thực hiện</dt>
-          <dd>{{ what_was_fixed|default:"—" }}</dd>
-        </div>
-        <div>
-          <dt>Người phê duyệt</dt>
-          <dd>
-            {% if approvers %}
-              {{ approvers|join:", " }}
-            {% else %}
-              Ban quản lý
-            {% endif %}
-          </dd>
-        </div>
-        {% if published_at %}
-        <div>
-          <dt>Ngày công bố sổ quỹ</dt>
-          <dd>{{ published_at|date:"d/m/Y" }}</dd>
+{% if integrity_observation %}
+<section class="evidence-observation-panel">
+  <h2>
+    <span>Xác thực tính toàn vẹn độc lập</span>
+    <span class="status status-{{ integrity_observation.tone }}">
+      <span class="status-icon" aria-hidden="true">●</span> {{ integrity_observation.label }}
+    </span>
+  </h2>
+  <dl class="detail-list">
+    <div>
+      <dt>Người xác minh</dt>
+      <dd>{{ integrity_observation.verifier }}</dd>
+    </div>
+    <div>
+      <dt>Thời gian xác minh</dt>
+      <dd>{{ integrity_observation.observed_at|date:"d/m/Y H:i" }}</dd>
+    </div>
+  </dl>
+</section>
+{% endif %}
+
+<section>
+  <h2>Chuỗi bằng chứng trách nhiệm</h2>
+  <p class="hint">Toàn bộ quá trình từ đề xuất sửa chữa đến thanh toán được ghi nhận và neo bằng chứng độc lập.</p>
+
+  <ol class="evidence-timeline">
+    {% for step in timeline_steps %}
+    <li class="evidence-timeline-step">
+      <div class="evidence-timeline-step-header">
+        <h3 class="evidence-timeline-step-title">{{ step.title }}</h3>
+        <span class="status status-{{ step.chain.evidence_tone }}">
+          <span class="status-icon" aria-hidden="true">●</span> {{ step.chain.evidence_label }}
+        </span>
+      </div>
+
+      {% if step.kind == "proposal_version" %}
+      <div class="evidence-timeline-step-body">
+        <dl class="detail-list">
+          <div>
+            <dt>Mục đích</dt>
+            <dd>{{ step.purpose }}</dd>
+          </div>
+          <div>
+            <dt>Phương án đề xuất</dt>
+            <dd>{{ step.proposed_action }}</dd>
+          </div>
+          <div>
+            <dt>Dự toán kinh phí</dt>
+            <dd>{{ step.amount_vnd|intcomma }} VND</dd>
+          </div>
+          <div>
+            <dt>Đơn vị thực hiện</dt>
+            <dd>{{ step.contractor_name }}</dd>
+          </div>
+          <div>
+            <dt>Tiến độ dự kiến</dt>
+            <dd>{{ step.expected_schedule }}</dd>
+          </div>
+          <div>
+            <dt>Người lập đề xuất</dt>
+            <dd>{{ step.creator_name }}</dd>
+          </div>
+          <div>
+            <dt>Thời gian tạo</dt>
+            <dd>{{ step.created_at|date:"d/m/Y H:i" }}</dd>
+          </div>
+        </dl>
+
+        {% if step.quotations %}
+        <div class="evidence-doc-section">
+          <strong>Tài liệu báo giá:</strong>
+          <ul class="evidence-doc-list">
+            {% for q in step.quotations %}
+            <li>
+              <span class="evidence-doc-link">
+                📄 {{ q.filename }}
+              </span>
+            </li>
+            {% endfor %}
+          </ul>
         </div>
         {% endif %}
-      </dl>
-    </section>
+      </div>
+      {% elif step.kind == "settlement" %}
+      <div class="evidence-timeline-step-body">
+        {% if step.is_settled %}
+        <dl class="detail-list">
+          <div>
+            <dt>Số tiền thanh toán</dt>
+            <dd><strong>{{ step.amount_vnd|intcomma }} VND</strong></dd>
+          </div>
+          <div>
+            <dt>Đơn vị thụ hưởng</dt>
+            <dd>{{ step.contractor_name }}</dd>
+          </div>
+          <div>
+            <dt>Người thực hiện thanh toán</dt>
+            <dd>{{ step.settled_by }}</dd>
+          </div>
+          <div>
+            <dt>Thời gian thanh toán</dt>
+            <dd>{{ step.settled_at|date:"d/m/Y H:i" }}</dd>
+          </div>
+        </dl>
 
-    {% if integrity_observation %}
-    <section class="observation-panel">
-      <h2 style="font-size: 1.15rem; margin-top: 0; display: flex; align-items: center; justify-content: space-between;">
-        <span>Xác thực tính toàn vẹn độc lập</span>
-        <span class="status status-{{ integrity_observation.tone }}">
-          <span class="status-icon" aria-hidden="true">●</span> {{ integrity_observation.label }}
-        </span>
-      </h2>
-      <dl class="detail-list">
-        <div>
-          <dt>Người xác minh</dt>
-          <dd>{{ integrity_observation.verifier }}</dd>
+        {% if step.transfer %}
+        <div class="evidence-doc-section">
+          <strong>Chứng từ thanh toán:</strong>
+          <ul class="evidence-doc-list">
+            <li>
+              <a class="evidence-doc-link" href="{% url 'explorer:document-download' public_token=public_token sha256=step.transfer.sha256 %}">
+                📄 {{ step.transfer.filename }}
+              </a>
+            </li>
+          </ul>
         </div>
-        <div>
-          <dt>Thời gian xác minh</dt>
-          <dd>{{ integrity_observation.observed_at|date:"d/m/Y H:i" }}</dd>
-        </div>
-      </dl>
-    </section>
-    {% endif %}
+        {% endif %}
+        {% else %}
+        <p class="hint">Khoản chi chưa thực hiện thanh toán. Bước này sẽ hoàn tất sau khi ban quản lý lập ủy nhiệm chi và xác nhận thanh toán.</p>
+        {% endif %}
+      </div>
+      {% endif %}
 
-    <section>
-      <h2 style="font-size: 1.25rem; margin-bottom: var(--space-2);">Chuỗi bằng chứng trách nhiệm</h2>
-      <p class="hint" style="margin-top: 0; color: var(--color-muted);">Toàn bộ quá trình từ đề xuất sửa chữa đến thanh toán được ghi nhận và neo bằng chứng độc lập.</p>
-
-      <ol class="timeline">
-        {% for step in timeline_steps %}
-        <li class="timeline-step">
-          <div class="timeline-step-header">
-            <h3 class="timeline-step-title">{{ step.title }}</h3>
-            <span class="status status-{{ step.chain.evidence_tone }}">
-              <span class="status-icon" aria-hidden="true">●</span> {{ step.chain.evidence_label }}
-            </span>
+      {% if step.chain.payload_hash %}
+      <details class="technical-proof">
+        <summary>Bằng chứng kỹ thuật</summary>
+        <dl class="detail-list">
+          <div>
+            <dt>Mã băm dữ liệu (Payload hash)</dt>
+            <dd><code class="hash">{{ step.chain.payload_hash }}</code></dd>
           </div>
-
-          {% if step.kind == "proposal_version" %}
-          <div class="timeline-step-body">
-            <dl class="detail-list">
-              <div>
-                <dt>Mục đích</dt>
-                <dd>{{ step.purpose }}</dd>
-              </div>
-              <div>
-                <dt>Phương án đề xuất</dt>
-                <dd>{{ step.proposed_action }}</dd>
-              </div>
-              <div>
-                <dt>Dự toán kinh phí</dt>
-                <dd>{{ step.amount_vnd|intcomma }} VND</dd>
-              </div>
-              <div>
-                <dt>Đơn vị thực hiện</dt>
-                <dd>{{ step.contractor_name }}</dd>
-              </div>
-              <div>
-                <dt>Tiến độ dự kiến</dt>
-                <dd>{{ step.expected_schedule }}</dd>
-              </div>
-              <div>
-                <dt>Người lập đề xuất</dt>
-                <dd>{{ step.creator_name }}</dd>
-              </div>
-              <div>
-                <dt>Thời gian tạo</dt>
-                <dd>{{ step.created_at|date:"d/m/Y H:i" }}</dd>
-              </div>
-            </dl>
-
-            {% if step.quotations %}
-            <div style="margin-top: var(--space-3);">
-              <strong>Tài liệu báo giá:</strong>
-              <ul class="doc-list">
-                {% for q in step.quotations %}
-                <li>
-                  <span class="doc-link">
-                    📄 {{ q.filename }}
-                  </span>
-                </li>
-                {% endfor %}
-              </ul>
-            </div>
-            {% endif %}
+          <div>
+            <dt>Mã giao dịch blockchain</dt>
+            <dd>{% if step.chain.transaction_url %}<a href="{{ step.chain.transaction_url }}" target="_blank" rel="noopener noreferrer"><code class="hash">{{ step.chain.transaction_hash }}</code></a>{% elif step.chain.transaction_hash %}<code class="hash">{{ step.chain.transaction_hash }}</code>{% else %}—{% endif %}</dd>
           </div>
-          {% elif step.kind == "settlement" %}
-          <div class="timeline-step-body">
-            {% if step.is_settled %}
-            <dl class="detail-list">
-              <div>
-                <dt>Số tiền thanh toán</dt>
-                <dd><strong>{{ step.amount_vnd|intcomma }} VND</strong></dd>
-              </div>
-              <div>
-                <dt>Đơn vị thụ hưởng</dt>
-                <dd>{{ step.contractor_name }}</dd>
-              </div>
-              <div>
-                <dt>Người thực hiện thanh toán</dt>
-                <dd>{{ step.settled_by }}</dd>
-              </div>
-              <div>
-                <dt>Thời gian thanh toán</dt>
-                <dd>{{ step.settled_at|date:"d/m/Y H:i" }}</dd>
-              </div>
-            </dl>
-
-            {% if step.transfer %}
-            <div style="margin-top: var(--space-3);">
-              <strong>Chứng từ thanh toán:</strong>
-              <ul class="doc-list">
-                <li>
-                  <a class="doc-link" href="{% url 'explorer:document-download' public_token=public_token sha256=step.transfer.sha256 %}">
-                    📄 {{ step.transfer.filename }}
-                  </a>
-                </li>
-              </ul>
-            </div>
-            {% endif %}
-            {% else %}
-            <p style="color: var(--color-muted); margin: var(--space-2) 0;">Khoản chi chưa thực hiện thanh toán. Bước này sẽ hoàn tất sau khi ban quản lý lập ủy nhiệm chi và xác nhận thanh toán.</p>
-            {% endif %}
+          <div>
+            <dt>Thời gian xác nhận</dt>
+            <dd>{% if step.chain.confirmation_time %}{{ step.chain.confirmation_time|date:"d/m/Y H:i:s" }}{% else %}—{% endif %}</dd>
           </div>
-          {% endif %}
-
-          {% if step.chain.payload_hash %}
-          <details class="technical-proof" style="margin-top: var(--space-4);">
-            <summary>Bằng chứng kỹ thuật</summary>
-            <dl class="detail-list" style="margin-top: var(--space-3);">
-              <div>
-                <dt>Mã băm dữ liệu (Payload hash)</dt>
-                <dd><code class="mono">{{ step.chain.payload_hash }}</code></dd>
-              </div>
-              <div>
-                <dt>Mã giao dịch blockchain</dt>
-                <dd>{% if step.chain.transaction_url %}<a href="{{ step.chain.transaction_url }}" target="_blank" rel="noopener noreferrer"><code class="mono">{{ step.chain.transaction_hash }}</code></a>{% elif step.chain.transaction_hash %}<code class="mono">{{ step.chain.transaction_hash }}</code>{% else %}<span style="color: var(--color-muted);">—</span>{% endif %}</dd>
-              </div>
-              <div>
-                <dt>Thời gian xác nhận</dt>
-                <dd>{% if step.chain.confirmation_time %}{{ step.chain.confirmation_time|date:"d/m/Y H:i:s" }}{% else %}<span style="color: var(--color-muted);">—</span>{% endif %}</dd>
-              </div>
-            </dl>
-          </details>
-          {% endif %}
-        </li>
-        {% endfor %}
-      </ol>
-    </section>
-  </div>
-</body>
-</html>
+        </dl>
+      </details>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endblock %}

@@ -52,6 +52,23 @@ class ManagementShellTests(TestCase):
         self.assertIn('Làm Tổ', html)
         self.assertNotIn('LÀM TỔ', html)
 
+    def test_public_shell_template_carries_brand_and_stylesheet_without_authenticated_chrome(self):
+        html = render_to_string("web/public/shell.html")
+
+        self.assertIn('rel="icon"', html)
+        self.assertIn('web/app.css', html)
+        self.assertIn('lamto-mark.png', html)
+        self.assertIn('Làm Tổ', html)
+        self.assertIn('<main id="main" class="site-main"', html)
+        self.assertIn('class="public"', html)
+
+        # No authenticated chrome
+        self.assertNotIn('logout', html)
+        self.assertNotIn('membership-switcher', html)
+        self.assertNotIn('staff-nav', html)
+        self.assertNotIn('Sign out', html)
+        self.assertNotIn('Đăng xuất', html)
+
     def test_non_management_user_is_denied_staff_home(self):
         resident = get_user_model().objects.create_user(
             email="resident@example.test", password="secret", display_name="Resident"
