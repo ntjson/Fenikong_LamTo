@@ -9,9 +9,6 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 
 from lamto.accounts.models import BackupMarker, Building, ManagementMembership
 from lamto.audit.models import AuditEvent
@@ -36,15 +33,6 @@ class ExportsAndHealthTests(TestCase):
         if management:
             return ManagementMembership.objects.create(user=user, building=building)
         return user
-
-    def enroll_and_bind(self, user):
-        device = TOTPDevice.objects.create(
-            user=user, name="test", confirmed=True, key=random_hex()
-        )
-        session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session.save()
-        return device
 
     def setUp(self):
         self.building = Building.objects.create(name=self._unique("Export Building"))
@@ -71,7 +59,6 @@ class ExportsAndHealthTests(TestCase):
             {"note": "=HACK()"},
         )
         self.client.force_login(self.auditor.user)
-        self.enroll_and_bind(self.auditor.user)
         response = self.client.get(reverse("web:audit-export"))
         self.assertEqual(response.status_code, 200)
         self.assertIn("text/csv", response["Content-Type"])
@@ -92,13 +79,11 @@ class ExportsAndHealthTests(TestCase):
 
     def test_non_management_export_denied(self):
         self.client.force_login(self.resident)
-        self.enroll_and_bind(self.resident)
         response = self.client.get(reverse("web:audit-export"))
         self.assertEqual(response.status_code, 403)
 
     def test_export_document_kind_has_hash_columns_not_bytes(self):
         self.client.force_login(self.auditor.user)
-        self.enroll_and_bind(self.auditor.user)
         response = self.client.get(reverse("web:audit-export") + "?kind=documents")
         self.assertEqual(response.status_code, 200)
         body = b"".join(response.streaming_content).decode("utf-8")
@@ -109,7 +94,6 @@ class ExportsAndHealthTests(TestCase):
 
     def test_health_requires_management(self):
         self.client.force_login(self.tech.user)
-        self.enroll_and_bind(self.tech.user)
         response = self.client.get(reverse("web:ops-health") + "?format=json")
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -143,7 +127,6 @@ class ExportsAndHealthTests(TestCase):
             metadata={"object_count": 0},
         )
         self.client.force_login(self.tech.user)
-        self.enroll_and_bind(self.tech.user)
         data = self.client.get(reverse("web:ops-health") + "?format=json").json()
         self.assertIsNotNone(data["latest_backup_marker"])
         self.assertEqual(data["latest_backup_marker"]["marker_id"], "m1")
@@ -228,7 +211,6 @@ class ExportsAndHealthTests(TestCase):
         self.assertGreaterEqual(snap["stale_device_max_inactive_days"], 40)
 
         self.client.force_login(self.tech.user)
-        self.enroll_and_bind(self.tech.user)
         data = self.client.get(reverse("web:ops-health") + "?format=json").json()
         self.assertEqual(data["push_sent_success"], snap["push_sent_success"])
         self.assertEqual(data["push_suppressed"], snap["push_suppressed"])
@@ -240,7 +222,6 @@ class ExportsAndHealthTests(TestCase):
 
     def test_pilot_metrics_non_authoritative(self):
         self.client.force_login(self.tech.user)
-        self.enroll_and_bind(self.tech.user)
         response = self.client.get(reverse("web:pilot-metrics") + "?format=json")
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -296,7 +277,6 @@ class ExportsAndHealthTests(TestCase):
         self.assertEqual(collect_health_snapshot(self.building.pk)["push_failures"], 0)
         self.assertEqual(collect_pilot_metrics(self.building.pk)["ai_suggestions_total"], 0)
         self.client.force_login(self.tech.user)
-        self.enroll_and_bind(self.tech.user)
         health = self.client.get(reverse("web:ops-health") + "?format=json").json()
         metrics = self.client.get(reverse("web:pilot-metrics") + "?format=json").json()
         self.assertEqual(health["push_failures"], 0)

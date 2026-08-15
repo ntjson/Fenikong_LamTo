@@ -6,9 +6,6 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 
 from lamto.accounts.models import Building, ManagementMembership, ResidentOccupancy, Unit
 from lamto.maintenance.models import BuildingLocation, IssueReport, MaintenanceCase, TriageDecision
@@ -24,12 +21,6 @@ class ManagementWorkspaceTests(TestCase):
 
     def authenticate_management(self, membership):
         self.client.force_login(membership.user)
-        device = TOTPDevice.objects.create(
-            user=membership.user, name="test", confirmed=True, key=random_hex()
-        )
-        session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session.save()
 
     def login_management(self):
         user = get_user_model().objects.create_user(

@@ -18,8 +18,6 @@ from django.contrib.sessions.models import Session
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 
 from lamto.accounts.models import AuthThrottleBucket, Building, ManagementMembership
 from lamto.accounts.security import THROTTLE_MAX_FAILURES, throttle_digest
@@ -33,7 +31,7 @@ class PasswordOnlyManagementSessionTests(TestCase):
         self.building = Building.objects.create(name="Session Tower")
         self.password = "secret-pass-123"
 
-    def make_manager(self, *, email="manager@example.test", totp=False, is_staff=False):
+    def make_manager(self, *, email="manager@example.test", is_staff=False):
         user = get_user_model().objects.create_user(
             email=email, password=self.password, display_name="Manager"
         )
@@ -43,10 +41,6 @@ class PasswordOnlyManagementSessionTests(TestCase):
         membership = ManagementMembership.objects.create(
             user=user, building=self.building
         )
-        if totp:
-            TOTPDevice.objects.create(
-                user=user, name="former", confirmed=True, key=random_hex()
-            )
         return user, membership
 
     def login(self, *, user=None, extra=None):
@@ -56,8 +50,8 @@ class PasswordOnlyManagementSessionTests(TestCase):
 
     # --- Login reaches the workspace, password only -------------------------
 
-    def test_password_login_reaches_workspace_ignoring_former_totp(self):
-        user, _ = self.make_manager(totp=True)
+    def test_password_login_reaches_workspace_without_authenticator_detour(self):
+        user, _ = self.make_manager()
         response = self.login(user=user)
 
         self.assertRedirects(

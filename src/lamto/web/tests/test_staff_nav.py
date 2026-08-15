@@ -3,9 +3,6 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 
 from lamto.accounts.models import Building, ManagementMembership
 from lamto.web.staff import finance_nav_items_for, gate_nav_items_for, nav_items_for
@@ -22,14 +19,8 @@ class ManagementShellTests(TestCase):
             user=self.user, building=self.building
         )
 
-    def _login_with_mfa(self, user):
+    def _login(self, user):
         self.client.force_login(user)
-        device = TOTPDevice.objects.create(
-            user=user, name="test", confirmed=True, key=random_hex()
-        )
-        session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session.save()
 
     def test_management_user_sees_staff_areas(self):
         labels = [str(item["label"]) for item in nav_items_for(self.membership)]
@@ -65,13 +56,13 @@ class ManagementShellTests(TestCase):
         resident = get_user_model().objects.create_user(
             email="resident@example.test", password="secret", display_name="Resident"
         )
-        self._login_with_mfa(resident)
+        self._login(resident)
         self.assertEqual(self.client.get(reverse("web:staff-home")).status_code, 403)
 
     def test_switch_building_returns_to_inbox(self):
         other = Building.objects.create(name="Other Building")
         selected = ManagementMembership.objects.create(user=self.user, building=other)
-        self._login_with_mfa(self.user)
+        self._login(self.user)
         response = self.client.post(
             reverse("web:switch-building"), {"building": selected.pk}
         )

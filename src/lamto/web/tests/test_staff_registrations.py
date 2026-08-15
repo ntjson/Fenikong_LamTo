@@ -2,9 +2,6 @@ from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 
 from lamto.accounts.models import (
     Building,
@@ -23,12 +20,6 @@ pytestmark = pytest.mark.django_db
 
 def authenticate(client, user):
     client.force_login(user)
-    device = TOTPDevice.objects.create(
-        user=user, name="test", confirmed=True, key=random_hex()
-    )
-    session = client.session
-    session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-    session.save()
 
 
 def setup_building(name, email):

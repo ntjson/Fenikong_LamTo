@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 import secrets
-import time
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 
 from lamto.accounts.models import Building, ManagementMembership
 from lamto.audit.models import AuditEvent
@@ -34,13 +30,6 @@ class ExceptionReviewTests(TestCase):
             user=user, building=self.building
         )
         self.client.force_login(user)
-        device = TOTPDevice.objects.create(
-            user=user, name="test", confirmed=True, key=random_hex()
-        )
-        session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session["recent_reauth_at"] = time.time()
-        session.save()
 
     def _failed_event(self, *, status=BlockchainOutboxEvent.Status.FAILED):
         # Inserts must go through the platform queue procedure (DB trigger);

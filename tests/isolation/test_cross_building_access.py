@@ -19,9 +19,6 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.urls import reverse
-from django_otp import DEVICE_ID_SESSION_KEY
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
 from knox.models import AuthToken
 
 from lamto.accounts.models import ResidentOccupancy
@@ -302,12 +299,6 @@ class CrossBuildingAccessTests(TestCase):
         membership = self.seed_a.management_memberships[0]
         user = membership.user
         self.client.force_login(user)
-        device = TOTPDevice.objects.create(
-            user=user, name="test", confirmed=True, key=random_hex()
-        )
-        session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session.save()
 
     def test_every_registered_route_is_classified(self):
         """Web <int:pk> routes + every registered API route must be classified."""
@@ -384,12 +375,6 @@ class CrossBuildingAccessTests(TestCase):
             email="non-manager@isolation.test", password="x", display_name="Non-manager"
         )
         self.client.force_login(non_manager)
-        device = TOTPDevice.objects.create(
-            user=non_manager, name="test", confirmed=True, key=random_hex()
-        )
-        session = self.client.session
-        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session.save()
         assert self.client.get(reverse("web:case-list")).status_code == 403
 
     def test_staff_cannot_reach_other_building_objects(self):
