@@ -233,7 +233,7 @@ def seed_pilot_world(
     manager = get_user_model().objects.create_user(
         email=email("management-1"),
         password=password,
-        display_name="Pilot Manager 1",
+        display_name="Fenikong",
     )
     seed.management_users.append(manager)
     seed.management_memberships.append(
