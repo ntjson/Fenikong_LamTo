@@ -56,9 +56,9 @@ class ExplorerDocumentDownloadTests(TestCase):
             uploader=self.manager,
         )
 
-    def published_proposal(self):
+    def published_proposal(self, quotation_payload=b"%PDF-1.7 quotation"):
         quotation = self.stored_version(
-            Document.Kind.QUOTATION, "quote", b"%PDF-1.7 quotation"
+            Document.Kind.QUOTATION, "quote", quotation_payload
         )
         proposal = create_standalone_proposal(self.building, self.membership)
         publish_proposal_version(
@@ -108,6 +108,69 @@ class ExplorerDocumentDownloadTests(TestCase):
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertIn("inline", response["Content-Disposition"])
         self.assertEqual(response["Cache-Control"], "no-store")
+
+    def test_quotation_document_is_served_by_its_hash(self):
+        proposal = self.published_proposal()
+        quotation = proposal.current_version.quotations.get()
+
+        response = self.client.get(
+            self.document_url(proposal.public_token, quotation.sha256)
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"%PDF-1.7 quotation")
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("inline", response["Content-Disposition"])
+        self.assertEqual(response["Cache-Control"], "no-store")
+
+    def test_quotation_of_a_superseded_version_stays_available(self):
+        proposal = self.published_proposal()
+        first_quotation = proposal.current_version.quotations.get()
+        newer = self.stored_version(
+            Document.Kind.QUOTATION, "quote-v2", b"%PDF-1.7 quotation v2"
+        )
+        publish_proposal_version(
+            proposal,
+            self.membership,
+            amount_vnd=200,
+            contractor_name="Acme",
+            purpose="Repair",
+            proposed_action="Fix the lift again",
+            expected_schedule="Later",
+            quotation_versions=[newer],
+            event_id="0x" + secrets.token_hex(32),
+        )
+
+        response = self.client.get(
+            self.document_url(proposal.public_token, first_quotation.sha256)
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"%PDF-1.7 quotation")
+
+    def test_another_proposals_quotation_hash_returns_not_found(self):
+        proposal = self.published_proposal(b"%PDF-1.7 quotation A")
+        other = self.published_proposal(b"%PDF-1.7 quotation B")
+        other_quotation = other.current_version.quotations.get()
+
+        response = self.client.get(
+            self.document_url(proposal.public_token, other_quotation.sha256)
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_tampered_quotation_bytes_are_rejected_never_served(self):
+        proposal = self.published_proposal()
+        quotation = proposal.current_version.quotations.get()
+        with storages["private"].open(quotation.storage_key, "wb") as file_obj:
+            file_obj.write(b"%PDF-1.7 tampered-quotation")
+
+        response = self.client.get(
+            self.document_url(proposal.public_token, quotation.sha256)
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertNotEqual(response.content, b"%PDF-1.7 tampered-quotation")
 
     def test_unknown_token_returns_not_found(self):
         _, proof = self.settled_proposal()

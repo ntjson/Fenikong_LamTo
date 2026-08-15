@@ -1,4 +1,5 @@
 import hashlib
+import re
 import secrets
 import tempfile
 
@@ -119,7 +120,10 @@ class EvidenceExplorerPageTests(TestCase):
         response = self.client.get(self.explorer_url(proposal.public_token))
         self.assertEqual(response.status_code, 200)
         content = response.content.decode("utf-8")
-        self.assertNotIn(proposal.public_token, content)
+        # The token addresses the page and its documents, so it lives in hrefs;
+        # what it must never be is content the reader is shown.
+        visible = re.sub(r'href="[^"]*"', "", content)
+        self.assertNotIn(proposal.public_token, visible)
         self.assertNotIn("Mã truy cập công khai", content)
         self.assertIn("Tòa nhà Sen Vàng", content)
         self.assertIn(f"Đề xuất #{proposal.pk}", content)
@@ -194,6 +198,22 @@ class EvidenceExplorerPageTests(TestCase):
         self.assertLess(v1_idx, v2_idx)
         self.assertIn("Phiên bản đầu tiên", content)
         self.assertIn("Phiên bản điều chỉnh kinh phí", content)
+
+    def test_quotation_documents_are_linked_for_download(self):
+        proposal = self.published_proposal()
+        quotation = proposal.current_version.quotations.get()
+
+        response = self.client.get(self.explorer_url(proposal.public_token))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+        self.assertIn("Tài liệu báo giá:", content)
+        self.assertIn(quotation.filename, content)
+        expected_doc_url = reverse(
+            "explorer:document-download",
+            kwargs={"public_token": proposal.public_token, "sha256": quotation.sha256},
+        )
+        self.assertIn(f'href="{expected_doc_url}"', content)
 
     def test_unsettled_proposal_shows_pending_settlement_step(self):
         proposal = self.published_proposal()

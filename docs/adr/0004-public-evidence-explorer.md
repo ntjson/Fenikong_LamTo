@@ -34,9 +34,11 @@ backfill — old bank-transfer proofs must not become public automatically —
 while full parity (amount, contractor, approvers, step texts and the transfer
 proof itself) is the chosen policy for whatever the explorer does show.
 
-Transfer-proof documents are served content-addressed at
+Every document the page shows — each published version's quotations and the
+Settlement's transfer proof — is served content-addressed at
 `/e/<token>/doc/<sha256>/`, the bytes re-verified against the anchored hash on
-download, so the document URL is itself part of the proof.
+download, so the document URL is itself part of the proof. Naming a document
+the reader cannot open would be a claim without its evidence.
 
 The page is fully honest about failure states (PENDING, LOCAL_SIGNED,
 MISMATCH, integrity MISMATCH/UNAVAILABLE) using the resident app's vocabulary,

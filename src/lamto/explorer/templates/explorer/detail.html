@@ -125,9 +125,9 @@
           <ul class="evidence-doc-list">
             {% for q in step.quotations %}
             <li>
-              <span class="evidence-doc-link">
+              <a class="evidence-doc-link" href="{% url 'explorer:document-download' public_token=public_token sha256=q.sha256 %}">
                 📄 {{ q.filename }}
-              </span>
+              </a>
             </li>
             {% endfor %}
           </ul>

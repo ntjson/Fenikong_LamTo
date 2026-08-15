@@ -17,6 +17,7 @@ from django.views.decorators.http import require_GET
 from django.core.exceptions import ObjectDoesNotExist
 from lamto.api.downloads import content_disposition_inline
 from lamto.documents.access import DocumentIntegrityError, read_version_bytes
+from lamto.documents.models import DocumentVersion
 from lamto.evidence.models import BlockchainOutboxEvent, EvidenceLevel, evidence_level
 from lamto.finance.models import Proposal, VerificationObservation
 from lamto.finance.selectors import ledger_story_fields
@@ -351,9 +352,25 @@ def explorer_page(request, public_token):
 logger = logging.getLogger(__name__)
 
 
+def _explorer_document(proposal, sha256):
+    """Resolve one document this proposal's chain shows, by its SHA-256.
+
+    The explorer publishes exactly two kinds of document — the quotations of
+    every published version and the Settlement's transfer proof — so those are
+    exactly what the download route resolves. A hash belonging to some other
+    proposal is not found here, however public that other proposal is.
+    """
+    settlement = getattr(proposal, "settlement", None)
+    if settlement is not None and settlement.transfer.sha256 == sha256:
+        return settlement.transfer
+    return DocumentVersion.objects.filter(
+        proposal_versions__proposal=proposal, sha256=sha256
+    ).first()
+
+
 @require_GET
 def document_download(request, public_token, sha256):
-    """Serve one transfer-proof document, content-addressed by its SHA-256.
+    """Serve one document of this proposal's chain, content-addressed by SHA-256.
 
     The URL is part of the proof: the served bytes must re-verify against the
     anchored hash, or nothing is served. Unknown tokens and unknown hashes are
@@ -368,14 +385,11 @@ def document_download(request, public_token, sha256):
     )
     if proposal is None:
         raise Http404("Document not found.")
-    settlement = getattr(proposal, "settlement", None)
-    if settlement is None:
-        raise Http404("Document not found.")
-    transfer = settlement.transfer
-    if sha256 != transfer.sha256:
+    version = _explorer_document(proposal, sha256)
+    if version is None:
         raise Http404("Document not found.")
     try:
-        data = read_version_bytes(transfer)
+        data = read_version_bytes(version)
     except DocumentIntegrityError as error:
         logger.warning("Explorer document refused: %s", error)
         return HttpResponse(
@@ -383,8 +397,8 @@ def document_download(request, public_token, sha256):
         )
     response = HttpResponse(
         data,
-        content_type=transfer.content_type or "application/octet-stream",
+        content_type=version.content_type or "application/octet-stream",
     )
     response["Cache-Control"] = "no-store"
-    response["Content-Disposition"] = content_disposition_inline(transfer.filename)
+    response["Content-Disposition"] = content_disposition_inline(version.filename)
     return response
