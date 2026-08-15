@@ -1,4 +1,3 @@
-import time
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -16,7 +15,6 @@ from lamto.accounts.models import (
     Unit,
     User,
 )
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.billing.models import Bill
 from lamto.notifications.models import NotificationDelivery
 
@@ -43,7 +41,6 @@ def test_full_bill_lifecycle():
     )
     session = staff.session
     session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-    session[RECENT_REAUTH_KEY] = time.time()
     session.save()
 
     pdf = SimpleUploadedFile(

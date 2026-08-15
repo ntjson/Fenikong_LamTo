@@ -24,7 +24,6 @@ from lamto.web.views import (
     health,
     proposals,
     requests,
-    security,
     settlements,
     staff_common,
 )
@@ -32,18 +31,19 @@ from lamto.web.views import (
 app_name = "web"
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="web:staff-home", permanent=False), name="root"),
-    # Security / MFA
-    path("s/security/mfa/setup/", security.mfa_setup, name="mfa-setup"),
-    path("s/security/mfa/verify/", security.mfa_verify, name="mfa-verify"),
-    path("s/security/mfa/revoke/<int:device_id>/", security.mfa_revoke_device, name="mfa-revoke"),
-    path("s/security/reauth/", security.reauth, name="reauth"),
+    path(
+        "",
+        RedirectView.as_view(pattern_name="web:staff-home", permanent=False),
+        name="root",
+    ),
     # Shell
     path("s/", staff_common.staff_home, name="staff-home"),
     path("s/inbox/", staff_common.action_inbox, name="action-inbox"),
     path("s/building/", staff_common.switch_building, name="switch-building"),
     path("s/announcements/", announcement_list, name="staff-announcement-list"),
-    path("s/announcements/create/", announcement_create, name="staff-announcement-create"),
+    path(
+        "s/announcements/create/", announcement_create, name="staff-announcement-create"
+    ),
     path("s/bills/", bill_list, name="staff-bill-list"),
     path("s/bills/create/", bill_create, name="staff-bill-create"),
     path("s/bills/<int:pk>/", bill_detail, name="staff-bill-detail"),
@@ -85,13 +85,31 @@ urlpatterns = [
     path("s/cases/<int:pk>/", requests.case_detail, name="case-detail"),
     # Proposals
     path("s/proposals/", proposals.proposal_list, name="proposal-list"),
-    path("s/proposals/new/", proposals.standalone_proposal_create, name="standalone-proposal-create"),
+    path(
+        "s/proposals/new/",
+        proposals.standalone_proposal_create,
+        name="standalone-proposal-create",
+    ),
     path("s/proposals/<int:pk>/", proposals.proposal_detail, name="proposal-detail"),
-    path("s/cases/<int:pk>/propose/", proposals.proposal_create, name="proposal-create"),
+    path(
+        "s/cases/<int:pk>/propose/", proposals.proposal_create, name="proposal-create"
+    ),
     path("s/settlements/", settlements.settlement_list, name="settlement-list"),
-    path("s/settlements/record/<int:pk>/", settlements.settlement_record_transfer, name="settlement-record-transfer"),
-    path("s/settlements/<int:pk>/ack/", settlements.settlement_record_ack, name="settlement-record-ack"),
-    path("s/settlements/<int:pk>/", settlements.settlement_detail, name="settlement-detail"),
+    path(
+        "s/settlements/record/<int:pk>/",
+        settlements.settlement_record_transfer,
+        name="settlement-record-transfer",
+    ),
+    path(
+        "s/settlements/<int:pk>/ack/",
+        settlements.settlement_record_ack,
+        name="settlement-record-ack",
+    ),
+    path(
+        "s/settlements/<int:pk>/",
+        settlements.settlement_detail,
+        name="settlement-detail",
+    ),
     # Exports
     path("s/exports/", exports.export_home, name="export-home"),
     path("s/audit/export/", exports.audit_export, name="audit-export"),
@@ -121,8 +139,14 @@ urlpatterns = [
     ),
     path("s/gate/", gate.gate_queue, name="gate-queue"),
     path("s/gate/face/<int:pk>/photo/", gate.gate_face_photo, name="gate-face-photo"),
-    path("s/gate/face/<int:pk>/decide/", gate.gate_face_decide, name="gate-face-decide"),
-    path("s/gate/plates/<int:pk>/decide/", gate.gate_plate_decide, name="gate-plate-decide"),
+    path(
+        "s/gate/face/<int:pk>/decide/", gate.gate_face_decide, name="gate-face-decide"
+    ),
+    path(
+        "s/gate/plates/<int:pk>/decide/",
+        gate.gate_plate_decide,
+        name="gate-plate-decide",
+    ),
     path("s/gate/registrations/", gate.gate_registrations, name="gate-registrations"),
     path("s/gate/devices/", gate.gate_devices, name="gate-devices"),
     path("s/gate/log/", gate.gate_log, name="gate-log"),

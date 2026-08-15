@@ -1,4 +1,3 @@
-import time
 from types import SimpleNamespace
 
 from django.contrib.auth import get_user_model
@@ -12,7 +11,6 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.util import random_hex
 
 from lamto.accounts.models import Building, ManagementMembership, ResidentOccupancy, Unit
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.maintenance.models import BuildingLocation, IssueReport, MaintenanceCase, TriageDecision
 from lamto.testing.factories import PilotDomainDriver, seed_pilot_world
 from lamto.web.forms.staff import ConfirmTriageForm
@@ -31,7 +29,6 @@ class ManagementWorkspaceTests(TestCase):
         )
         session = self.client.session
         session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session[RECENT_REAUTH_KEY] = time.time()
         session.save()
 
     def login_management(self):

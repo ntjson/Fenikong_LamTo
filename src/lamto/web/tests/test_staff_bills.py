@@ -1,4 +1,3 @@
-import time
 import tempfile
 from xml.etree import ElementTree
 
@@ -21,7 +20,6 @@ from lamto.accounts.models import (
     Unit,
     User,
 )
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.billing.models import Bill
 from lamto.billing.services import BillError, confirm_payment, issue_bill
 from lamto.documents.models import Document, DocumentVersion
@@ -49,7 +47,6 @@ def setup_manager(client, name="Tower A"):
     )
     session = client.session
     session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-    session[RECENT_REAUTH_KEY] = time.time()
     session.save()
     return building, manager
 

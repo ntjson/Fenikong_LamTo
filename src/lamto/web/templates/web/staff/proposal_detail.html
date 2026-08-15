@@ -65,7 +65,7 @@
       <div class="workflow-section workflow-primary">
         <h2>{% trans "Publish settled expense" %}</h2>
         <p class="consequence-note">{% trans "Publishing adds this settled expense to the resident ledger. Verify the frozen proposal and settlement evidence before continuing." %}</p>
-        <form method="post" class="stack-form" data-busy-on-submit>{% csrf_token %}<input type="hidden" name="action" value="publish">{{ publish_form.as_p }}<p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check." %}</p><button type="submit" class="button button-primary">{% trans "Publish to resident ledger" %}</button></form>
+        <form method="post" class="stack-form" data-busy-on-submit>{% csrf_token %}<input type="hidden" name="action" value="publish">{{ publish_form.as_p }}<button type="submit" class="button button-primary">{% trans "Publish to resident ledger" %}</button></form>
       </div>
       {% elif proposal.status == "PUBLISHED" %}
       <div class="workflow-section workflow-primary">
@@ -88,14 +88,13 @@
             {{ decision_form.note }}
             <p class="hint">{% trans "Required when not proceeding; it is recorded with the decision." %}</p>
           </div>
-          <p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check." %}</p>
           <button type="submit" class="button button-primary">{% trans "Record decision" %}</button>
         </form>
       </div>
       {% elif proposal.status == "IN_PROGRESS" %}
       <div class="workflow-section workflow-primary">
         <h2>{% trans "Publish work progress" %}</h2>
-        <form method="post" enctype="multipart/form-data" class="stack-form" data-busy-on-submit>{% csrf_token %}{{ progress_form.as_p }}<p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check; re-select any file attachments before submitting again." %}</p><button name="action" value="progress" class="button button-primary">{% trans "Publish progress" %}</button><button name="action" value="complete" class="button button-secondary">{% trans "Complete work" %}</button></form>
+        <form method="post" enctype="multipart/form-data" class="stack-form" data-busy-on-submit>{% csrf_token %}{{ progress_form.as_p }}<button name="action" value="progress" class="button button-primary">{% trans "Publish progress" %}</button><button name="action" value="complete" class="button button-secondary">{% trans "Complete work" %}</button></form>
       </div>
       {% endif %}
       {% if publication_pending %}

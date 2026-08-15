@@ -1,4 +1,3 @@
-import time
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
@@ -13,7 +12,6 @@ from lamto.accounts.models import (
     ManagementMembership,
     Unit,
 )
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.finance.models import Proposal
 from lamto.maintenance.models import (
     BuildingLocation,
@@ -33,7 +31,6 @@ class ListPatternTests(TestCase):
         )
         session = self.client.session
         session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session[RECENT_REAUTH_KEY] = time.time()
         session["active_management_id"] = membership.pk
         session.save()
 

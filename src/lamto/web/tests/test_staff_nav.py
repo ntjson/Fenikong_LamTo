@@ -1,4 +1,3 @@
-import time
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
@@ -9,7 +8,6 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.util import random_hex
 
 from lamto.accounts.models import Building, ManagementMembership
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.web.staff import finance_nav_items_for, gate_nav_items_for, nav_items_for
 
 
@@ -31,7 +29,6 @@ class ManagementShellTests(TestCase):
         )
         session = self.client.session
         session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session[RECENT_REAUTH_KEY] = time.time()
         session.save()
 
     def test_management_user_sees_staff_areas(self):

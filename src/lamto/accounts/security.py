@@ -1,4 +1,4 @@
-"""Authentication throttle, re-auth, and privileged-action gates."""
+"""Authentication throttling, session lifecycle, and Management gates."""
 
 from __future__ import annotations
 
@@ -12,26 +12,10 @@ from django.utils.translation import gettext_lazy as _
 from django.db import transaction
 from django.utils import timezone
 
-from lamto.audit.services import record_audit
+from .models import AuthThrottleBucket
 
-from .models import AuthThrottleBucket, ManagementMembership
-from .services import require_management
-
-RECENT_REAUTH_KEY = "recent_reauth_at"
-DEFAULT_REAUTH_MAX_AGE = 300
 THROTTLE_MAX_FAILURES = 5
 THROTTLE_WINDOW_SECONDS = 15 * 60
-
-# In-flight POST bodies preserved across the reauth hop (never files or secrets).
-REAUTH_STASH_KEY = "reauth_stashed_post"
-REAUTH_STASH_MAX_AGE_SECONDS = 15 * 60
-REAUTH_STASH_MAX_CHARS = 20_000
-# Never restore: CSRF, action routing, irreversibility confirms, credentials.
-_REAUTH_STASH_DROP = {"csrfmiddlewaretoken", "action", "confirm", "password", "token"}
-
-
-class RecentAuthRequired(PermissionDenied):
-    """Recent re-authentication required; middleware redirects to reauth."""
 
 
 def throttle_digest(account: str, ip: str | None) -> str:
@@ -73,7 +57,7 @@ def assert_not_throttled(account: str, ip: str | None) -> None:
 def record_auth_failure(
     account: str, ip: str | None, *, kind: str = "login"
 ) -> AuthThrottleBucket:
-    """Record a failed login/MFA attempt. Never stores password or OTP values."""
+    """Record a failed login attempt. Never stores passwords."""
     digest = throttle_digest(account, ip)
     bucket, _ = AuthThrottleBucket.objects.select_for_update().get_or_create(
         key_digest=digest,
@@ -156,133 +140,8 @@ def reset_auth_throttle(account: str, ip: str | None) -> None:
     )
 
 
-def user_is_otp_verified(request) -> bool:
-    user = getattr(request, "user", None)
-    if user is None or not getattr(user, "is_authenticated", False):
-        return False
-    is_verified = getattr(user, "is_verified", None)
-    if callable(is_verified):
-        return bool(is_verified())
-    return False
-
-
-def require_otp_verified(request) -> None:
-    if not user_is_otp_verified(request):
-        _deny_sensitive(request, "otp_required")
-        raise PermissionDenied("Verified OTP is required.")
-
-
-def recent_reauth_age_seconds(request) -> float | None:
-    raw = request.session.get(RECENT_REAUTH_KEY)
-    if raw is None:
-        return None
-    try:
-        return time.time() - float(raw)
-    except (TypeError, ValueError):
-        return None
-
-
-def mark_recent_reauth(request) -> None:
-    request.session[RECENT_REAUTH_KEY] = time.time()
-    request.session.modified = True
-
-
-def stash_post_for_reauth(request) -> None:
-    """Keep typed POST values across the reauth redirect so the hop loses no work.
-
-    File uploads cannot be stashed in the session; the form copy tells the
-    manager attachments need re-selecting. Confirm checkboxes are dropped so an
-    irreversible action is never re-armed without a fresh human tick.
-    """
-    if request.method != "POST":
-        return
-    data = {
-        key: values if len(values) > 1 else values[0]
-        for key in request.POST
-        if key not in _REAUTH_STASH_DROP
-        for values in [request.POST.getlist(key)]
-    }
-    if not data or sum(len(str(v)) for v in data.values()) > REAUTH_STASH_MAX_CHARS:
-        return
-    request.session[REAUTH_STASH_KEY] = {
-        "path": request.path,
-        "at": time.time(),
-        "data": data,
-    }
-    request.session.modified = True
-
-
-def pop_stashed_post(request) -> dict | None:
-    """Return the values stashed for this path, once, or None."""
-    stash = request.session.get(REAUTH_STASH_KEY)
-    if stash is None:
-        return None
-    if (
-        stash.get("path") != request.path
-        or time.time() - float(stash.get("at") or 0) > REAUTH_STASH_MAX_AGE_SECONDS
-    ):
-        return None
-    del request.session[REAUTH_STASH_KEY]
-    request.session.modified = True
-    return stash.get("data") or None
-
-
-def require_recent_auth(request, max_age_seconds: int = DEFAULT_REAUTH_MAX_AGE) -> None:
-    """Require verified OTP and password+OTP re-auth within max_age_seconds."""
-    if not getattr(request.user, "is_authenticated", False):
-        raise PermissionDenied("Authentication required.")
-    require_otp_verified(request)
-    age = recent_reauth_age_seconds(request)
-    if age is None or age > max_age_seconds:
-        _deny_sensitive(
-            request, "reauth_required", {"max_age_seconds": max_age_seconds}
-        )
-        raise RecentAuthRequired("Recent re-authentication is required.")
-
-
-def _deny_sensitive(request, reason: str, extra: dict | None = None) -> None:
-    membership = None
-    mid = request.session.get("active_management_id")
-    if mid is not None:
-        membership = ManagementMembership.objects.filter(
-            pk=mid, user=request.user, active=True
-        ).first()
-    try:
-        record_audit(
-            request.user if getattr(request.user, "is_authenticated", False) else None,
-            require_management(request.user, membership.building_id)
-            if membership
-            else None,
-            "security.sensitive_action",
-            "Session",
-            str(getattr(request.user, "pk", "") or ""),
-            "denied",
-            {"reason": reason, **(extra or {})},
-        )
-    except Exception:
-        # Audit attribution may fail for anonymous users; never block denial path.
-        pass
-
-
-def user_has_confirmed_totp(user) -> bool:
-    from django_otp.plugins.otp_totp.models import TOTPDevice
-
-    if user is None or not getattr(user, "is_authenticated", False):
-        return False
-    return TOTPDevice.objects.filter(user=user, confirmed=True).exists()
-
-
-def require_staff_mfa(request) -> None:
-    """Privileged staff workspace entry requires a confirmed TOTP device + OTP session."""
-    if not getattr(request.user, "is_authenticated", False):
-        raise PermissionDenied("Authentication required.")
-    if not user_has_confirmed_totp(request.user):
-        raise PermissionDenied("TOTP enrollment is required for staff workspaces.")
-    require_otp_verified(request)
-
-
 def rotate_session(request) -> None:
-    """Rotate the session key (login / MFA / reauth) without losing data."""
+    """Rotate the session key (login) without losing data."""
     try:
         request.session.cycle_key()
     except Exception:

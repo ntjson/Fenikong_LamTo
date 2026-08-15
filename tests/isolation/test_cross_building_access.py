@@ -13,7 +13,6 @@ Completeness:
 """
 
 import tempfile
-import time
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -27,7 +26,6 @@ from knox.models import AuthToken
 
 from lamto.accounts.models import ResidentOccupancy
 from lamto.accounts.registration import submit_registration
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.billing.models import Bill
 from lamto.documents.models import Document, DocumentVersion, QuarantinedUpload
 from lamto.evidence.models import BlockchainOutboxEvent
@@ -79,10 +77,7 @@ STAFF_FORBIDDEN_CASES = set()
 
 RESIDENT_CASES = {}
 
-EXEMPT = {
-    # Device revocation is user-scoped (own MFA devices), not tenant-scoped.
-    "web:mfa-revoke": "user-scoped MFA device",
-}
+EXEMPT = {}
 
 LIST_ROUTES = [
     "web:action-inbox",
@@ -193,9 +188,7 @@ class CrossBuildingAccessTests(TestCase):
             create_sample_report=False,
         )
         driver = PilotDomainDriver(cls.seed_b)
-        driver.submit_report(
-            f"{B_LEAK_MARKER} lift noise", "Lift 2"
-        )
+        driver.submit_report(f"{B_LEAK_MARKER} lift noise", "Lift 2")
         driver.confirm_triage_case()
         driver.publish_proposal()
         driver.complete_assigned_work()
@@ -240,10 +233,14 @@ class CrossBuildingAccessTests(TestCase):
             retention_expires_at=timezone.now() + timedelta(days=1),
         ).pk
         b_notice = NotificationDelivery.objects.create(
-            recipient=cls.seed_b.residents[0], building=b_building,
-            channel=NotificationDelivery.Channel.IN_APP, status=NotificationDelivery.Status.AVAILABLE,
-            event_key="ledger.publication:iso:1", event_code="ledger.publication",
-            subject="B notice", body=B_LEAK_MARKER,
+            recipient=cls.seed_b.residents[0],
+            building=b_building,
+            channel=NotificationDelivery.Channel.IN_APP,
+            status=NotificationDelivery.Status.AVAILABLE,
+            event_key="ledger.publication:iso:1",
+            event_code="ledger.publication",
+            subject="B notice",
+            body=B_LEAK_MARKER,
         )
         cls.b["notification_pk"] = b_notice.pk
         b_occupancy = ResidentOccupancy.objects.get(
@@ -310,7 +307,6 @@ class CrossBuildingAccessTests(TestCase):
         )
         session = self.client.session
         session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session[RECENT_REAUTH_KEY] = time.time()
         session.save()
 
     def test_every_registered_route_is_classified(self):
@@ -402,10 +398,13 @@ class CrossBuildingAccessTests(TestCase):
             with self.subTest(route=route):
                 self._management_login()
                 url = reverse(
-                    route, args=[*(prefix_args[0] if prefix_args else ()), self.b[pk_attr]]
+                    route,
+                    args=[*(prefix_args[0] if prefix_args else ()), self.b[pk_attr]],
                 )
                 response = (
-                    self.client.post(url, {}) if method == "POST" else self.client.get(url)
+                    self.client.post(url, {})
+                    if method == "POST"
+                    else self.client.get(url)
                 )
                 # Object lookups hide other tenants with 404; service-layer
                 # authorization may reject them with 403 before mutation.
@@ -437,7 +436,9 @@ class CrossBuildingAccessTests(TestCase):
             with self.subTest(route=route):
                 url = reverse(route, args=[self.b[pk_attr]])
                 response = (
-                    self.client.post(url, {}) if method == "POST" else self.client.get(url)
+                    self.client.post(url, {})
+                    if method == "POST"
+                    else self.client.get(url)
                 )
                 assert response.status_code == expected, (route, response.status_code)
 
@@ -531,7 +532,9 @@ class CrossBuildingAccessTests(TestCase):
         )
         assert location_ids.isdisjoint(b_location_ids)
 
-        notifications_response = self.client.get(reverse("api:notifications"), headers=auth)
+        notifications_response = self.client.get(
+            reverse("api:notifications"), headers=auth
+        )
         assert notifications_response.status_code == 200
         assert B_LEAK_MARKER.encode() not in notifications_response.content
         assert B_BUILDING_NAME.encode() not in notifications_response.content

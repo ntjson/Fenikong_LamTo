@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import csv
 import io
-import time
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
@@ -15,7 +14,6 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.util import random_hex
 
 from lamto.accounts.models import BackupMarker, Building, ManagementMembership
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.audit.models import AuditEvent
 from lamto.audit.services import record_audit
 from lamto.web.views.exports import neutralize_cell
@@ -45,7 +43,6 @@ class ExportsAndHealthTests(TestCase):
         )
         session = self.client.session
         session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session[RECENT_REAUTH_KEY] = time.time()
         session.save()
         return device
 

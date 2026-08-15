@@ -10,6 +10,7 @@ from lamto.accounts.models import Building, ManagementMembership, Unit, User
 from lamto.finance.models import MaintenanceFund
 from lamto.maintenance.models import BuildingLocation
 
+
 def _split(raw):
     return [part.strip() for part in raw.split(",") if part.strip()]
 
@@ -20,7 +21,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--name", required=True, help="Building display name.")
         parser.add_argument("--timezone", default="Asia/Ho_Chi_Minh")
-        parser.add_argument("--locations", default="", help="Comma-separated root location names.")
+        parser.add_argument(
+            "--locations", default="", help="Comma-separated root location names."
+        )
         parser.add_argument("--units", default="", help="Comma-separated unit labels.")
         parser.add_argument(
             "--managers",
@@ -45,12 +48,16 @@ class Command(BaseCommand):
         for email in _split(options["managers"]):
             user = User.objects.filter(email=email).first()
             if user is None:
-                user = User.objects.create_user(email=email, password=None, display_name=email)
+                user = User.objects.create_user(
+                    email=email, password=None, display_name=email
+                )
             ManagementMembership.objects.create(user=user, building=building)
 
-        self.stdout.write(self.style.SUCCESS(f"Building onboarded: {name} (id={building.pk})"))
         self.stdout.write(
-            "Next steps (runbook): set manager passwords + TOTP, "
+            self.style.SUCCESS(f"Building onboarded: {name} (id={building.pk})")
+        )
+        self.stdout.write(
+            "Next steps (runbook): set manager passwords, "
             "add resident occupancies (set phone numbers for phone "
             "login), then record and verify the fund opening balance."
         )

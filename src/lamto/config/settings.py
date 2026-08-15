@@ -73,7 +73,6 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django_otp.middleware.OTPMiddleware",
     "lamto.accounts.middleware.ManagementSessionMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -303,7 +302,7 @@ PUSH_ENABLED = os.getenv("PUSH_ENABLED", "").lower() in {"1", "true", "yes"} and
 PUSH_DAILY_CAP_PER_CATEGORY = int(os.getenv("PUSH_DAILY_CAP_PER_CATEGORY", "10"))
 
 
-# --- Security: password hashing, sessions, MFA-related defaults ---
+# --- Security: password hashing and sessions ---
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
@@ -325,8 +324,6 @@ CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
 ]
 
-# MFA / re-auth
-LAMTO_REAUTH_MAX_AGE_SECONDS = int(os.getenv("LAMTO_REAUTH_MAX_AGE_SECONDS", "300"))
 LAMTO_AUTH_THROTTLE_MAX_FAILURES = int(
     os.getenv("LAMTO_AUTH_THROTTLE_MAX_FAILURES", "5")
 )

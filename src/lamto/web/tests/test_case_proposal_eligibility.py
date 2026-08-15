@@ -1,5 +1,4 @@
 from datetime import timedelta
-import time
 
 from django.test import TestCase
 from django.urls import reverse
@@ -9,7 +8,6 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.util import random_hex
 
 from lamto.accounts.models import Building, ManagementMembership, Unit, User
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.maintenance.cases import start_case_work
 from lamto.maintenance.models import (
     BuildingLocation, CaseReport, IssueReport, MaintenanceCase, TriageDecision,
@@ -61,7 +59,6 @@ class CaseProposalEligibilityTests(TestCase):
         device = TOTPDevice.objects.create(user=self.manager, name="t", confirmed=True, key=random_hex())
         session = self.client.session
         session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-        session[RECENT_REAUTH_KEY] = time.time()
         session["active_management_id"] = self.membership.pk
         session.save()
         for case, offered in ((eligible, True), (private, False), (no_spend, False)):

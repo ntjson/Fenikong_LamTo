@@ -1,4 +1,3 @@
-import time
 from unittest.mock import patch
 
 import pytest
@@ -16,7 +15,6 @@ from lamto.accounts.models import (
     User,
 )
 from lamto.accounts.registration import submit_registration
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.audit.models import AuditEvent
 
 
@@ -30,7 +28,6 @@ def authenticate(client, user):
     )
     session = client.session
     session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-    session[RECENT_REAUTH_KEY] = time.time()
     session.save()
 
 

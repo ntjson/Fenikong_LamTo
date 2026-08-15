@@ -46,8 +46,12 @@ class Unit(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["building", "label"], name="unit_label_per_building"),
-            models.UniqueConstraint(fields=["id", "building"], name="unit_id_building_key"),
+            models.UniqueConstraint(
+                fields=["building", "label"], name="unit_label_per_building"
+            ),
+            models.UniqueConstraint(
+                fields=["id", "building"], name="unit_id_building_key"
+            ),
         ]
 
 
@@ -118,7 +122,7 @@ class RegistrationRequest(models.Model):
 
 
 class AuthThrottleBucket(models.Model):
-    """Cross-worker login/MFA failure throttle keyed by SHA-256(account|ip)."""
+    """Cross-worker login-failure throttle keyed by SHA-256(account|ip)."""
 
     key_digest = models.CharField(max_length=64, unique=True, db_index=True)
     failure_count = models.PositiveIntegerField(default=0)

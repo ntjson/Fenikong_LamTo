@@ -1,4 +1,3 @@
-import time
 
 import pytest
 from django.test import Client, override_settings
@@ -16,7 +15,6 @@ from lamto.accounts.models import (
     Unit,
     User,
 )
-from lamto.accounts.security import RECENT_REAUTH_KEY
 from lamto.audit.models import AuditEvent
 from lamto.notifications.announcements import edit_announcement, publish_announcement
 from lamto.notifications.models import (
@@ -42,7 +40,6 @@ def setup_manager(client, name="Tower A", email="manager@example.test"):
     )
     session = client.session
     session[DEVICE_ID_SESSION_KEY] = device.persistent_id
-    session[RECENT_REAUTH_KEY] = time.time()
     session.save()
     return building, manager
 

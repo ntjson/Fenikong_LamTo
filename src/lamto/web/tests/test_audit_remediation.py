@@ -45,7 +45,10 @@ def test_action_inbox_starts_with_h1_and_fund_link_is_not_a_heading_wrapper():
 
     assert source.index("<h1") < source.index("<h2")
     assert '<a class="fund-chart-link"' not in source
-    assert '<a class="button button-secondary" href="{% url \'web:fund-home\' %}">' in source
+    assert (
+        '<a class="button button-secondary" href="{% url \'web:fund-home\' %}">'
+        in source
+    )
 
 
 def test_proposal_detail_does_not_skip_from_h1_to_h3():
@@ -75,12 +78,10 @@ def test_full_navigation_messages_are_a_focusable_named_status_region():
     assert '<h2 id="messages-heading" class="sr-only">Messages</h2>' in html
 
 
-def test_original_nine_templates_load_i18n_and_mark_user_copy_for_translation():
+def test_core_templates_load_i18n_and_mark_user_copy_for_translation():
     expected = {
         "base.html",
         "login.html",
-        "security/mfa_setup.html",
-        "security/reauth.html",
         "staff/_evidence_level.html",
         "staff/gate_devices.html",
         "staff/gate_log.html",

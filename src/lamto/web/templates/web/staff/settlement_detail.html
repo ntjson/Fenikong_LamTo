@@ -73,7 +73,6 @@
   <form method="post" class="stack-form" enctype="multipart/form-data" data-busy-on-submit>
     {% csrf_token %}
     {{ transfer_form.as_p }}
-    <p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check; re-select any file attachments before submitting again." %}</p>
     <p><button type="submit" class="button button-primary">{% trans "Record transfer" %}</button></p>
   </form>
 </section>
@@ -93,7 +92,6 @@
   <form method="post" class="stack-form" enctype="multipart/form-data" data-busy-on-submit>
     {% csrf_token %}
     {{ ack_form.as_p }}
-    <p class="hint">{% trans "Recording asks for your password and authenticator code when your last confirmation is older than five minutes. What you typed is kept across that check; re-select any file attachments before submitting again." %}</p>
     <p><button type="submit" class="button button-primary">{% trans "Record acknowledgement" %}</button></p>
   </form>
 </section>
