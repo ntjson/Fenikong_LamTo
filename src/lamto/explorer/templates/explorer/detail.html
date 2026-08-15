@@ -106,7 +106,7 @@
         <span>Làm Tổ · Trình khám phá bằng chứng</span>
       </div>
       <h1 class="explorer-title">Hồ sơ minh bạch chi tiêu</h1>
-      <p class="explorer-subtitle">{{ building.name }} · Mã truy cập công khai: <code class="mono">{{ public_token }}</code></p>
+      <p class="explorer-subtitle">{{ building.name }} · Đề xuất #{{ proposal.pk }}{% if published_at %} · {{ published_at|date:"d/m/Y" }}{% endif %}</p>
     </header>
 
     {% if chain_unreachable %}

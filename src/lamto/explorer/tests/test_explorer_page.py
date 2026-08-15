@@ -114,6 +114,29 @@ class EvidenceExplorerPageTests(TestCase):
         response = self.client.get(self.explorer_url(proposal.public_token))
         self.assertEqual(response.status_code, 200)
 
+    def test_subtitle_names_building_and_proposal_and_excludes_public_token(self):
+        proposal = self.published_proposal()
+        response = self.client.get(self.explorer_url(proposal.public_token))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+        self.assertNotIn(proposal.public_token, content)
+        self.assertNotIn("Mã truy cập công khai", content)
+        self.assertIn("Tòa nhà Sen Vàng", content)
+        self.assertIn(f"Đề xuất #{proposal.pk}", content)
+        self.assertIn(f"Tòa nhà Sen Vàng · Đề xuất #{proposal.pk}", content)
+
+    def test_subtitle_includes_publication_date_when_published_to_ledger(self):
+        proposal, _ = self.settled_proposal()
+        entry = publish_settlement_entry(proposal.settlement)
+        response = self.client.get(self.explorer_url(proposal.public_token))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+        expected_date = entry.published_at.strftime("%d/%m/%Y")
+        self.assertIn(
+            f"Tòa nhà Sen Vàng · Đề xuất #{proposal.pk} · {expected_date}",
+            content,
+        )
+
     def test_proposal_summary_renders_parity_fields(self):
         proposal = self.published_proposal(
             amount_vnd=50_000_000,
