@@ -74,10 +74,26 @@ def _resolve_proposal_action_panel(
     if proposal.status == Proposal.Status.PUBLISHED:
         return "decide"
     if proposal.status == Proposal.Status.IN_PROGRESS:
+        if proposal.case_id:
+            return "case"
         return "progress"
     if publication_pending:
         return "pending"
     return None
+
+
+def _proposal_next_action(proposal: Proposal) -> str:
+    if proposal.status == Proposal.Status.DRAFT:
+        return _("Complete and submit")
+    if proposal.status == Proposal.Status.PUBLISHED:
+        return _("Decide whether to proceed")
+    if proposal.status == Proposal.Status.IN_PROGRESS:
+        if proposal.case_id:
+            return _("Follow work on case")
+        return _("Publish progress or complete")
+    if proposal.status == Proposal.Status.COMPLETED:
+        return _("Record settlement")
+    return ""
 
 
 @login_required
@@ -99,12 +115,6 @@ def proposal_list(request):
         ),
         sorts=(("", _("Newest first"), ("-created_at",)),),
     )
-    next_actions = {
-        Proposal.Status.DRAFT: _("Complete and submit"),
-        Proposal.Status.IN_PROGRESS: _("Publish progress or complete"),
-        Proposal.Status.PUBLISHED: _("Decide whether to proceed"),
-        Proposal.Status.COMPLETED: _("Record settlement"),
-    }
     proposal_items = [
         {
             "url": f"/s/proposals/{p.pk}/",
@@ -124,7 +134,7 @@ def proposal_list(request):
             "status": p.get_status_display(),
             "deadline": None,
             "deadline_tone": "neutral",
-            "next_action": next_actions.get(p.status, ""),
+            "next_action": _proposal_next_action(p),
         }
         for p in list_meta["page"].object_list
     ]

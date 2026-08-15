@@ -95,6 +95,12 @@
           <button type="submit" class="button button-primary">{% trans "Record decision" %}</button>
         </form>
       </div>
+      {% elif action_panel == "case" %}
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Work tracked on maintenance case" %}</h2>
+        <p class="consequence-note">{% trans "Work on this proposal is recorded through its maintenance case. Open the case to publish progress or mark the work complete." %}</p>
+        <a class="button button-primary" href="{% url 'web:case-detail' proposal.case_id %}">{% trans "Open maintenance case" %}</a>
+      </div>
       {% elif action_panel == "progress" %}
       <div class="workflow-section workflow-primary">
         <h2>{% trans "Publish work progress" %}</h2>

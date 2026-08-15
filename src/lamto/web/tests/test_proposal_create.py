@@ -224,6 +224,75 @@ class ProposalCreateTests(TestCase):
         resp = self.client.get(reverse("web:proposal-create", kwargs={"pk": self.work.pk}))
         self.assertEqual(resp.status_code, 200)
 
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_case_linked_proposal_in_progress_links_to_case_without_progress_form(self):
+        self._login_operator()
+        driver = PilotDomainDriver(self.seed)
+        driver.publish_proposal()
+        driver.decide_proposal(proceed=True)
+        proposal = self.seed.proposal
+        self.assertEqual(proposal.status, Proposal.Status.IN_PROGRESS)
+        self.assertIsNotNone(proposal.case_id)
+
+        response = self.client.get(reverse("web:proposal-detail", args=[proposal.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["action_panel"], "case")
+        self.assertContains(response, "Work tracked on maintenance case")
+        self.assertContains(response, reverse("web:case-detail", kwargs={"pk": proposal.case_id}))
+        self.assertContains(response, "Open maintenance case")
+        self.assertNotContains(response, 'name="action" value="progress"')
+        self.assertNotContains(response, 'name="action" value="complete"')
+        self.assertNotContains(response, "Publish work progress")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_standalone_proposal_in_progress_can_complete_work_via_form(self):
+        self._login_operator()
+        driver = PilotDomainDriver(self.seed)
+        driver.publish_standalone_proposal()
+        driver.decide_proposal(proceed=True)
+        proposal = self.seed.proposal
+        self.assertEqual(proposal.status, Proposal.Status.IN_PROGRESS)
+        self.assertIsNone(proposal.case_id)
+
+        response = self.client.get(reverse("web:proposal-detail", args=[proposal.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["action_panel"], "progress")
+        self.assertContains(response, "Publish work progress")
+        self.assertContains(response, 'name="action" value="progress"')
+        self.assertContains(response, 'name="action" value="complete"')
+
+        post_response = self.client.post(
+            reverse("web:proposal-detail", args=[proposal.pk]),
+            {"action": "complete", "cause": "Normal wear", "result": "Equipment replaced"},
+        )
+        self.assertRedirects(post_response, reverse("web:proposal-detail", args=[proposal.pk]))
+        proposal.refresh_from_db()
+        self.assertEqual(proposal.status, Proposal.Status.COMPLETED)
+        self.assertIsNotNone(proposal.completed_at)
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposals_list_distinguishes_case_linked_and_standalone_in_progress_next_action(self):
+        self._login_operator()
+        driver = PilotDomainDriver(self.seed)
+        driver.publish_proposal()
+        driver.decide_proposal(proceed=True)
+        case_proposal = self.seed.proposal
+
+        driver.publish_standalone_proposal()
+        driver.decide_proposal(proceed=True)
+        standalone_proposal = self.seed.proposal
+
+        response = self.client.get(reverse("web:proposal-list"))
+        self.assertEqual(response.status_code, 200)
+
+        items_by_url = {item["url"]: item for item in response.context["proposal_items"]}
+        case_item = items_by_url[f"/s/proposals/{case_proposal.pk}/"]
+        standalone_item = items_by_url[f"/s/proposals/{standalone_proposal.pk}/"]
+
+        self.assertEqual(case_item["next_action"], "Follow work on case")
+        self.assertEqual(standalone_item["next_action"], "Publish progress or complete")
+
 
 def test_decision_form_requires_explicit_choice_and_decline_note():
     from lamto.web.forms.staff import ProposalDecisionForm

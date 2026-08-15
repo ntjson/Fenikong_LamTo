@@ -2741,3 +2741,19 @@ msgstr "Kiểm soát côn trùng"
 
 msgid "General"
 msgstr "Chung"
+
+msgid "Work tracked on maintenance case"
+msgstr "Công việc được theo dõi theo vụ việc bảo trì"
+
+msgid ""
+"Work on this proposal is recorded through its maintenance case. Open the "
+"case to publish progress or mark the work complete."
+msgstr ""
+"Công việc của đề xuất này được ghi nhận thông qua vụ việc bảo trì tương ứng. "
+"Mở vụ việc để công bố tiến độ hoặc hoàn thành công việc."
+
+msgid "Open maintenance case"
+msgstr "Mở vụ việc bảo trì"
+
+msgid "Follow work on case"
+msgstr "Theo dõi công việc theo vụ việc"
