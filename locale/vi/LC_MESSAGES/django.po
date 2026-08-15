@@ -805,6 +805,9 @@ msgstr "Nhập nhãn đầu đọc và chọn hướng hợp lệ."
 msgid "Evidence"
 msgstr "Bằng chứng"
 
+msgid "Evidence explorer"
+msgstr "Trình khám phá bằng chứng"
+
 msgid "Evidence delivery queue"
 msgstr "Hàng đợi giao bằng chứng"
 

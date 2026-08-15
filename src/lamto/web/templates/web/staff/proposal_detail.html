@@ -47,6 +47,9 @@
       {% endif %}
 
       {% if version %}
+      {% if proposal.public_token %}
+      {% include "web/staff/_evidence_anchor.html" with event=version.outbox_event token=proposal.public_token %}
+      {% else %}
       <details class="technical-proof">
         <summary>{% trans "Technical proof" %}</summary>
         <dl class="detail-list">
@@ -57,6 +60,7 @@
         <h2>{% trans "Signed snapshot" %}</h2>
         <pre id="snapshot-json">{{ version.snapshot }}</pre>
       </details>
+      {% endif %}
       {% endif %}
     </div>
 

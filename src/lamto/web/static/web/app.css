@@ -357,6 +357,14 @@ details.workflow-section[open] > summary {
   margin-top: var(--space-5);
 }
 
+.evidence-anchor {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  flex-wrap: wrap;
+}
+
 .technical-proof summary {
   min-height: var(--touch);
   display: flex;

@@ -1,0 +1,5 @@
+{% load i18n %}
+<div class="evidence-anchor">
+  {% include "web/staff/_evidence_level.html" with event=event %}
+  <a href="{% url 'explorer:detail' public_token=token %}">{% trans "Evidence explorer" %}</a>
+</div>

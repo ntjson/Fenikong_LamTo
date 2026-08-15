@@ -137,7 +137,7 @@ def proposal_detail(request, pk):
     membership, memberships = require_management_context(request)
     proposal = get_object_or_404(
         Proposal.objects.select_related(
-            "current_version", "case", "creator_membership"
+            "current_version", "current_version__outbox_event", "case", "creator_membership"
         ),
         pk=pk,
         building_id=membership.building_id,

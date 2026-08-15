@@ -97,12 +97,16 @@
       {% include "web/staff/_accountability_chain.html" %}
       {% endif %}
 
+      {% if settlement.proposal.public_token %}
+      {% include "web/staff/_evidence_anchor.html" with event=settlement.outbox_event token=settlement.proposal.public_token %}
+      {% else %}
       <details class="technical-proof">
         <summary>{% trans "Technical proof" %}</summary>
         <dl class="detail-list">
           <div><dt>{% trans "Anchor" %}</dt><dd>{% include "web/staff/_evidence_level.html" with event=settlement.outbox_event %}</dd></div>
         </dl>
       </details>
+      {% endif %}
     </div>
 
     <div class="record-action">
