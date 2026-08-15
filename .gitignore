@@ -15,6 +15,7 @@ __pycache__/
 .env.*
 *.local
 .playwright/
+docs/agents/
 test-results/
 playwright-report/
 skills-lock.json
@@ -22,3 +23,9 @@ skills-lock.json
 .github/hooks
 opencode.json
 node_modules/
+.playwright-mcp/
+.scratch/
+assets/
+reference/
+lessons/
+learning-records/
