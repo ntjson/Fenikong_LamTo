@@ -151,6 +151,39 @@ class CaseTests(CaseFixture, TestCase):
         )
         self.assertEqual(unknown.category, "OTHER")
 
+    def test_confirmation_records_chosen_place_not_root_area(self):
+        floor_2 = BuildingLocation.objects.create(building=self.building, name="Floor 2")
+        lift_a = BuildingLocation.objects.create(building=self.building, parent=floor_2, name="Lift A")
+        report = self.make_report(1, location=lift_a)
+
+        case = confirm_triage(report, self.operator, "Elevator", "HIGH", lift_a, "Maintenance", 60)
+
+        self.assertEqual(case.location, lift_a)
+        self.assertEqual(case.decision.location, lift_a)
+
+    def test_confirmation_records_chosen_area(self):
+        floor_2 = BuildingLocation.objects.create(building=self.building, name="Floor 2")
+        report = self.make_report(1, location=floor_2)
+
+        case = confirm_triage(report, self.operator, "Elevator", "HIGH", floor_2, "Maintenance", 60)
+
+        self.assertEqual(case.location, floor_2)
+        self.assertEqual(case.decision.location, floor_2)
+
+    def test_confirmation_rejects_inactive_location_or_inactive_ancestor(self):
+        inactive_area = BuildingLocation.objects.create(
+            building=self.building, name="Old Floor", active=False
+        )
+        report = self.make_report(1)
+        with self.assertRaisesMessage(ValidationError, "belong to the report building"):
+            confirm_triage(report, self.operator, "Elevator", "HIGH", inactive_area, "Maintenance", 60)
+
+        active_child = BuildingLocation.objects.create(
+            building=self.building, parent=inactive_area, name="Old Stairwell", active=True
+        )
+        with self.assertRaisesMessage(ValidationError, "belong to the report building"):
+            confirm_triage(report, self.operator, "Elevator", "HIGH", active_child, "Maintenance", 60)
+
     def test_grouping_rejects_report_already_in_an_active_case(self):
         first, second, third = self.make_report(1), self.make_report(2), self.make_report(3)
         case = confirm_triage(first, self.operator, "Elevator", "HIGH", self.location, "Maintenance", 240)

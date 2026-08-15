@@ -68,13 +68,43 @@ class ConfirmTriageForm(forms.Form):
     def __init__(self, *args, building_id=None, extra_deadline_minutes=None, **kwargs):
         super().__init__(*args, **kwargs)
         if building_id is not None:
-            locations = BuildingLocation.objects.filter(
+            locations_qs = BuildingLocation.objects.filter(
                 building_id=building_id, active=True
-            ).order_by("name")
-            self.fields["location"].queryset = locations
+            ).order_by("name", "pk")
+            self.fields["location"].queryset = locations_qs
+            locations = list(locations_qs)
+            areas = [loc for loc in locations if loc.parent_id is None]
+            area_map = {area.pk: area for area in areas}
+            places_by_parent = {}
+
+            for loc in locations:
+                if loc.parent_id is not None and loc.parent_id in area_map:
+                    places_by_parent.setdefault(loc.parent_id, []).append(loc)
+
+            choices = []
+            if self.fields["location"].empty_label is not None:
+                choices.append(("", self.fields["location"].empty_label))
+
+            selectable_pks = []
+            for area in areas:
+                children = places_by_parent.get(area.pk)
+                if children:
+                    group_options = [
+                        (area.pk, _("%(name)s (whole area)") % {"name": area.name})
+                    ]
+                    selectable_pks.append(area.pk)
+                    for child in children:
+                        group_options.append((child.pk, child.name))
+                        selectable_pks.append(child.pk)
+                    choices.append((area.name, group_options))
+                else:
+                    choices.append((area.pk, area.name))
+                    selectable_pks.append(area.pk)
+
+            self.fields["location"].choices = choices
             # One real choice for a required field is not a decision to ask for.
-            if not self.is_bound and not self.initial.get("location") and locations.count() == 1:
-                self.initial["location"] = locations.first().pk
+            if not self.is_bound and not self.initial.get("location") and len(selectable_pks) == 1:
+                self.initial["location"] = selectable_pks[0]
         if extra_deadline_minutes is not None:
             choices = list(self.fields["deadline_minutes"].choices)
             if not any(int(v) == extra_deadline_minutes for v, _label in choices):

@@ -25,6 +25,66 @@ class ManagementWorkspaceTests(TestCase):
     def test_triage_queue_field_is_labeled_management_queue(self):
         self.assertEqual(ConfirmTriageForm().fields["management_queue"].label, "Management queue")
 
+    def test_confirm_triage_form_groups_locations_by_area_and_labels_whole_area(self):
+        building = Building.objects.create(name="Tower A")
+        floor_2 = BuildingLocation.objects.create(building=building, name="Floor 2")
+        lift_b = BuildingLocation.objects.create(building=building, parent=floor_2, name="Lift B")
+        stair_b = BuildingLocation.objects.create(building=building, parent=floor_2, name="Stairwell B")
+
+        floor_1 = BuildingLocation.objects.create(building=building, name="Floor 1")
+        stair_a = BuildingLocation.objects.create(building=building, parent=floor_1, name="Stairwell A")
+        lift_a = BuildingLocation.objects.create(building=building, parent=floor_1, name="Lift A")
+
+        lobby = BuildingLocation.objects.create(building=building, name="Lobby")
+
+        inactive_floor = BuildingLocation.objects.create(building=building, name="Old Floor", active=False)
+        BuildingLocation.objects.create(building=building, parent=inactive_floor, name="Old Lift", active=True)
+
+        form = ConfirmTriageForm(building_id=building.pk)
+        choices = list(form.fields["location"].choices)
+
+        expected_choices = [
+            ("", "---------"),
+            (
+                "Floor 1",
+                [
+                    (floor_1.pk, "Floor 1 (whole area)"),
+                    (lift_a.pk, "Lift A"),
+                    (stair_a.pk, "Stairwell A"),
+                ],
+            ),
+            (
+                "Floor 2",
+                [
+                    (floor_2.pk, "Floor 2 (whole area)"),
+                    (lift_b.pk, "Lift B"),
+                    (stair_b.pk, "Stairwell B"),
+                ],
+            ),
+            (lobby.pk, "Lobby"),
+        ]
+        self.assertEqual(choices, expected_choices)
+
+        html = str(form["location"])
+        self.assertIn('<optgroup label="Floor 1">', html)
+        self.assertIn(f'<option value="{floor_1.pk}">Floor 1 (whole area)</option>', html)
+        self.assertIn(f'<option value="{lift_a.pk}">Lift A</option>', html)
+        self.assertIn(f'<option value="{lobby.pk}">Lobby</option>', html)
+        self.assertNotIn("Old Floor", html)
+        self.assertNotIn("Old Lift", html)
+
+    def test_confirm_triage_form_auto_selects_single_choice(self):
+        building = Building.objects.create(name="Tower B")
+        lobby = BuildingLocation.objects.create(building=building, name="Lobby")
+
+        form = ConfirmTriageForm(building_id=building.pk)
+        self.assertEqual(form.initial.get("location"), lobby.pk)
+
+        # If an area has a place (2 selectable options), no auto-selection
+        BuildingLocation.objects.create(building=building, parent=lobby, name="Desk")
+        multi_form = ConfirmTriageForm(building_id=building.pk)
+        self.assertIsNone(multi_form.initial.get("location"))
+
     def authenticate_management(self, membership):
         self.client.force_login(membership.user)
 
@@ -181,6 +241,64 @@ class ManagementWorkspaceTests(TestCase):
         self.assertTrue(response.context["form"].is_bound)
         self.assertFalse(response.context["info_form"].is_bound)
         self.assertFalse(response.context["decline_form"].is_bound)
+
+    def test_staff_can_triage_report_with_place_or_area_location(self):
+        membership = self.login_management()
+        floor_3 = BuildingLocation.objects.create(building=membership.building, name="Floor 3")
+        stair_c = BuildingLocation.objects.create(building=membership.building, parent=floor_3, name="Stairwell C")
+        resident = get_user_model().objects.create_user(email="triage_user@example.test", password="secret")
+        report = IssueReport.objects.create(
+            reporter=resident,
+            unit=Unit.objects.create(building=membership.building, label="B-1"),
+            building=membership.building,
+            text="Broken handrail",
+            selected_location=stair_c,
+            location_path_snapshot="Tower / Floor 3 / Stairwell C",
+            status=IssueReport.Status.SUBMITTED,
+        )
+
+        detail_url = reverse("web:staff-report-detail", args=[report.pk])
+        get_res = self.client.get(detail_url)
+        self.assertEqual(get_res.status_code, 200)
+        self.assertContains(get_res, '<optgroup label="Floor 3">')
+        self.assertContains(get_res, f'<option value="{floor_3.pk}">Floor 3 (whole area)</option>')
+        self.assertContains(get_res, f'<option value="{stair_c.pk}">Stairwell C</option>')
+
+        post_res = self.client.post(detail_url, {
+            "action": "confirm_triage",
+            "category": "STRUCTURAL",
+            "urgency": "HIGH",
+            "location": stair_c.pk,
+            "management_queue": "MAINTENANCE",
+            "deadline_minutes": 1440,
+        })
+        self.assertEqual(post_res.status_code, 302)
+        case = MaintenanceCase.objects.get(reports=report)
+        self.assertEqual(case.location, stair_c)
+        self.assertEqual(case.decision.location, stair_c)
+
+        # Triage another report picking the area directly
+        report_area = IssueReport.objects.create(
+            reporter=resident,
+            unit=Unit.objects.create(building=membership.building, label="B-2"),
+            building=membership.building,
+            text="Floor hallway light out",
+            selected_location=floor_3,
+            location_path_snapshot="Tower / Floor 3",
+            status=IssueReport.Status.SUBMITTED,
+        )
+        post_area_res = self.client.post(reverse("web:staff-report-detail", args=[report_area.pk]), {
+            "action": "confirm_triage",
+            "category": "LIGHTING",
+            "urgency": "MEDIUM",
+            "location": floor_3.pk,
+            "management_queue": "ELECTRICAL",
+            "deadline_minutes": 2880,
+        })
+        self.assertEqual(post_area_res.status_code, 302)
+        area_case = MaintenanceCase.objects.get(reports=report_area)
+        self.assertEqual(area_case.location, floor_3)
+        self.assertEqual(area_case.decision.location, floor_3)
 
     def test_settlement_form_accepts_a_new_upload_in_the_same_post(self):
         self.assertIn("proof_upload", RecordSettlementForm().fields)

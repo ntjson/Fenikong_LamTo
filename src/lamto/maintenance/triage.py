@@ -22,15 +22,18 @@ from .models import (
 
 
 def _active_location(location, building_id):
-    location = BuildingLocation.objects.select_for_update().filter(pk=getattr(location, "pk", None)).first()
+    target = BuildingLocation.objects.select_for_update().filter(pk=getattr(location, "pk", None)).first()
+    if target is None:
+        raise ValidationError(_("Case location must be active and belong to the report building."))
+    curr = target
     seen = set()
-    while location is not None:
-        if location.pk in seen or not location.active or location.building_id != building_id:
+    while curr is not None:
+        if curr.pk in seen or not curr.active or curr.building_id != building_id:
             raise ValidationError(_("Case location must be active and belong to the report building."))
-        seen.add(location.pk)
-        if location.parent_id is None:
-            return location
-        location = BuildingLocation.objects.select_for_update().filter(pk=location.parent_id).first()
+        seen.add(curr.pk)
+        if curr.parent_id is None:
+            return target
+        curr = BuildingLocation.objects.select_for_update().filter(pk=curr.parent_id).first()
     raise ValidationError(_("Case location hierarchy is invalid."))
 
 

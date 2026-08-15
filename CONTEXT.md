@@ -26,6 +26,12 @@ a two-level tree — an area and the places within it. Names are unique only amo
 siblings, so the same lift or corridor name recurs on every floor.
 _Avoid_: Area, zone, place
 
+**Case location**:
+The place a case is filed against, exactly what was selected at triage, an area
+or a place within one.
+_Avoid_: Incident location, issue location
+
+
 **Management queue**:
 The team responsible for handling a case, chosen from a fixed set. The triage
 assistant proposes one and a Management account confirms or overrides it.
