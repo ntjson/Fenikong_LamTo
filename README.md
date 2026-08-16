@@ -69,7 +69,7 @@ dân đã đăng ký.
                            ├──► Django + PostgreSQL ──► MinIO + ClamAV
 Web quản lý ───────────────┘             │
                                          ▼
-                         outbox đã ký ──► EvidenceRegistry (Besu QBFT)
+                outbox đã ký ──► EvidenceRegistry (Besu QBFT)
 ```
 
 Một worker nền (`manage.py run_worker`) lo phân loại, neo bằng chứng, hoàn tất
