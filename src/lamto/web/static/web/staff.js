@@ -74,9 +74,18 @@
     if (!resultEl) return;
 
     var rawValue = amountInput ? amountInput.value.trim() : "";
-    var amount = parseInt(rawValue, 10);
-    if (!rawValue || isNaN(amount) || amount <= 0) {
+    if (!rawValue) {
       resultEl.textContent = strings.priceCompareEnterAmount || "Enter an amount to compare.";
+      return;
+    }
+    // A dot is the ordinary VND thousands separator, and a number input keeps
+    // the first one: "460.000.000" arrives here as "460.000000". parseInt would
+    // read that as 460 and report a confident comparison against the wrong
+    // amount, so anything but whole digits is refused.
+    var amount = parseInt(rawValue, 10);
+    if (!/^\d+$/.test(rawValue) || amount <= 0) {
+      resultEl.textContent = strings.priceCompareWholeVnd
+        || "Enter the amount in whole VND, with no separators.";
       return;
     }
 

@@ -395,6 +395,29 @@ class ProposalCreateTests(TestCase):
         self.assertEqual(version.snapshot["expected_schedule"], "To be scheduled")
 
     @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_create_rejects_a_separated_amount_rather_than_truncating_it(self):
+        """A number input keeps the first dot, so 460.000.000 is submitted as
+        460.000000. IntegerField used to clean that to 460 and publish a 460
+        VND proposal that reads as deliberate."""
+        self._login_operator()
+        response = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": "460.000000",
+                "contractor_name": "Acme Co",
+                "purpose": "Elevator noise",
+                "proposed_action": "Replace bearings",
+                "expected_schedule": "August 2026",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Proposal.objects.filter(case=self.work).exists())
+        self.assertContains(response, "whole VND")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
     def test_proposal_create_rejects_single_date_without_the_other(self):
         self._login_operator()
         # Start without end

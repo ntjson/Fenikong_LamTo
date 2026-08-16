@@ -1,15 +1,13 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from lamto.web.forms.fields import WholeVndField
+
 
 class BillForm(forms.Form):
     resident = forms.ChoiceField(label=_("Resident"))
     title = forms.CharField(max_length=160, strip=True, label=_("Title"))
-    amount_vnd = forms.IntegerField(
-        min_value=1,
-        label=_("Amount (VND)"),
-        widget=forms.NumberInput(attrs={"class": "input"}),
-    )
+    amount_vnd = WholeVndField(label=_("Amount (VND)"))
     period = forms.CharField(
         max_length=64,
         required=False,

@@ -129,6 +129,26 @@ class PriceComparisonE2ETests(StaticLiveServerTestCase):
                     expect(result_locator).to_contain_text("Below the range of comparable jobs (380,000,000 – 520,000,000 VND, 12 synthetic samples). 24% below the reference price.")
                 self.assertEqual(page.eval_on_selector('input[name="quotation"]', "el => el.files.length"), 1)
 
+                # 4b. Thousands separators: the number input keeps the first dot,
+                # so "460.000.000" reaches the handler as "460.000000". It must be
+                # refused, not read as 460.
+                page.fill('input[name="amount_vnd"]', "")
+                page.type('input[name="amount_vnd"]', "460.000.000")
+                compare_button.click()
+                if is_vietnamese:
+                    expect(result_locator).to_contain_text("không dùng dấu phân cách")
+                else:
+                    expect(result_locator).to_contain_text(
+                        "Enter the amount in whole VND, with no separators."
+                    )
+                # The browser sees a whole 460 and would happily submit it, so the
+                # form field is the one that has to refuse it (see WholeVndField).
+                self.assertEqual(
+                    page.eval_on_selector('input[name="amount_vnd"]', "el => el.value"),
+                    "460.000000",
+                )
+                self.assertEqual(page.eval_on_selector('input[name="quotation"]', "el => el.files.length"), 1)
+
                 # 5. Non-elevator category (Water leak)
                 page.goto(f"{self.live_server_url}/s/cases/{water_case.pk}/propose/")
                 page.wait_for_load_state("networkidle")

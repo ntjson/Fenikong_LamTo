@@ -11,6 +11,7 @@ from lamto.maintenance.models import BuildingLocation, CaseCategory, ManagementQ
 from lamto.maintenance.triage import confirm_triage
 from lamto.notifications.models import NotificationPreference
 from lamto.notifications.services import PREFERENCE_EVENT_CHOICES
+from lamto.web.forms.fields import WholeVndField
 
 
 class MembershipSwitchForm(forms.Form):
@@ -247,7 +248,7 @@ class NotificationPreferenceForm(forms.Form):
 class CreateProposalForm(forms.Form):
     """Management-entered proposal draft; the quotation uploads on prepare."""
 
-    amount_vnd = forms.IntegerField(min_value=1, label=_("Amount (VND)"), widget=forms.NumberInput(attrs={"class": "input"}))
+    amount_vnd = WholeVndField(label=_("Amount (VND)"))
     contractor_name = forms.CharField(max_length=255, label=_("Contractor name"), widget=forms.TextInput(attrs={"class": "input"}))
     purpose = forms.CharField(required=False, label=_("Purpose"), widget=forms.Textarea(attrs={"class": "input"}))
     proposed_action = forms.CharField(required=False, label=_("Proposed action"), widget=forms.Textarea(attrs={"class": "input"}))
@@ -304,9 +305,7 @@ class RecordFundSourceForm(forms.Form):
         label=_("Entry type"),
         widget=forms.Select(attrs={"class": "input"}),
     )
-    amount_vnd = forms.IntegerField(
-        min_value=1, label=_("Amount (VND)"), widget=forms.NumberInput(attrs={"class": "input"})
-    )
+    amount_vnd = WholeVndField(label=_("Amount (VND)"))
     evidence = forms.FileField(
         label=_("Evidence"), widget=forms.ClearableFileInput(attrs={"class": "input"})
     )
