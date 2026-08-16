@@ -1808,6 +1808,36 @@ abstract class AppLocalizations {
   /// **'Paid'**
   String get proposalSettled;
 
+  /// No description provided for @proposalPriceComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Price comparison'**
+  String get proposalPriceComparison;
+
+  /// No description provided for @proposalPriceComparisonBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'{percentage}% below the reference price (around {range})'**
+  String proposalPriceComparisonBelow(int percentage, String range);
+
+  /// No description provided for @proposalPriceComparisonAbove.
+  ///
+  /// In en, this message translates to:
+  /// **'{percentage}% above the reference price (around {range})'**
+  String proposalPriceComparisonAbove(int percentage, String range);
+
+  /// No description provided for @proposalPriceComparisonEqual.
+  ///
+  /// In en, this message translates to:
+  /// **'Equal to the reference price'**
+  String get proposalPriceComparisonEqual;
+
+  /// No description provided for @proposalPriceComparisonCaveat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI estimate, for reference only.'**
+  String get proposalPriceComparisonCaveat;
+
   /// No description provided for @proposalViewFromLedger.
   ///
   /// In en, this message translates to:

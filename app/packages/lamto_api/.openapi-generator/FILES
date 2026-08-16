@@ -54,6 +54,7 @@ doc/Problem.md
 doc/Proof.md
 doc/ProofEvent.md
 doc/Proposal.md
+doc/ProposalComparison.md
 doc/ProposalProgress.md
 doc/ProposalRatingResult.md
 doc/ProposalSettlement.md
@@ -144,6 +145,7 @@ lib/src/model/problem.dart
 lib/src/model/proof.dart
 lib/src/model/proof_event.dart
 lib/src/model/proposal.dart
+lib/src/model/proposal_comparison.dart
 lib/src/model/proposal_progress.dart
 lib/src/model/proposal_rating_result.dart
 lib/src/model/proposal_settlement.dart
@@ -219,6 +221,7 @@ test/platform_enum_test.dart
 test/problem_test.dart
 test/proof_event_test.dart
 test/proof_test.dart
+test/proposal_comparison_test.dart
 test/proposal_progress_test.dart
 test/proposal_rating_result_test.dart
 test/proposal_settlement_test.dart

@@ -940,6 +940,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String get proposalSettled => 'Đã thanh toán';
 
   @override
+  String get proposalPriceComparison => 'So sánh giá';
+
+  @override
+  String proposalPriceComparisonBelow(int percentage, String range) {
+    return 'Thấp hơn giá tham chiếu $percentage% (khoảng $range)';
+  }
+
+  @override
+  String proposalPriceComparisonAbove(int percentage, String range) {
+    return 'Cao hơn giá tham chiếu $percentage% (khoảng $range)';
+  }
+
+  @override
+  String get proposalPriceComparisonEqual => 'Bằng giá tham chiếu';
+
+  @override
+  String get proposalPriceComparisonCaveat =>
+      'Ước tính bằng AI, chỉ để tham khảo.';
+
+  @override
   String get proposalViewFromLedger => 'Xem đề xuất';
 
   @override

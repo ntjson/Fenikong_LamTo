@@ -303,6 +303,23 @@
   "@proposalVersion": {"placeholders": {"number": {"type": "String"}}},
   "proposalSettlement": "Payment settlement",
   "proposalSettled": "Paid",
+  "proposalPriceComparison": "Price comparison",
+  "proposalPriceComparisonBelow": "{percentage}% below the reference price (around {range})",
+  "@proposalPriceComparisonBelow": {
+    "placeholders": {
+      "percentage": {"type": "int"},
+      "range": {"type": "String"}
+    }
+  },
+  "proposalPriceComparisonAbove": "{percentage}% above the reference price (around {range})",
+  "@proposalPriceComparisonAbove": {
+    "placeholders": {
+      "percentage": {"type": "int"},
+      "range": {"type": "String"}
+    }
+  },
+  "proposalPriceComparisonEqual": "Equal to the reference price",
+  "proposalPriceComparisonCaveat": "AI estimate, for reference only.",
   "proposalViewFromLedger": "View proposal",
   "proposalRateCta": "Rate the result",
   "homeBillTitle": "Building bill",

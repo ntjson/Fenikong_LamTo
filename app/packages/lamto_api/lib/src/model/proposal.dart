@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:lamto_api/src/model/proposal_comparison.dart';
 import 'package:lamto_api/src/model/proposal_version.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:lamto_api/src/model/proposal_progress.dart';
@@ -27,6 +28,7 @@ part 'proposal.g.dart';
 /// * [contractorName]
 /// * [expectedSchedule]
 /// * [explorerUrl]
+/// * [comparison]
 /// * [versions]
 /// * [progress]
 /// * [settlement]
@@ -68,6 +70,9 @@ abstract class Proposal implements Built<Proposal, ProposalBuilder> {
 
   @BuiltValueField(wireName: r'explorer_url')
   String? get explorerUrl;
+
+  @BuiltValueField(wireName: r'comparison')
+  ProposalComparison? get comparison;
 
   @BuiltValueField(wireName: r'versions')
   BuiltList<ProposalVersion> get versions;
@@ -163,6 +168,11 @@ class _$ProposalSerializer implements PrimitiveSerializer<Proposal> {
     yield object.explorerUrl == null ? null : serializers.serialize(
       object.explorerUrl,
       specifiedType: const FullType.nullable(String),
+    );
+    yield r'comparison';
+    yield object.comparison == null ? null : serializers.serialize(
+      object.comparison,
+      specifiedType: const FullType.nullable(ProposalComparison),
     );
     yield r'versions';
     yield serializers.serialize(
@@ -294,6 +304,14 @@ class _$ProposalSerializer implements PrimitiveSerializer<Proposal> {
           ) as String?;
           if (valueDes == null) continue;
           result.explorerUrl = valueDes;
+          break;
+        case r'comparison':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(ProposalComparison),
+          ) as ProposalComparison?;
+          if (valueDes == null) continue;
+          result.comparison.replace(valueDes);
           break;
         case r'versions':
           final valueDes = serializers.deserialize(

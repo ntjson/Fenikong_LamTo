@@ -67,6 +67,11 @@ void main() {
       // TODO
     });
 
+    // ProposalComparison comparison
+    test('to test the property `comparison`', () async {
+      // TODO
+    });
+
     // BuiltList<ProposalVersion> versions
     test('to test the property `versions`', () async {
       // TODO

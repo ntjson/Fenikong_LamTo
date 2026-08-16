@@ -327,6 +327,24 @@ class ProposalSettlementSerializer(serializers.Serializer):
     settled_at = serializers.DateTimeField()
 
 
+class ProposalComparisonSerializer(serializers.Serializer):
+    direction = serializers.CharField(
+        help_text="Direction of comparison: above, below, or equal."
+    )
+    percentage = serializers.IntegerField(
+        help_text="Difference percentage against the predicted price band."
+    )
+    range = serializers.CharField(
+        help_text="Formatted range string of the predicted price band."
+    )
+    reasoning = serializers.CharField(
+        help_text="One-sentence Vietnamese reasoning explaining the band."
+    )
+    source = serializers.CharField(
+        help_text="Source of the prediction: predicted or fallback."
+    )
+
+
 class ProposalSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     case_id = serializers.IntegerField(allow_null=True)
@@ -340,10 +358,31 @@ class ProposalSerializer(serializers.Serializer):
     contractor_name = serializers.CharField(source="current_version.contractor_name")
     expected_schedule = serializers.CharField(source="current_version.expected_schedule")
     explorer_url = serializers.SerializerMethodField()
+    comparison = serializers.SerializerMethodField()
     versions = serializers.SerializerMethodField()
     progress = serializers.SerializerMethodField()
     settlement = serializers.SerializerMethodField()
     can_rate = serializers.SerializerMethodField()
+
+    @extend_schema_field(ProposalComparisonSerializer(allow_null=True))
+    def get_comparison(self, proposal) -> dict | None:
+        version = proposal.current_version
+        if version is None:
+            return None
+        try:
+            prediction = getattr(version, "price_prediction", None)
+        except Exception:
+            prediction = None
+        if prediction is None:
+            return None
+        formatted = prediction.formatted_comparison
+        return {
+            "direction": formatted["direction"],
+            "percentage": formatted["percentage"],
+            "range": formatted["range_text"],
+            "reasoning": formatted["reasoning"],
+            "source": prediction.source,
+        }
 
     @extend_schema_field(serializers.CharField(allow_null=True))
     def get_explorer_url(self, proposal) -> str | None:

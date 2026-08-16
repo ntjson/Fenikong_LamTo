@@ -20,6 +20,7 @@ Name | Type | Description | Notes
 **contractorName** | **String** |  |
 **expectedSchedule** | **String** |  |
 **explorerUrl** | **String** |  |
+**comparison** | [**ProposalComparison**](ProposalComparison.md) |  |
 **versions** | [**BuiltList&lt;ProposalVersion&gt;**](ProposalVersion.md) |  |
 **progress** | [**BuiltList&lt;ProposalProgress&gt;**](ProposalProgress.md) |  |
 **settlement** | [**ProposalSettlement**](ProposalSettlement.md) |  |

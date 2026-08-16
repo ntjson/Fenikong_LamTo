@@ -940,6 +940,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proposalSettled => 'Paid';
 
   @override
+  String get proposalPriceComparison => 'Price comparison';
+
+  @override
+  String proposalPriceComparisonBelow(int percentage, String range) {
+    return '$percentage% below the reference price (around $range)';
+  }
+
+  @override
+  String proposalPriceComparisonAbove(int percentage, String range) {
+    return '$percentage% above the reference price (around $range)';
+  }
+
+  @override
+  String get proposalPriceComparisonEqual => 'Equal to the reference price';
+
+  @override
+  String get proposalPriceComparisonCaveat =>
+      'AI estimate, for reference only.';
+
+  @override
   String get proposalViewFromLedger => 'View proposal';
 
   @override

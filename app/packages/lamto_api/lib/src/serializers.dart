@@ -55,6 +55,7 @@ import 'package:lamto_api/src/model/problem.dart';
 import 'package:lamto_api/src/model/proof.dart';
 import 'package:lamto_api/src/model/proof_event.dart';
 import 'package:lamto_api/src/model/proposal.dart';
+import 'package:lamto_api/src/model/proposal_comparison.dart';
 import 'package:lamto_api/src/model/proposal_progress.dart';
 import 'package:lamto_api/src/model/proposal_rating_result.dart';
 import 'package:lamto_api/src/model/proposal_settlement.dart';
@@ -122,6 +123,7 @@ part 'serializers.g.dart';
   Proof,
   ProofEvent,
   Proposal,
+  ProposalComparison,
   ProposalProgress,
   ProposalRatingResult,
   ProposalSettlement,

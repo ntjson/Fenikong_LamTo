@@ -148,6 +148,7 @@ Class | Method | HTTP request | Description
  - [Proof](doc/Proof.md)
  - [ProofEvent](doc/ProofEvent.md)
  - [Proposal](doc/Proposal.md)
+ - [ProposalComparison](doc/ProposalComparison.md)
  - [ProposalProgress](doc/ProposalProgress.md)
  - [ProposalRatingResult](doc/ProposalRatingResult.md)
  - [ProposalSettlement](doc/ProposalSettlement.md)

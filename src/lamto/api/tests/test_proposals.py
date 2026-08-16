@@ -227,3 +227,69 @@ class ProposalApiTests(TestCase):
         )
         assert rated.status_code == 201, rated.content
         assert self.client.get(detail_url, headers=auth).json()["can_rate"] is False
+
+    def test_proposal_payload_includes_frozen_price_comparison(self):
+        from lamto.finance.models import PricePrediction
+        from lamto.maintenance.models import CaseCategory
+
+        driver = PilotDomainDriver(self.seed)
+        driver.submit_report("Elevator door stuck", "Elevator 1")
+        driver.confirm_triage_case()
+        case = self.seed.case
+        case.category = CaseCategory.ELEVATOR
+        case.save(update_fields=["category"])
+
+        prediction = PricePrediction.objects.create(
+            building=self.seed.building,
+            case=case,
+            category=case.category,
+            amount_vnd=450_000_000,
+            minimum_vnd=400_000_000,
+            central_vnd=425_000_000,
+            maximum_vnd=500_000_000,
+            reasoning="Giá dự đoán cho sửa chữa thang máy dựa trên dữ liệu tham chiếu.",
+            source=PricePrediction.Source.PREDICTED,
+            requested_by=self.manager,
+        )
+
+        proposal = create_standalone_proposal(self.seed.building, self.manager)
+        proposal.case = case
+        proposal.save(update_fields=["case"])
+        original = self.seed.document(
+            Document.Kind.QUOTATION, self.manager.user, "elevator-repair-quote"
+        )
+        publish_proposal_version(
+            proposal,
+            self.manager,
+            amount_vnd=450_000_000,
+            contractor_name="Lift Co",
+            purpose="Sửa thang máy",
+            proposed_action="Thay thế linh kiện cửa",
+            expected_schedule="Within 14 days",
+            quotation_versions=[original],
+            event_id=new_event_id(),
+            price_prediction_id=prediction.pk,
+        )
+
+        response = self.client.get(
+            reverse("api:proposal-detail", args=[proposal.pk]), headers=self._auth()
+        )
+        assert response.status_code == 200, response.content
+        body = response.json()
+        assert body["comparison"] is not None
+        assert body["comparison"]["direction"] == "above"
+        assert body["comparison"]["percentage"] == 6
+        assert "400.000.000" in body["comparison"]["range"]
+        assert "500.000.000" in body["comparison"]["range"]
+        assert body["comparison"]["reasoning"] == prediction.reasoning
+        assert body["comparison"]["source"] == "predicted"
+
+    def test_proposal_payload_comparison_is_null_when_none_frozen(self):
+        proposal = self._standalone("Proposal without comparison")
+        response = self.client.get(
+            reverse("api:proposal-detail", args=[proposal.pk]), headers=self._auth()
+        )
+        assert response.status_code == 200, response.content
+        body = response.json()
+        assert "comparison" in body
+        assert body["comparison"] is None

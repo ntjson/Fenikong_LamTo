@@ -32,6 +32,8 @@ class _$Proposal extends Proposal {
   @override
   final String? explorerUrl;
   @override
+  final ProposalComparison? comparison;
+  @override
   final BuiltList<ProposalVersion> versions;
   @override
   final BuiltList<ProposalProgress> progress;
@@ -56,6 +58,7 @@ class _$Proposal extends Proposal {
       required this.contractorName,
       required this.expectedSchedule,
       this.explorerUrl,
+      this.comparison,
       required this.versions,
       required this.progress,
       this.settlement,
@@ -84,6 +87,7 @@ class _$Proposal extends Proposal {
         contractorName == other.contractorName &&
         expectedSchedule == other.expectedSchedule &&
         explorerUrl == other.explorerUrl &&
+        comparison == other.comparison &&
         versions == other.versions &&
         progress == other.progress &&
         settlement == other.settlement &&
@@ -105,6 +109,7 @@ class _$Proposal extends Proposal {
     _$hash = $jc(_$hash, contractorName.hashCode);
     _$hash = $jc(_$hash, expectedSchedule.hashCode);
     _$hash = $jc(_$hash, explorerUrl.hashCode);
+    _$hash = $jc(_$hash, comparison.hashCode);
     _$hash = $jc(_$hash, versions.hashCode);
     _$hash = $jc(_$hash, progress.hashCode);
     _$hash = $jc(_$hash, settlement.hashCode);
@@ -128,6 +133,7 @@ class _$Proposal extends Proposal {
           ..add('contractorName', contractorName)
           ..add('expectedSchedule', expectedSchedule)
           ..add('explorerUrl', explorerUrl)
+          ..add('comparison', comparison)
           ..add('versions', versions)
           ..add('progress', progress)
           ..add('settlement', settlement)
@@ -190,6 +196,12 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
   String? get explorerUrl => _$this._explorerUrl;
   set explorerUrl(String? explorerUrl) => _$this._explorerUrl = explorerUrl;
 
+  ProposalComparisonBuilder? _comparison;
+  ProposalComparisonBuilder get comparison =>
+      _$this._comparison ??= ProposalComparisonBuilder();
+  set comparison(ProposalComparisonBuilder? comparison) =>
+      _$this._comparison = comparison;
+
   ListBuilder<ProposalVersion>? _versions;
   ListBuilder<ProposalVersion> get versions =>
       _$this._versions ??= ListBuilder<ProposalVersion>();
@@ -231,6 +243,7 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
       _contractorName = $v.contractorName;
       _expectedSchedule = $v.expectedSchedule;
       _explorerUrl = $v.explorerUrl;
+      _comparison = $v.comparison?.toBuilder();
       _versions = $v.versions.toBuilder();
       _progress = $v.progress.toBuilder();
       _settlement = $v.settlement?.toBuilder();
@@ -277,6 +290,7 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
             expectedSchedule: BuiltValueNullFieldError.checkNotNull(
                 expectedSchedule, r'Proposal', 'expectedSchedule'),
             explorerUrl: explorerUrl,
+            comparison: _comparison?.build(),
             versions: versions.build(),
             progress: progress.build(),
             settlement: _settlement?.build(),
@@ -286,6 +300,8 @@ class ProposalBuilder implements Builder<Proposal, ProposalBuilder> {
     } catch (_) {
       late String _$failedField;
       try {
+        _$failedField = 'comparison';
+        _comparison?.build();
         _$failedField = 'versions';
         versions.build();
         _$failedField = 'progress';

@@ -75,6 +75,8 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
         _Field(l10n.proposalProblem, proposal.purpose),
         _Field(l10n.proposalAction, proposal.proposedAction),
         _Field(l10n.proposalCost, formatVnd(proposal.amountVnd), amount: true),
+        if (proposal.comparison != null)
+          _PriceComparisonField(comparison: proposal.comparison!),
         _Field(l10n.proposalContractor, proposal.contractorName),
         _Field(l10n.proposalSchedule, proposal.expectedSchedule),
         const Divider(height: 32),
@@ -169,6 +171,88 @@ class _Field extends StatelessWidget {
       style: amount ? listAmountStyle(context) : null,
     ),
   );
+}
+
+class _PriceComparisonField extends StatelessWidget {
+  const _PriceComparisonField({required this.comparison});
+
+  final ProposalComparison comparison;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final direction = comparison.direction;
+
+    final String arrow;
+    final Color? arrowColor;
+    final String comparisonText;
+
+    if (direction == 'below') {
+      arrow = '↓';
+      arrowColor = statusToneColors(context, StatusTone.success).fg;
+      comparisonText = l10n.proposalPriceComparisonBelow(
+        comparison.percentage,
+        comparison.range,
+      );
+    } else if (direction == 'above') {
+      arrow = '↑';
+      arrowColor = statusToneColors(context, StatusTone.error).fg;
+      comparisonText = l10n.proposalPriceComparisonAbove(
+        comparison.percentage,
+        comparison.range,
+      );
+    } else {
+      arrow = '';
+      arrowColor = null;
+      comparisonText = l10n.proposalPriceComparisonEqual;
+    }
+
+    final mutedColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final textTheme = Theme.of(context).textTheme;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.proposalPriceComparison),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 2),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (arrow.isNotEmpty) ...[
+                Text(
+                  arrow,
+                  style: TextStyle(
+                    color: arrowColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: Text(
+                  comparisonText,
+                ),
+              ),
+            ],
+          ),
+          if (comparison.reasoning.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              comparison.reasoning,
+              style: textTheme.bodySmall?.copyWith(color: mutedColor),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Text(
+            l10n.proposalPriceComparisonCaveat,
+            style: textTheme.bodySmall?.copyWith(color: mutedColor),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _RateProposalSheet extends ConsumerStatefulWidget {

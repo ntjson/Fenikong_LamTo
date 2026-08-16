@@ -2326,6 +2326,11 @@ components:
           type: string
           nullable: true
           readOnly: true
+        comparison:
+          allOf:
+          - $ref: '#/components/schemas/ProposalComparison'
+          nullable: true
+          readOnly: true
         versions:
           type: array
           items:
@@ -2350,6 +2355,7 @@ components:
       - can_rate
       - case_id
       - closed_at
+      - comparison
       - completed_at
       - contractor_name
       - expected_schedule
@@ -2361,6 +2367,30 @@ components:
       - settlement
       - status
       - versions
+    ProposalComparison:
+      type: object
+      properties:
+        direction:
+          type: string
+          description: 'Direction of comparison: above, below, or equal.'
+        percentage:
+          type: integer
+          description: Difference percentage against the predicted price band.
+        range:
+          type: string
+          description: Formatted range string of the predicted price band.
+        reasoning:
+          type: string
+          description: One-sentence Vietnamese reasoning explaining the band.
+        source:
+          type: string
+          description: 'Source of the prediction: predicted or fallback.'
+      required:
+      - direction
+      - percentage
+      - range
+      - reasoning
+      - source
     ProposalProgress:
       type: object
       properties:

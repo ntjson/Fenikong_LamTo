@@ -15,6 +15,7 @@ Proposal _proposal({
   bool canRate = true,
   bool includeSettlement = true,
   String? explorerUrl,
+  ProposalComparison? comparison,
 }) => Proposal(
   (b) => b
     ..id = 7
@@ -28,6 +29,7 @@ Proposal _proposal({
     ..expectedSchedule = 'Within 14 days'
     ..canRate = canRate
     ..explorerUrl = explorerUrl
+    ..comparison = comparison?.toBuilder()
     ..versions = ListBuilder<ProposalVersion>([
       ProposalVersion(
         (v) => v
@@ -116,13 +118,17 @@ class _FakeProposalsRepository implements ProposalsRepository {
   }
 }
 
-Widget _host(Widget child, _FakeProposalsRepository repository) =>
+Widget _host(
+  Widget child,
+  _FakeProposalsRepository repository, {
+  Locale locale = const Locale('en'),
+}) =>
     ProviderScope(
       overrides: [proposalsRepositoryProvider.overrideWithValue(repository)],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('en'),
+        locale: locale,
         home: child,
       ),
     );
@@ -297,4 +303,122 @@ void main() {
       );
     },
   );
+
+  testWidgets('proposal detail renders price comparison below with green downward arrow, reasoning, and caveat', (
+    tester,
+  ) async {
+    final comparison = ProposalComparison(
+      (b) => b
+        ..direction = 'below'
+        ..percentage = 12
+        ..range = '400.000.000 – 500.000.000 VND'
+        ..reasoning = 'Báo giá thấp hơn mức dự đoán cho thang máy.'
+        ..source_ = 'predicted',
+    );
+    final repository = _FakeProposalsRepository(
+      proposal: _proposal(comparison: comparison),
+    );
+    await tester.pumpWidget(
+      _host(const ProposalDetailScreen(proposalId: 7), repository),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Price comparison'), findsOneWidget);
+    expect(find.text('↓'), findsOneWidget);
+    final arrowText = tester.widget<Text>(find.text('↓'));
+    expect(arrowText.style?.color, LamToColors.success);
+    expect(
+      find.text('12% below the reference price (around 400.000.000 – 500.000.000 VND)'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Báo giá thấp hơn mức dự đoán cho thang máy.'),
+      findsOneWidget,
+    );
+    expect(find.text('AI estimate, for reference only.'), findsOneWidget);
+  });
+
+  testWidgets('proposal detail renders price comparison above with red upward arrow, reasoning, and caveat', (
+    tester,
+  ) async {
+    final comparison = ProposalComparison(
+      (b) => b
+        ..direction = 'above'
+        ..percentage = 8
+        ..range = '400.000.000 – 500.000.000 VND'
+        ..reasoning = 'Báo giá cao hơn do phụ tùng chính hãng.'
+        ..source_ = 'predicted',
+    );
+    final repository = _FakeProposalsRepository(
+      proposal: _proposal(comparison: comparison),
+    );
+    await tester.pumpWidget(
+      _host(const ProposalDetailScreen(proposalId: 7), repository),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Price comparison'), findsOneWidget);
+    expect(find.text('↑'), findsOneWidget);
+    final arrowText = tester.widget<Text>(find.text('↑'));
+    expect(arrowText.style?.color, LamToColors.error);
+    expect(
+      find.text('8% above the reference price (around 400.000.000 – 500.000.000 VND)'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Báo giá cao hơn do phụ tùng chính hãng.'),
+      findsOneWidget,
+    );
+    expect(find.text('AI estimate, for reference only.'), findsOneWidget);
+  });
+
+  testWidgets('proposal detail in Vietnamese locale renders Vietnamese strings and caveat', (
+    tester,
+  ) async {
+    final comparison = ProposalComparison(
+      (b) => b
+        ..direction = 'below'
+        ..percentage = 12
+        ..range = '400.000.000 – 500.000.000 VND'
+        ..reasoning = 'Ước tính cho thang máy'
+        ..source_ = 'predicted',
+    );
+    final repository = _FakeProposalsRepository(
+      proposal: _proposal(comparison: comparison),
+    );
+    await tester.pumpWidget(
+      _host(
+        const ProposalDetailScreen(proposalId: 7),
+        repository,
+        locale: const Locale('vi'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('So sánh giá'), findsOneWidget);
+    expect(find.text('↓'), findsOneWidget);
+    expect(
+      find.text('Thấp hơn giá tham chiếu 12% (khoảng 400.000.000 – 500.000.000 VND)'),
+      findsOneWidget,
+    );
+    expect(find.text('Ước tính cho thang máy'), findsOneWidget);
+    expect(find.text('Ước tính bằng AI, chỉ để tham khảo.'), findsOneWidget);
+  });
+
+  testWidgets('proposal detail with null comparison renders no price comparison section', (
+    tester,
+  ) async {
+    final repository = _FakeProposalsRepository(
+      proposal: _proposal(comparison: null),
+    );
+    await tester.pumpWidget(
+      _host(const ProposalDetailScreen(proposalId: 7), repository),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Price comparison'), findsNothing);
+    expect(find.text('So sánh giá'), findsNothing);
+    expect(find.text('AI estimate, for reference only.'), findsNothing);
+    expect(find.text('Ước tính bằng AI, chỉ để tham khảo.'), findsNothing);
+  });
 }

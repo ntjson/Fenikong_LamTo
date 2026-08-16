@@ -304,6 +304,23 @@
   "@proposalVersion": {"placeholders": {"number": {"type": "String"}}},
   "proposalSettlement": "Quyết toán thanh toán",
   "proposalSettled": "Đã thanh toán",
+  "proposalPriceComparison": "So sánh giá",
+  "proposalPriceComparisonBelow": "Thấp hơn giá tham chiếu {percentage}% (khoảng {range})",
+  "@proposalPriceComparisonBelow": {
+    "placeholders": {
+      "percentage": {"type": "int"},
+      "range": {"type": "String"}
+    }
+  },
+  "proposalPriceComparisonAbove": "Cao hơn giá tham chiếu {percentage}% (khoảng {range})",
+  "@proposalPriceComparisonAbove": {
+    "placeholders": {
+      "percentage": {"type": "int"},
+      "range": {"type": "String"}
+    }
+  },
+  "proposalPriceComparisonEqual": "Bằng giá tham chiếu",
+  "proposalPriceComparisonCaveat": "Ước tính bằng AI, chỉ để tham khảo.",
   "proposalViewFromLedger": "Xem đề xuất",
   "proposalRateCta": "Đánh giá kết quả",
   "homeBillTitle": "Hóa đơn tòa nhà",
