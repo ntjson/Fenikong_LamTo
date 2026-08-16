@@ -56,9 +56,10 @@ expected end date.
 _Avoid_: Timeline, schedule range, planned dates
 
 **Reference price set**:
-The synthetic collection of past job prices a quotation can be compared
-against. It describes jobs outside this building, commits no one, and covers
-Elevator work only.
+The synthetic collection of past job prices held in the repository. It describes
+jobs outside this building, commits no one, and covers Elevator work only. It is
+never shown on its own: it grounds the Predicted price band, and stands in for
+one when a band cannot be produced.
 _Avoid_: Benchmark data, market data, price database, historical prices
 
 **Reference price**:
@@ -69,11 +70,21 @@ sense Expected schedule uses that word.
 _Avoid_: Expected price, benchmark price, market rate, market average, fair
 price
 
+**Predicted price band**:
+What a category and scope are worth according to the model: a central figure, a
+range around it, and one sentence of Vietnamese reasoning. It is generated, so
+asking twice may answer twice; it is grounded on the Reference price set, and
+falls back to one when the model is unavailable or answers outside its contract.
+The quotation amount is withheld from the model, so a band never reacts to the
+figure it will be compared against.
+_Avoid_: AI price, predicted price, estimate, quote, fair price
+
 **Price comparison**:
 The advisory reading a Management account asks for while entering a quotation:
-whether the amount falls within the range of comparable jobs, and how far it
-sits from the Reference price. Nothing is recorded, published, or anchored, so
-it informs the spend without entering the evidence chain.
+how the amount sits against the Predicted price band, in a direction and a
+percentage. The reading the account acted on is frozen at publication and shown
+to residents. It never enters the evidence chain — no version of it is hashed,
+signed, or anchored.
 _Avoid_: Price check, price validation, price verdict, price approval
 
 **Settlement**:
