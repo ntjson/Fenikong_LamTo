@@ -6,8 +6,10 @@ import pytest
 
 from lamto.finance.reference_prices import (
     ComparisonPosition,
+    PriceBand,
     ReferencePrice,
     compare_price,
+    compare_price_against_band,
     get_reference_price,
     load_reference_prices,
 )
@@ -106,3 +108,29 @@ def test_compare_price_rejects_invalid_amount(invalid_amount):
 def test_compare_price_for_missing_category_returns_none_comparison():
     comparison = compare_price(CaseCategory.WATER_LEAK, 10_000_000)
     assert comparison is None
+
+
+def test_compare_price_against_supplied_band():
+    """Arithmetic operates on a supplied band and does not need to look up fixture data."""
+    band = PriceBand(
+        category="ELEVATOR",
+        minimum_vnd=300_000_000,
+        central_vnd=400_000_000,
+        maximum_vnd=500_000_000,
+    )
+    assert band.minimum == 300_000_000
+    assert band.central == 400_000_000
+    assert band.maximum == 500_000_000
+    assert band.average == 400_000_000
+
+    # Test comparison against band directly
+    comparison = compare_price_against_band(band, 420_000_000)
+    assert comparison.position == ComparisonPosition.WITHIN_RANGE
+    assert comparison.percentage == 5  # (420 - 400) / 400 = 5%
+    assert comparison.direction == "above"
+    assert comparison.reference_price == band
+
+    # compare_price also accepts a PriceBand
+    comparison_via_general = compare_price(band, 420_000_000)
+    assert comparison_via_general == comparison
+

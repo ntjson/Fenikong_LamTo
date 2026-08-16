@@ -2820,3 +2820,16 @@ msgstr "Đã bắt đầu công việc %(ts)s."
 
 msgid "Enter the amount in whole VND, with no separators."
 msgstr "Nhập số tiền bằng số nguyên VND, không dùng dấu phân cách."
+
+msgid "AI prediction unavailable — using sample reference price."
+msgstr "Dự đoán AI không khả dụng — dùng giá tham chiếu mẫu."
+
+msgid "Invalid JSON payload."
+msgstr "Dữ liệu JSON không hợp lệ."
+
+msgid "Predicted"
+msgstr "Dự đoán"
+
+msgid "Fallback"
+msgstr "Dự phòng"
+

@@ -24,6 +24,7 @@
         <span class="input-with-button">
           {{ field }}
           <button type="button" class="button button-secondary" data-price-compare
+            data-compare-url="{% url 'web:proposal-price-compare' pk=case.pk %}"
             data-has-reference-price="{% if reference_price %}true{% else %}false{% endif %}"
             data-category-label="{{ case.get_category_display }}"
             {% if reference_price %}

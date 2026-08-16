@@ -51,6 +51,7 @@ STAFF_CASES = {
     "web:case-detail": ("case_pk", "GET"),
     "web:proposal-detail": ("proposal_pk", "GET"),
     "web:proposal-create": ("case_pk", "POST"),
+    "web:proposal-price-compare": ("case_pk", "POST"),
     "web:settlement-record": ("proposal_pk", "POST"),
     "web:settlement-detail": ("settlement_pk", "GET"),
     "web:fund-verify": ("fund_entry_pk", "POST"),

@@ -63,7 +63,7 @@
   });
 
   // Price comparison on proposal create form.
-  // Advisory reading calculated client-side so attached quotation PDF is never discarded.
+  // Advisory reading requested via endpoint; attached quotation PDF is never discarded.
   document.addEventListener("click", function (event) {
     var button = event.target.closest("[data-price-compare]");
     if (!button) return;
@@ -97,29 +97,67 @@
       return;
     }
 
-    var average = parseInt(button.getAttribute("data-average"), 10);
-    var rangeFormatted = button.getAttribute("data-range-formatted") || "";
-
-    var diff = amount - average;
-    if (diff === 0) {
-      resultEl.textContent = strings.priceCompareEqual || "Equal to the reference price";
+    var compareUrl = button.getAttribute("data-compare-url");
+    if (!compareUrl) {
+      var average = parseInt(button.getAttribute("data-average"), 10);
+      var rangeFormatted = button.getAttribute("data-range-formatted") || "";
+      var diff = amount - average;
+      if (diff === 0) {
+        resultEl.textContent = strings.priceCompareEqual || "Equal to the reference price";
+        return;
+      }
+      var pct = Math.round(Math.abs(diff) / average * 100);
+      var isBelow = diff < 0;
+      var arrow = isBelow ? "↓" : "↑";
+      var arrowClass = isBelow ? "price-comparison-arrow-below" : "price-comparison-arrow-above";
+      var template = isBelow
+        ? (strings.priceCompareBelow || "{pct}% below the reference price (around {range})")
+        : (strings.priceCompareAbove || "{pct}% above the reference price (around {range})");
+      var text = template
+        .replace("{range}", rangeFormatted)
+        .replace("{pct}", String(pct));
+      resultEl.innerHTML = '<span class="price-comparison-arrow ' + arrowClass + '" aria-hidden="true">' + arrow + "</span> " + text;
       return;
     }
 
-    var pct = Math.round(Math.abs(diff) / average * 100);
-    var isBelow = diff < 0;
-    var arrow = isBelow ? "↓" : "↑";
-    var arrowClass = isBelow ? "price-comparison-arrow-below" : "price-comparison-arrow-above";
+    button.setAttribute("aria-busy", "true");
+    button.disabled = true;
 
-    var template = isBelow
-      ? (strings.priceCompareBelow || "{pct}% below the reference price (around {range})")
-      : (strings.priceCompareAbove || "{pct}% above the reference price (around {range})");
+    var csrfEl = form ? form.querySelector('input[name="csrfmiddlewaretoken"]') : document.querySelector('input[name="csrfmiddlewaretoken"]');
+    var csrfToken = csrfEl ? csrfEl.value : "";
 
-    var text = template
-      .replace("{range}", rangeFormatted)
-      .replace("{pct}", String(pct));
-
-    resultEl.innerHTML = '<span class="price-comparison-arrow ' + arrowClass + '" aria-hidden="true">' + arrow + "</span> " + text;
+    fetch(compareUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      body: JSON.stringify({ amount_vnd: amount })
+    })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        if (data.formatted) {
+          var arrowHtml = data.formatted.arrow
+            ? '<span class="price-comparison-arrow ' + data.formatted.arrow_class + '" aria-hidden="true">' + data.formatted.arrow + '</span> '
+            : '';
+          var lineHtml = arrowHtml + (data.formatted.comparison_text || data.formatted.message || "");
+          var reasoningHtml = data.formatted.reasoning
+            ? '<div class="price-comparison-reasoning">' + data.formatted.reasoning + '</div>'
+            : '';
+          resultEl.innerHTML = lineHtml + reasoningHtml;
+        } else if (data.error) {
+          resultEl.textContent = data.error;
+        }
+      })
+      .catch(function () {
+        resultEl.textContent = strings.priceCompareEnterAmount || "Enter an amount to compare.";
+      })
+      .finally(function () {
+        button.removeAttribute("aria-busy");
+        button.disabled = false;
+      });
   });
 
   // Every mutation is a full page navigation; nothing announces the outcome

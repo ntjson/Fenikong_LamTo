@@ -842,6 +842,13 @@ textarea {
   color: var(--color-error);
 }
 
+.price-comparison-reasoning {
+  margin-top: var(--space-1);
+  font-weight: 400;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
 .field-error,
 .form-errors,
 .errorlist {

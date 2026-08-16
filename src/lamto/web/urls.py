@@ -94,6 +94,11 @@ urlpatterns = [
     path(
         "s/cases/<int:pk>/propose/", proposals.proposal_create, name="proposal-create"
     ),
+    path(
+        "s/cases/<int:pk>/price-compare/",
+        proposals.proposal_price_compare,
+        name="proposal-price-compare",
+    ),
     path("s/settlements/", settlements.settlement_list, name="settlement-list"),
     path(
         "s/settlements/record/<int:pk>/",

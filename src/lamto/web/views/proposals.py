@@ -1,12 +1,15 @@
 """Management workspace: triage, cases, proposals."""
 
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext, gettext_lazy as _
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from lamto.audit.services import record_audit
 from lamto.documents.models import Document, DocumentVersion
@@ -25,6 +28,7 @@ from lamto.finance.proposals import (
     publish_proposal_version,
     spending_proposal_cases,
 )
+from lamto.finance.predictions import evaluate_and_record_price_comparison
 from lamto.finance.reference_prices import get_reference_price
 from lamto.maintenance.models import IssueReport, MaintenanceCase
 from lamto.maintenance.cases import complete_proposal_work, publish_progress, start_case_work
@@ -393,3 +397,41 @@ def standalone_proposal_create(request):
         request, membership, memberships, nav_active="finance", finance_active="proposals",
         case=None, create_form=form,
     ))
+
+
+@login_required
+@require_POST
+def proposal_price_compare(request, pk):
+    """POST JSON to obtain a predicted/fallback price band comparison for a case."""
+    membership, memberships = require_management_context(request)
+    case = get_object_or_404(
+        MaintenanceCase.objects.all(),
+        pk=pk,
+        building_id=membership.building_id,
+    )
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+        return JsonResponse({"error": _("Invalid JSON payload.")}, status=400)
+
+    if not isinstance(data, dict):
+        return JsonResponse({"error": _("Invalid JSON payload.")}, status=400)
+
+    amount_raw = data.get("amount_vnd")
+    try:
+        amount_vnd = int(amount_raw)
+        if amount_vnd <= 0:
+            raise ValueError()
+    except (TypeError, ValueError):
+        return JsonResponse(
+            {"error": _("Enter the amount in whole VND, with no separators.")},
+            status=400,
+        )
+
+    result = evaluate_and_record_price_comparison(
+        case=case,
+        membership=membership,
+        amount_vnd=amount_vnd,
+    )
+    return JsonResponse(result, status=200)
+

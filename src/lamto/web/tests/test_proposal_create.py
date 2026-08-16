@@ -559,6 +559,7 @@ class ProposalCreateTests(TestCase):
         response = self.client.get(reverse("web:proposal-create", kwargs={"pk": self.work.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "data-price-compare")
+        self.assertContains(response, f'data-compare-url="/s/cases/{self.work.pk}/price-compare/"')
         self.assertContains(response, 'data-has-reference-price="true"')
         self.assertContains(response, 'data-average="450000000"')
         self.assertContains(response, 'data-range-formatted="380,000,000 – 520,000,000 VND"')

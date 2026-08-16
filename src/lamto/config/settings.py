@@ -214,6 +214,8 @@ AI_TRIAGE_ALLOW_HTTP = os.getenv("AI_TRIAGE_ALLOW_HTTP", "").lower() in {
     "true",
     "yes",
 }
+AI_PRICE_MODEL = os.getenv("AI_PRICE_MODEL", "")
+AI_PRICE_TIMEOUT_SECONDS = float(os.getenv("AI_PRICE_TIMEOUT_SECONDS", "8"))
 BLOCKCHAIN_CHAIN_ID = int(
     os.getenv("BLOCKCHAIN_CHAIN_ID", os.getenv("CHAIN_ID", "1337"))
 )
