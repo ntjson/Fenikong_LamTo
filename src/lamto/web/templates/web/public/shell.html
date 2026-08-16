@@ -1,4 +1,4 @@
-{% load i18n static %}
+{% load i18n static assets %}
 {% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#2f3a8f">
   <title>{% block title %}{% trans "Evidence explorer" %} · LamTo{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'web/brand/favicon.png' %}">
-  <link rel="stylesheet" href="{% static 'web/app.css' %}">
+  <link rel="stylesheet" href="{% asset 'web/app.css' %}">
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}public{% endblock %}">

@@ -1,4 +1,4 @@
-{% load i18n static %}
+{% load i18n static assets %}
 {% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#2f3a8f">
   <title>{% block title %}{% trans "Management" %} · LamTo{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'web/brand/favicon.png' %}">
-  <link rel="stylesheet" href="{% static 'web/app.css' %}">
+  <link rel="stylesheet" href="{% asset 'web/app.css' %}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <a class="skip-link" href="#main">{% trans "Skip to content" %}</a>
@@ -40,7 +40,7 @@
       copyFailed: "{% filter escapejs %}{% trans 'Copy failed. Select the value and copy it manually.' %}{% endfilter %}"
     };
   </script>
-  <script src="{% static 'web/staff.js' %}" defer></script>
+  <script src="{% asset 'web/staff.js' %}" defer></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

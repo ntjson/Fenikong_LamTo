@@ -1,5 +1,5 @@
 {% extends "web/staff/shell.html" %}
-{% load i18n humanize static staff_extras %}
+{% load i18n humanize static assets staff_extras %}
 {% block title %}{% trans "Action inbox" %} · LamTo{% endblock %}
 {% block content %}
 <section class="panel" aria-labelledby="inbox-heading">
@@ -82,6 +82,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'web/chart.umd.js' %}"></script>
-<script src="{% static 'web/fund-chart.js' %}"></script>
+<script src="{% asset 'web/chart.umd.js' %}"></script>
+<script src="{% asset 'web/fund-chart.js' %}"></script>
 {% endblock %}
