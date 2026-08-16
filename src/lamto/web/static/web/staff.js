@@ -92,35 +92,34 @@
     var hasRef = button.getAttribute("data-has-reference-price") === "true";
     if (!hasRef) {
       var catLabel = button.getAttribute("data-category-label") || "";
-      var noRefTpl = strings.priceCompareNoReference || "No reference prices for {category}. Reference prices are synthetic sample data and currently cover Elevator only.";
+      var noRefTpl = strings.priceCompareNoReference || "Price predictions not yet supported for {category}. Currently available for Elevator only.";
       resultEl.textContent = noRefTpl.replace("{category}", catLabel);
       return;
     }
 
     var average = parseInt(button.getAttribute("data-average"), 10);
-    var min = parseInt(button.getAttribute("data-min"), 10);
-    var max = parseInt(button.getAttribute("data-max"), 10);
     var rangeFormatted = button.getAttribute("data-range-formatted") || "";
-    var samplesFormatted = button.getAttribute("data-samples-formatted") || "";
 
     var diff = amount - average;
-    var pct = Math.round(Math.abs(diff) / average * 100);
-
-    var template = "";
-    if (amount >= min && amount <= max) {
-      template = diff >= 0
-        ? (strings.priceCompareWithinAbove || "Within the range of comparable jobs ({range}, {samples}). {pct}% above the reference price.")
-        : (strings.priceCompareWithinBelow || "Within the range of comparable jobs ({range}, {samples}). {pct}% below the reference price.");
-    } else if (amount > max) {
-      template = strings.priceCompareAbove || "Above the range of comparable jobs ({range}, {samples}). {pct}% above the reference price.";
-    } else {
-      template = strings.priceCompareBelow || "Below the range of comparable jobs ({range}, {samples}). {pct}% below the reference price.";
+    if (diff === 0) {
+      resultEl.textContent = strings.priceCompareEqual || "Equal to the reference price";
+      return;
     }
 
-    resultEl.textContent = template
+    var pct = Math.round(Math.abs(diff) / average * 100);
+    var isBelow = diff < 0;
+    var arrow = isBelow ? "↓" : "↑";
+    var arrowClass = isBelow ? "price-comparison-arrow-below" : "price-comparison-arrow-above";
+
+    var template = isBelow
+      ? (strings.priceCompareBelow || "{pct}% below the reference price (around {range})")
+      : (strings.priceCompareAbove || "{pct}% above the reference price (around {range})");
+
+    var text = template
       .replace("{range}", rangeFormatted)
-      .replace("{samples}", samplesFormatted)
       .replace("{pct}", String(pct));
+
+    resultEl.innerHTML = '<span class="price-comparison-arrow ' + arrowClass + '" aria-hidden="true">' + arrow + "</span> " + text;
   });
 
   // Every mutation is a full page navigation; nothing announces the outcome

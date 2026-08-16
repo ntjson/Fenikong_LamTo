@@ -71,8 +71,8 @@ def test_missing_categories_have_no_reference_price():
         (460_000_000, ComparisonPosition.WITHIN_RANGE, 2, "above"),
         # Inside range, below average (440M vs 450M -> -10M / 450M = 2.22% -> 2% below)
         (440_000_000, ComparisonPosition.WITHIN_RANGE, 2, "below"),
-        # Inside range, exactly equal to average (450M -> 0% above)
-        (450_000_000, ComparisonPosition.WITHIN_RANGE, 0, "above"),
+        # Inside range, exactly equal to average (450M -> 0% equal)
+        (450_000_000, ComparisonPosition.WITHIN_RANGE, 0, "equal"),
         # Inside range, at minimum boundary
         (380_000_000, ComparisonPosition.WITHIN_RANGE, 16, "below"),
         # Inside range, at maximum boundary

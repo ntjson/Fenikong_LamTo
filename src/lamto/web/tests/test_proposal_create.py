@@ -554,19 +554,17 @@ class ProposalCreateTests(TestCase):
         self.assertContains(response, "Expected schedule")
         self.assertContains(response, "01/08/2026 \u2013 15/08/2026")
 
-    def test_case_proposal_create_renders_compare_button_and_synthetic_disclosure_for_elevator(self):
+    def test_case_proposal_create_renders_compare_button_for_elevator(self):
         self._login_operator()
         response = self.client.get(reverse("web:proposal-create", kwargs={"pk": self.work.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "data-price-compare")
         self.assertContains(response, 'data-has-reference-price="true"')
         self.assertContains(response, 'data-average="450000000"')
-        self.assertContains(response, 'data-min="380000000"')
-        self.assertContains(response, 'data-max="520000000"')
-        self.assertContains(response, 'data-sample-count="12"')
-        self.assertContains(response, 'data-range-formatted="380,000,000 \u2013 520,000,000 VND"')
-        self.assertContains(response, 'data-samples-formatted="12 synthetic samples"')
-        self.assertContains(response, "Reference prices are synthetic sample data, not real market prices.")
+        self.assertContains(response, 'data-range-formatted="380,000,000 – 520,000,000 VND"')
+        self.assertNotContains(response, "data-samples-formatted")
+        self.assertNotContains(response, "synthetic samples")
+        self.assertNotContains(response, "Reference prices are synthetic sample data, not real market prices.")
         self.assertContains(response, "data-price-comparison-result")
 
     def test_case_proposal_create_renders_compare_button_for_uncovered_category(self):
@@ -580,7 +578,7 @@ class ProposalCreateTests(TestCase):
         self.assertContains(response, "data-price-compare")
         self.assertContains(response, 'data-has-reference-price="false"')
         self.assertContains(response, 'data-category-label="Water leak"')
-        self.assertContains(response, "Reference prices are synthetic sample data, not real market prices.")
+        self.assertNotContains(response, "Reference prices are synthetic sample data, not real market prices.")
 
     def test_standalone_proposal_create_omits_compare_button_and_disclosure(self):
         self._login_operator()
@@ -635,12 +633,14 @@ class ProposalCreateTests(TestCase):
                 {"case": self.work, "create_form": form, "reference_price": ref},
             )
             self.assertIn("So sánh", html_vi)
-            self.assertIn("Giá tham chiếu là dữ liệu mẫu mô phỏng, không phải giá thị trường thực tế.", html_vi)
-            self.assertIn('data-samples-formatted="12 mẫu mô phỏng"', html_vi)
-            self.assertIn('data-range-formatted="380.000.000 \u2013 520.000.000 VND"', html_vi)
+            self.assertNotIn("Giá tham chiếu là dữ liệu mẫu mô phỏng", html_vi)
+            self.assertNotIn("mẫu mô phỏng", html_vi)
+            self.assertIn('data-range-formatted="380.000.000 – 520.000.000 VND"', html_vi)
             self.assertIn("Nhập số tiền để so sánh.", html_vi)
-            self.assertIn("Không có giá tham chiếu cho", html_vi)
+            self.assertIn("Chưa hỗ trợ dự đoán giá cho", html_vi)
+            self.assertIn("Bằng giá tham chiếu", html_vi)
             self.assertIn("Cao hơn giá tham chiếu", html_vi)
+            self.assertIn("Thấp hơn giá tham chiếu", html_vi)
 
     def test_no_avoid_terms_in_rendered_proposal_create_page(self):
         self._login_operator()

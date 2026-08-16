@@ -829,6 +829,19 @@ textarea {
   color: var(--color-ink);
 }
 
+.price-comparison-arrow {
+  display: inline-block;
+  font-weight: 700;
+}
+
+.price-comparison-arrow-below {
+  color: var(--color-success);
+}
+
+.price-comparison-arrow-above {
+  color: var(--color-error);
+}
+
 .field-error,
 .form-errors,
 .errorlist {

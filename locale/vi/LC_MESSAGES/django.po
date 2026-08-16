@@ -2774,32 +2774,23 @@ msgstr "Theo dõi công việc theo vụ việc"
 msgid "%(name)s (whole area)"
 msgstr "%(name)s (toàn khu vực)"
 
-msgid "Reference prices are synthetic sample data, not real market prices."
-msgstr "Giá tham chiếu là dữ liệu mẫu mô phỏng, không phải giá thị trường thực tế."
-
 msgid "Compare"
 msgstr "So sánh"
 
 msgid "Enter an amount to compare."
 msgstr "Nhập số tiền để so sánh."
 
-msgid "No reference prices for %(category)s. Reference prices are synthetic sample data and currently cover Elevator only."
-msgstr "Không có giá tham chiếu cho %(category)s. Giá tham chiếu là dữ liệu mẫu mô phỏng và hiện chỉ có cho Thang máy."
+msgid "Price predictions not yet supported for %(category)s. Currently available for Elevator only."
+msgstr "Chưa hỗ trợ dự đoán giá cho %(category)s. Hiện chỉ có Thang máy."
 
-msgid "Within the range of comparable jobs (%(range)s, %(samples)s). %(pct)s%% above the reference price."
-msgstr "Nằm trong khoảng của các công việc tương đương (%(range)s, %(samples)s). Cao hơn giá tham chiếu %(pct)s%%."
+msgid "Equal to the reference price"
+msgstr "Bằng giá tham chiếu"
 
-msgid "Within the range of comparable jobs (%(range)s, %(samples)s). %(pct)s%% below the reference price."
-msgstr "Nằm trong khoảng của các công việc tương đương (%(range)s, %(samples)s). Thấp hơn giá tham chiếu %(pct)s%%."
+msgid "%(pct)s%% above the reference price (around %(range)s)"
+msgstr "Cao hơn giá tham chiếu %(pct)s%% (khoảng %(range)s)"
 
-msgid "Above the range of comparable jobs (%(range)s, %(samples)s). %(pct)s%% above the reference price."
-msgstr "Cao hơn khoảng của các công việc tương đương (%(range)s, %(samples)s). Cao hơn giá tham chiếu %(pct)s%%."
-
-msgid "Below the range of comparable jobs (%(range)s, %(samples)s). %(pct)s%% below the reference price."
-msgstr "Thấp hơn khoảng của các công việc tương đương (%(range)s, %(samples)s). Thấp hơn giá tham chiếu %(pct)s%%."
-
-msgid "%(count)s synthetic samples"
-msgstr "%(count)s mẫu mô phỏng"
+msgid "%(pct)s%% below the reference price (around %(range)s)"
+msgstr "Thấp hơn giá tham chiếu %(pct)s%% (khoảng %(range)s)"
 
 msgid "Amount must be a positive integer."
 msgstr "Số tiền phải là số nguyên dương."

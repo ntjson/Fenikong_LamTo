@@ -78,11 +78,11 @@ class PriceComparisonE2ETests(StaticLiveServerTestCase):
                 file_val = page.eval_on_selector('input[name="quotation"]', "el => el.files.length")
                 self.assertEqual(file_val, 1)
 
-                # Check persistent hint
+                # Check that persistent hint is removed
                 hint_text = page.locator("span.hint", has_text="Giá tham chiếu là dữ liệu mẫu mô phỏng").or_(
                     page.locator("span.hint", has_text="Reference prices are synthetic sample data")
                 )
-                expect(hint_text).to_be_visible()
+                expect(hint_text).to_have_count(0)
 
                 compare_button = page.locator("button[data-price-compare]")
                 result_locator = page.locator("[data-price-comparison-result]")
@@ -103,30 +103,40 @@ class PriceComparisonE2ETests(StaticLiveServerTestCase):
                 page.fill('input[name="amount_vnd"]', "460000000")
                 compare_button.click()
                 if is_vietnamese:
-                    expect(result_locator).to_contain_text("Nằm trong khoảng của các công việc tương đương")
-                    expect(result_locator).to_contain_text("Cao hơn giá tham chiếu 2%.")
+                    expect(result_locator).to_contain_text("Cao hơn giá tham chiếu 2% (khoảng 380.000.000 – 520.000.000 VND)")
                 else:
-                    expect(result_locator).to_contain_text("Within the range of comparable jobs (380,000,000 – 520,000,000 VND, 12 synthetic samples). 2% above the reference price.")
+                    expect(result_locator).to_contain_text("2% above the reference price (around 380,000,000 – 520,000,000 VND)")
+                expect(page.locator(".price-comparison-arrow.price-comparison-arrow-above")).to_contain_text("↑")
                 self.assertEqual(page.eval_on_selector('input[name="quotation"]', "el => el.files.length"), 1)
 
                 # 3. Above range (715,000,000 -> 59% above reference price)
                 page.fill('input[name="amount_vnd"]', "715000000")
                 compare_button.click()
                 if is_vietnamese:
-                    expect(result_locator).to_contain_text("Cao hơn khoảng của các công việc tương đương")
-                    expect(result_locator).to_contain_text("Cao hơn giá tham chiếu 59%.")
+                    expect(result_locator).to_contain_text("Cao hơn giá tham chiếu 59% (khoảng 380.000.000 – 520.000.000 VND)")
                 else:
-                    expect(result_locator).to_contain_text("Above the range of comparable jobs (380,000,000 – 520,000,000 VND, 12 synthetic samples). 59% above the reference price.")
+                    expect(result_locator).to_contain_text("59% above the reference price (around 380,000,000 – 520,000,000 VND)")
+                expect(page.locator(".price-comparison-arrow.price-comparison-arrow-above")).to_contain_text("↑")
                 self.assertEqual(page.eval_on_selector('input[name="quotation"]', "el => el.files.length"), 1)
 
                 # 4. Below range (340,000,000 -> 24% below reference price)
                 page.fill('input[name="amount_vnd"]', "340000000")
                 compare_button.click()
                 if is_vietnamese:
-                    expect(result_locator).to_contain_text("Thấp hơn khoảng của các công việc tương đương")
-                    expect(result_locator).to_contain_text("Thấp hơn giá tham chiếu 24%.")
+                    expect(result_locator).to_contain_text("Thấp hơn giá tham chiếu 24% (khoảng 380.000.000 – 520.000.000 VND)")
                 else:
-                    expect(result_locator).to_contain_text("Below the range of comparable jobs (380,000,000 – 520,000,000 VND, 12 synthetic samples). 24% below the reference price.")
+                    expect(result_locator).to_contain_text("24% below the reference price (around 380,000,000 – 520,000,000 VND)")
+                expect(page.locator(".price-comparison-arrow.price-comparison-arrow-below")).to_contain_text("↓")
+                self.assertEqual(page.eval_on_selector('input[name="quotation"]', "el => el.files.length"), 1)
+
+                # 4a. Exact equality (450,000,000 -> equal to reference price, no arrow)
+                page.fill('input[name="amount_vnd"]', "450000000")
+                compare_button.click()
+                if is_vietnamese:
+                    expect(result_locator).to_contain_text("Bằng giá tham chiếu")
+                else:
+                    expect(result_locator).to_contain_text("Equal to the reference price")
+                expect(page.locator(".price-comparison-arrow")).to_have_count(0)
                 self.assertEqual(page.eval_on_selector('input[name="quotation"]', "el => el.files.length"), 1)
 
                 # 4b. Thousands separators: the number input keeps the first dot,
@@ -159,10 +169,10 @@ class PriceComparisonE2ETests(StaticLiveServerTestCase):
                 water_result = page.locator("[data-price-comparison-result]")
                 water_compare.click()
                 if is_vietnamese:
-                    expect(water_result).to_contain_text("Không có giá tham chiếu cho")
-                    expect(water_result).to_contain_text("hiện chỉ có cho Thang máy")
+                    expect(water_result).to_contain_text("Chưa hỗ trợ dự đoán giá cho")
+                    expect(water_result).to_contain_text("Hiện chỉ có Thang máy.")
                 else:
-                    expect(water_result).to_contain_text("No reference prices for Water leak. Reference prices are synthetic sample data and currently cover Elevator only.")
+                    expect(water_result).to_contain_text("Price predictions not yet supported for Water leak. Currently available for Elevator only.")
                 self.assertEqual(page.eval_on_selector('input[name="quotation"]', "el => el.files.length"), 1)
 
                 # 6. Standalone proposal page offers NO Compare button

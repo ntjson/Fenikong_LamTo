@@ -73,7 +73,12 @@ def compare_price(category: str | CaseCategory, amount_vnd: int) -> PriceCompari
 
     diff = amount_vnd - ref.average
     pct = round(abs(diff) / ref.average * 100)
-    direction = "above" if diff >= 0 else "below"
+    if diff > 0:
+        direction = "above"
+    elif diff < 0:
+        direction = "below"
+    else:
+        direction = "equal"
 
     if ref.minimum <= amount_vnd <= ref.maximum:
         position = ComparisonPosition.WITHIN_RANGE
