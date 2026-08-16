@@ -4,7 +4,7 @@ from .models import Document, DocumentVersion
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ("pk", "building", "kind", "created_at")
+    list_display = ("pk", "building", "kind")
     list_filter = ("kind", "building")
 
 

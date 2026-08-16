@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+from django import forms
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -588,10 +589,77 @@ class ProposalCreateTests(TestCase):
         self.assertNotContains(response, "data-price-compare")
         self.assertNotContains(response, "Reference prices are synthetic sample data, not real market prices.")
 
+    def test_create_form_carries_only_price_prediction_id_and_no_figures(self):
+        from lamto.web.forms.staff import CreateProposalForm
+        form = CreateProposalForm()
+        self.assertIn("price_prediction_id", form.fields)
+        self.assertIsInstance(form.fields["price_prediction_id"].widget, forms.HiddenInput)
+        for forbidden in ("direction", "percentage", "reasoning", "band", "minimum_vnd", "maximum_vnd", "central_vnd"):
+            self.assertNotIn(forbidden, form.fields)
+
     @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
-    def test_proposal_publication_and_detail_do_not_store_or_show_price_comparison(self):
+    def test_proposal_publication_with_prediction_freezes_and_shows_price_comparison(self):
+        from lamto.finance.models import PricePrediction
         self._login_operator()
-        self.client.post(
+        prediction = PricePrediction.objects.create(
+            building=self.work.building,
+            case=self.work,
+            category="Elevator",
+            amount_vnd=460_000_000,
+            minimum_vnd=380_000_000,
+            central_vnd=450_000_000,
+            maximum_vnd=520_000_000,
+            reasoning="Dự đoán AI không khả dụng — dùng giá tham chiếu mẫu.",
+            source=PricePrediction.Source.FALLBACK,
+            requested_by=self.operator,
+        )
+        response = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 460_000_000,
+                "contractor_name": "Elevator Pro",
+                "purpose": "Elevator overhaul",
+                "proposed_action": "Overhaul lift parts",
+                "expected_start": "2026-09-01",
+                "expected_end": "2026-09-15",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+                "price_prediction_id": prediction.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        proposal = Proposal.objects.get(case=self.work)
+        version = proposal.current_version
+        self.assertEqual(version.amount_vnd, 460_000_000)
+
+        # Frozen prediction is linked to published version
+        prediction.refresh_from_db()
+        self.assertEqual(prediction.proposal_version, version)
+        self.assertEqual(version.price_prediction, prediction)
+
+        # Snapshot, hash, and anchored payload remain pure (no comparison/prediction fields)
+        self.assertNotIn("prediction", version.snapshot)
+        self.assertNotIn("price_comparison", version.snapshot)
+        self.assertNotIn("price_prediction_id", version.snapshot)
+        self.assertNotIn("prediction", version.outbox_event.payload)
+        self.assertNotIn("price_comparison", version.outbox_event.payload)
+        self.assertNotIn("price_prediction_id", version.outbox_event.payload)
+
+        # Published detail page renders frozen comparison
+        detail_resp = self.client.get(reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
+        self.assertEqual(detail_resp.status_code, 200)
+        self.assertContains(detail_resp, "Price comparison")
+        self.assertContains(detail_resp, "price-comparison-result")
+        self.assertContains(detail_resp, "price-comparison-arrow price-comparison-arrow-above")
+        self.assertContains(detail_resp, "↑")
+        self.assertContains(detail_resp, "2% above the reference price (around 380,000,000 – 520,000,000 VND)")
+        self.assertContains(detail_resp, "Dự đoán AI không khả dụng — dùng giá tham chiếu mẫu.")
+
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_publication_without_prediction_shows_no_price_comparison(self):
+        self._login_operator()
+        response = self.client.post(
             reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
             {
                 "action": "prepare",
@@ -605,20 +673,60 @@ class ProposalCreateTests(TestCase):
                 "confirm": "on",
             },
         )
+        self.assertEqual(response.status_code, 302)
         proposal = Proposal.objects.get(case=self.work)
         version = proposal.current_version
-        self.assertEqual(version.amount_vnd, 460_000_000)
+        self.assertFalse(hasattr(version, "price_prediction"))
 
-        # Assert no price comparison state is stored on the proposal or version
-        self.assertFalse(hasattr(proposal, "price_comparison"))
-        self.assertFalse(hasattr(version, "price_comparison"))
+        # Published detail page renders no price comparison section
+        detail_resp = self.client.get(reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
+        self.assertEqual(detail_resp.status_code, 200)
+        self.assertNotContains(detail_resp, "Price comparison")
+        self.assertNotContains(detail_resp, "price-comparison-result")
+        self.assertNotContains(detail_resp, "data-price-compare")
 
-        # Assert published detail page contains no comparison or reference price widgets
-        response = self.client.get(reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "data-price-compare")
-        self.assertNotContains(response, "reference price")
-        self.assertNotContains(response, "synthetic samples")
+    @patch("lamto.web.staff_documents.scan_with_clamav", lambda _f: True)
+    def test_proposal_publication_with_changed_amount_discards_prediction(self):
+        from lamto.finance.models import PricePrediction
+        self._login_operator()
+        prediction = PricePrediction.objects.create(
+            building=self.work.building,
+            case=self.work,
+            category="Elevator",
+            amount_vnd=20_000_000,
+            minimum_vnd=15_000_000,
+            central_vnd=20_000_000,
+            maximum_vnd=25_000_000,
+            reasoning="Old reasoning.",
+            source=PricePrediction.Source.PREDICTED,
+            requested_by=self.operator,
+        )
+        response = self.client.post(
+            reverse("web:proposal-create", kwargs={"pk": self.work.pk}),
+            {
+                "action": "prepare",
+                "amount_vnd": 400_000_000,
+                "contractor_name": "Elevator Pro",
+                "purpose": "Elevator overhaul",
+                "proposed_action": "Overhaul lift parts",
+                "expected_start": "2026-09-01",
+                "expected_end": "2026-09-15",
+                "quotation": _pdf("q.pdf", b"orig"),
+                "confirm": "on",
+                "price_prediction_id": prediction.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        proposal = Proposal.objects.get(case=self.work)
+        version = proposal.current_version
+        prediction.refresh_from_db()
+        self.assertIsNone(prediction.proposal_version)
+        self.assertFalse(hasattr(version, "price_prediction"))
+
+        detail_resp = self.client.get(reverse("web:proposal-detail", kwargs={"pk": proposal.pk}))
+        self.assertEqual(detail_resp.status_code, 200)
+        self.assertNotContains(detail_resp, "Price comparison")
+        self.assertNotContains(detail_resp, "price-comparison-result")
 
     def test_case_proposal_create_renders_vietnamese_strings(self):
         from django.template.loader import render_to_string

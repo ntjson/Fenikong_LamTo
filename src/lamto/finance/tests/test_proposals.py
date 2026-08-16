@@ -287,3 +287,205 @@ class ProposalVersionTests(TestCase):
                 event_id="0x" + "ef" * 32,
             )
 
+    def test_publish_proposal_version_links_matching_prediction(self):
+        from lamto.finance.models import PricePrediction
+        operator, case, quotation, _account = self.make_signed_proposal_inputs()
+        proposal = create_proposal(case, operator)
+        prediction = PricePrediction.objects.create(
+            building=case.building,
+            case=case,
+            category="Elevator",
+            amount_vnd=460_000_000,
+            minimum_vnd=390_000_000,
+            central_vnd=460_000_000,
+            maximum_vnd=530_000_000,
+            reasoning="Reasoning text.",
+            source=PricePrediction.Source.PREDICTED,
+            requested_by=operator,
+        )
+        version = publish_proposal_version(
+            proposal,
+            operator,
+            amount_vnd=460_000_000,
+            contractor_name="Company X",
+            purpose="Elevator repair",
+            proposed_action="Replace cables",
+            quotation_versions=[quotation],
+            event_id="0x" + "f1" * 32,
+            price_prediction_id=prediction.pk,
+        )
+        prediction.refresh_from_db()
+        self.assertEqual(prediction.proposal_version, version)
+        self.assertEqual(version.price_prediction, prediction)
+        # Snapshot, hash, and outbox payload remain untouched
+        self.assertNotIn("prediction", version.snapshot)
+        self.assertNotIn("price_comparison", version.snapshot)
+        self.assertNotIn("prediction", version.outbox_event.payload)
+        self.assertNotIn("price_comparison", version.outbox_event.payload)
+
+    def test_publish_proposal_version_refuses_prediction_from_different_building(self):
+        from lamto.finance.models import PricePrediction
+        operator, case, quotation, _account = self.make_signed_proposal_inputs()
+        other_building = Building.objects.create(name="Other Residence")
+        other_membership = ManagementMembership.objects.create(user=operator.user, building=other_building)
+        prediction = PricePrediction.objects.create(
+            building=other_building,
+            case=None,
+            category="Elevator",
+            amount_vnd=460_000_000,
+            minimum_vnd=390_000_000,
+            central_vnd=460_000_000,
+            maximum_vnd=530_000_000,
+            reasoning="Reasoning text.",
+            source=PricePrediction.Source.PREDICTED,
+            requested_by=other_membership,
+        )
+        proposal = create_proposal(case, operator)
+        version = publish_proposal_version(
+            proposal,
+            operator,
+            amount_vnd=460_000_000,
+            contractor_name="Company X",
+            purpose="Elevator repair",
+            proposed_action="Replace cables",
+            quotation_versions=[quotation],
+            event_id="0x" + "f2" * 32,
+            price_prediction_id=prediction.pk,
+        )
+        prediction.refresh_from_db()
+        self.assertIsNone(prediction.proposal_version)
+        self.assertFalse(hasattr(version, "price_prediction"))
+
+    def test_publish_proposal_version_refuses_prediction_from_different_case(self):
+        from lamto.finance.models import PricePrediction
+        operator, case, quotation, _account = self.make_signed_proposal_inputs()
+        other_report = IssueReport.objects.create(
+            reporter=get_user_model().objects.create_user(
+                email="resident2@example.test", password="secret", display_name="Resident 2"
+            ),
+            unit=Unit.objects.create(building=case.building, label="A-2"),
+            text="Second elevator shakes",
+            selected_location=case.location,
+            location_path_snapshot="Minh An Residence / Lobby",
+        )
+        other_decision = TriageDecision.objects.create(
+            report=other_report,
+            suggestion=None,
+            operator=operator.user,
+            category="Elevator",
+            urgency="HIGH",
+            location=case.location,
+            management_queue="MAINTENANCE",
+            deadline_minutes=240,
+        )
+        other_case = MaintenanceCase.objects.create(
+            decision=other_decision,
+            building=case.building,
+            category="Elevator",
+            urgency="HIGH",
+            location=case.location,
+            management_queue="MAINTENANCE",
+            deadline_at="2026-07-20T12:00:00Z",
+        )
+        prediction = PricePrediction.objects.create(
+            building=case.building,
+            case=other_case,
+            category="Elevator",
+            amount_vnd=460_000_000,
+            minimum_vnd=390_000_000,
+            central_vnd=460_000_000,
+            maximum_vnd=530_000_000,
+            reasoning="Reasoning text.",
+            source=PricePrediction.Source.PREDICTED,
+            requested_by=operator,
+        )
+        proposal = create_proposal(case, operator)
+        version = publish_proposal_version(
+            proposal,
+            operator,
+            amount_vnd=460_000_000,
+            contractor_name="Company X",
+            purpose="Elevator repair",
+            proposed_action="Replace cables",
+            quotation_versions=[quotation],
+            event_id="0x" + "f3" * 32,
+            price_prediction_id=prediction.pk,
+        )
+        prediction.refresh_from_db()
+        self.assertIsNone(prediction.proposal_version)
+        self.assertFalse(hasattr(version, "price_prediction"))
+
+    def test_publish_proposal_version_discards_prediction_when_amount_mismatches(self):
+        from lamto.finance.models import PricePrediction
+        operator, case, quotation, _account = self.make_signed_proposal_inputs()
+        prediction = PricePrediction.objects.create(
+            building=case.building,
+            case=case,
+            category="Elevator",
+            amount_vnd=20_000_000,
+            minimum_vnd=15_000_000,
+            central_vnd=20_000_000,
+            maximum_vnd=25_000_000,
+            reasoning="Reasoning text.",
+            source=PricePrediction.Source.PREDICTED,
+            requested_by=operator,
+        )
+        proposal = create_proposal(case, operator)
+        version = publish_proposal_version(
+            proposal,
+            operator,
+            amount_vnd=400_000_000,
+            contractor_name="Company X",
+            purpose="Elevator repair",
+            proposed_action="Replace cables",
+            quotation_versions=[quotation],
+            event_id="0x" + "f4" * 32,
+            price_prediction_id=prediction.pk,
+        )
+        prediction.refresh_from_db()
+        self.assertIsNone(prediction.proposal_version)
+        self.assertFalse(hasattr(version, "price_prediction"))
+
+    def test_prediction_links_to_at_most_one_proposal_version(self):
+        from lamto.finance.models import PricePrediction
+        operator, case, quotation, _account = self.make_signed_proposal_inputs()
+        proposal = create_proposal(case, operator)
+        prediction = PricePrediction.objects.create(
+            building=case.building,
+            case=case,
+            category="Elevator",
+            amount_vnd=460_000_000,
+            minimum_vnd=390_000_000,
+            central_vnd=460_000_000,
+            maximum_vnd=530_000_000,
+            reasoning="Reasoning text.",
+            source=PricePrediction.Source.PREDICTED,
+            requested_by=operator,
+        )
+        version1 = publish_proposal_version(
+            proposal,
+            operator,
+            amount_vnd=460_000_000,
+            contractor_name="Company X",
+            purpose="Elevator repair",
+            proposed_action="Replace cables",
+            quotation_versions=[quotation],
+            event_id="0x" + "f5" * 32,
+            price_prediction_id=prediction.pk,
+        )
+        # Attempt to publish another version claiming the same prediction
+        version2 = publish_proposal_version(
+            proposal,
+            operator,
+            amount_vnd=460_000_000,
+            contractor_name="Company X",
+            purpose="Elevator repair",
+            proposed_action="Replace cables",
+            quotation_versions=[quotation],
+            event_id="0x" + "f6" * 32,
+            price_prediction_id=prediction.pk,
+        )
+        prediction.refresh_from_db()
+        self.assertEqual(prediction.proposal_version, version1)
+        self.assertFalse(hasattr(version2, "price_prediction"))
+

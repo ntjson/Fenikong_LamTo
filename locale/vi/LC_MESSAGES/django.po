@@ -2833,3 +2833,6 @@ msgstr "Dự đoán"
 msgid "Fallback"
 msgstr "Dự phòng"
 
+msgid "Price comparison"
+msgstr "So sánh giá"
+

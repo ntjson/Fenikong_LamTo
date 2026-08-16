@@ -238,6 +238,7 @@ class CreateProposalForm(forms.Form):
     """Management-entered proposal draft; the quotation uploads on prepare."""
 
     amount_vnd = WholeVndField(label=_("Amount (VND)"))
+    price_prediction_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
     contractor_name = forms.CharField(max_length=255, label=_("Contractor name"), widget=forms.TextInput(attrs={"class": "input"}))
     purpose = forms.CharField(required=False, label=_("Purpose"), widget=forms.Textarea(attrs={"class": "input"}))
     proposed_action = forms.CharField(required=False, label=_("Proposed action"), widget=forms.Textarea(attrs={"class": "input"}))

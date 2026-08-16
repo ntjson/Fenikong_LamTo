@@ -138,6 +138,12 @@
         return response.json();
       })
       .then(function (data) {
+        if (data.id) {
+          var predictionInput = form ? form.querySelector('input[name="price_prediction_id"]') : document.querySelector('input[name="price_prediction_id"]');
+          if (predictionInput) {
+            predictionInput.value = data.id;
+          }
+        }
         if (data.formatted) {
           var arrowHtml = data.formatted.arrow
             ? '<span class="price-comparison-arrow ' + data.formatted.arrow_class + '" aria-hidden="true">' + data.formatted.arrow + '</span> '

@@ -28,6 +28,17 @@
         <div><dt>{% trans "Status" %}</dt><dd>{{ proposal.get_status_display }}</dd></div>
         {% if version %}
         <div><dt>{% trans "Amount" %}</dt><dd>{{ version.amount_vnd|intcomma }} VND</dd></div>
+        {% if price_comparison %}
+        <div>
+          <dt>{% trans "Price comparison" %}</dt>
+          <dd>
+            <span class="price-comparison-result">
+              {% if price_comparison.arrow %}<span class="price-comparison-arrow {{ price_comparison.arrow_class }}" aria-hidden="true">{{ price_comparison.arrow }}</span> {% endif %}{{ price_comparison.comparison_text }}
+              {% if price_comparison.reasoning %}<div class="price-comparison-reasoning">{{ price_comparison.reasoning }}</div>{% endif %}
+            </span>
+          </dd>
+        </div>
+        {% endif %}
         <div><dt>{% trans "Contractor" %}</dt><dd>{{ version.contractor_name }}</dd></div>
         <div><dt>{% trans "Expected schedule" %}</dt><dd>{{ version.expected_schedule }}</dd></div>
         {% if proposal.case_id %}<div><dt>{% trans "Maintenance case" %}</dt><dd><a href="{% url 'web:case-detail' proposal.case_id %}">{{ proposal.case.get_category_display }} · {% blocktrans with id=proposal.case_id %}Case #{{ id }}{% endblocktrans %}</a></dd></div>{% endif %}

@@ -111,6 +111,14 @@ class ProposalVersion(InsertOnlyModel):
         }
         return labels.get(self.outbox_event.status, _("Pending anchoring"))
 
+    @property
+    def price_comparison(self):
+        try:
+            prediction = getattr(self, "price_prediction", None)
+        except Exception:
+            return None
+        return prediction.formatted_comparison if prediction else None
+
     class Meta:
         constraints = [
             models.UniqueConstraint(

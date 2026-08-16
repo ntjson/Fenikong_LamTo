@@ -106,6 +106,8 @@ class PriceComparisonE2ETests(StaticLiveServerTestCase):
                 expect(result_locator).to_contain_text("Dự đoán AI không khả dụng — dùng giá tham chiếu mẫu.")
                 expect(page.locator(".price-comparison-arrow.price-comparison-arrow-above")).to_contain_text("↑")
                 self.assertEqual(page.eval_on_selector('input[name="quotation"]', "el => el.files.length"), 1)
+                prediction_id_val = page.eval_on_selector('input[name="price_prediction_id"]', "el => el.value")
+                self.assertTrue(prediction_id_val and prediction_id_val.isdigit())
 
                 # 3. Above range (715,000,000 -> 59% above reference price)
                 page.fill('input[name="amount_vnd"]', "715000000")

@@ -174,7 +174,11 @@ def proposal_detail(request, pk):
     membership, memberships = require_management_context(request)
     proposal = get_object_or_404(
         Proposal.objects.select_related(
-            "current_version", "current_version__outbox_event", "case", "creator_membership"
+            "current_version",
+            "current_version__outbox_event",
+            "current_version__price_prediction",
+            "case",
+            "creator_membership",
         ),
         pk=pk,
         building_id=membership.building_id,
@@ -264,6 +268,8 @@ def proposal_detail(request, pk):
         publication_problem=publication_problem,
     )
 
+    price_comparison = version.price_comparison if version else None
+
     return render(
         request,
         "web/staff/proposal_detail.html",
@@ -276,6 +282,7 @@ def proposal_detail(request, pk):
             list_mode=False,
             proposal=proposal,
             version=version,
+            price_comparison=price_comparison,
             action_panel=action_panel,
             publish_form=publish_form if can_publish else None,
             can_publish=can_publish,
@@ -334,6 +341,7 @@ def proposal_create(request, pk):
                     expected_start=create_form.cleaned_data.get("expected_start"),
                     expected_end=create_form.cleaned_data.get("expected_end"),
                     quotation_versions=[original], event_id=new_event_id(),
+                    price_prediction_id=create_form.cleaned_data.get("price_prediction_id"),
                 )
         except (ValidationError, PermissionDenied) as error:
             if original is not None:

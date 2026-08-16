@@ -17,6 +17,9 @@
     <p class="consequence-note">{% trans "Publishing freezes the amount, contractor, scope, schedule, and quotation evidence. The published proposal cannot be edited." %}</p>
     {{ create_form.non_field_errors }}
     {% for field in create_form %}
+      {% if field.is_hidden %}
+        {{ field }}
+      {% else %}
       <p>
         {{ field.errors }}
         {{ field.label_tag }}
@@ -41,6 +44,7 @@
         <span class="hint">{{ field.help_text|safe }}</span>
         {% endif %}
       </p>
+      {% endif %}
     {% endfor %}
     <p class="hint">{% trans "Upload the quotation (PDF). Amounts are integer VND." %}</p>
     <button type="submit" class="button button-primary">{% trans "Publish proposal" %}</button>

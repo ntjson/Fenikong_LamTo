@@ -16,7 +16,7 @@ from lamto.maintenance.cases import TERMINAL_STATUSES
 from lamto.maintenance.models import CaseReport, IssueReport, MaintenanceCase
 from django.utils.translation import gettext_lazy as _
 
-from .models import Proposal, ProposalDocument, ProposalVersion
+from .models import PricePrediction, Proposal, ProposalDocument, ProposalVersion
 
 
 def new_public_token() -> str:
@@ -309,6 +309,7 @@ def publish_proposal_version(
     expected_schedule="",
     quotation_versions,
     event_id,
+    price_prediction_id=None,
 ) -> ProposalVersion:
     locked_proposal = (
         Proposal.objects.select_for_update()
@@ -388,6 +389,24 @@ def publish_proposal_version(
             for document in versions
         ]
     )
+    if price_prediction_id:
+        try:
+            prediction = (
+                PricePrediction.objects.select_for_update()
+                .filter(pk=price_prediction_id)
+                .first()
+            )
+            if (
+                prediction is not None
+                and prediction.building_id == locked_proposal.building_id
+                and prediction.case_id == locked_proposal.case_id
+                and prediction.amount_vnd == amount_vnd
+                and prediction.proposal_version_id is None
+            ):
+                prediction.proposal_version = version
+                prediction.save(update_fields=["proposal_version"])
+        except Exception:
+            pass
     locked_proposal.current_version = version
     locked_proposal.status = Proposal.Status.PUBLISHED
     locked_proposal.save(update_fields=["current_version", "status", "public_token"])

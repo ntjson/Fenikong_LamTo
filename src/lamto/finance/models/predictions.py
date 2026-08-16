@@ -40,7 +40,27 @@ class PricePrediction(models.Model):
         on_delete=models.PROTECT,
         related_name="price_predictions",
     )
+    proposal_version = models.OneToOneField(
+        "finance.ProposalVersion",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="price_prediction",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def formatted_comparison(self):
+        from lamto.finance.predictions import format_price_comparison
+        from lamto.finance.reference_prices import PriceBand
+
+        band = PriceBand(
+            category=self.category,
+            minimum_vnd=self.minimum_vnd,
+            central_vnd=self.central_vnd,
+            maximum_vnd=self.maximum_vnd,
+        )
+        return format_price_comparison(band, self.amount_vnd, reasoning=self.reasoning)
 
     class Meta:
         constraints = [
