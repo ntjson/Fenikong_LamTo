@@ -71,33 +71,6 @@ def upload_document(building, kind, uploader, file):
     return version
 
 
-def document_options(building_id: int, kind: str):
-    """Return clean document versions for a building and document kind.
-
-    Each option is ``(value, label, version)`` where value is the version pk.
-    """
-    versions = (
-        DocumentVersion.objects.filter(
-            document__building_id=building_id,
-            document__kind=kind,
-            scan_status=DocumentVersion.ScanStatus.CLEAN,
-        )
-        .select_related("document")
-        .order_by("-pk")
-    )
-    return [(str(version.pk), version.filename, version) for version in versions]
-
-
-def selected_document(options, value):
-    """Resolve a document value against freshly rebuilt options; None if gone."""
-    return next(
-        (
-            version
-            for key, _, version in options
-            if key == value
-        ),
-        None,
-    )
 
 
 def _disable_document_append_only_triggers():

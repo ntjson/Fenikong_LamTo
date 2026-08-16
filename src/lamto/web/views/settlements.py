@@ -12,7 +12,7 @@ from lamto.finance.settlements import record_settlement
 from lamto.web.forms.staff import RecordSettlementForm
 from lamto.web.staff import require_management_context, staff_context
 from lamto.web.views.staff_common import accountability_chain_for, prepare_record_list
-from lamto.web.staff_documents import _delete_storage_blob, document_options, new_event_id, selected_document, upload_document
+from lamto.web.staff_documents import _delete_storage_blob, new_event_id, upload_document
 
 
 def _context(request, membership, memberships, **extra):
@@ -42,29 +42,22 @@ def settlement_record(request, pk):
         pk=pk,
         building_id=membership.building_id,
     )
-    options = document_options(membership.building_id, Document.Kind.PAYMENT_PROOF)
     form = RecordSettlementForm(
         request.POST or None,
         request.FILES or None,
         initial={"event_id": new_event_id()},
-        proof_choices=[(value, label) for value, label, _ in options],
     )
     if request.method == "POST" and form.is_valid():
-        uploaded = False
+        proof = None
         try:
             with transaction.atomic():
-                uploaded = bool(form.cleaned_data.get("proof_upload"))
-                proof = upload_document(membership.building, Document.Kind.PAYMENT_PROOF, request.user, form.cleaned_data["proof_upload"]) if uploaded else selected_document(options, form.cleaned_data["proof"])
-                if proof is not None:
-                    settlement = record_settlement(proposal, membership, transfer=proof, event_id=form.cleaned_data["event_id"])
+                proof = upload_document(membership.building, Document.Kind.PAYMENT_PROOF, request.user, form.cleaned_data["proof_upload"])
+                settlement = record_settlement(proposal, membership, transfer=proof, event_id=form.cleaned_data["event_id"])
         except (ValidationError, PermissionDenied) as error:
-            if uploaded and "proof" in locals() and proof is not None:
+            # The rollback drops the version row but not the blob it already wrote.
+            if proof is not None:
                 _delete_storage_blob(proof.storage_key, proof.provider_version_id or "")
             form.add_error(None, error)
-            proof = None
-        if proof is None:
-            if not form.errors:
-                form.add_error("proof", _("Selected evidence is no longer available."))
         else:
             messages.success(request, _("Settlement recorded and anchored."))
             return redirect("web:settlement-detail", pk=settlement.pk)

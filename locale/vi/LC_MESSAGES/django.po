@@ -194,17 +194,8 @@ msgstr "Kết quả"
 msgid "Amount (VND)"
 msgstr "Số tiền (VND)"
 
-msgid "Existing transfer proof"
-msgstr "Chứng từ thanh toán hiện có"
-
-msgid "Upload new transfer proof"
-msgstr "Tải lên chứng từ thanh toán mới"
-
-msgid "Select transfer proof…"
-msgstr "Chọn chứng từ thanh toán…"
-
-msgid "Select existing transfer proof or upload a new one."
-msgstr "Chọn chứng từ thanh toán hiện có hoặc tải lên chứng từ mới."
+msgid "Upload transfer proof"
+msgstr "Tải lên chứng từ thanh toán"
 
 msgid "Contractor name"
 msgstr "Tên nhà thầu"
@@ -2204,9 +2195,6 @@ msgstr "Thông thường"
 
 msgid "Urgent"
 msgstr "Khẩn cấp"
-
-msgid "Selected evidence is no longer available."
-msgstr "Bằng chứng đã chọn không còn khả dụng."
 
 msgid "Back to Action inbox"
 msgstr "Về Hộp việc"

@@ -300,8 +300,12 @@ class ManagementWorkspaceTests(TestCase):
         self.assertEqual(area_case.location, floor_3)
         self.assertEqual(area_case.decision.location, floor_3)
 
-    def test_settlement_form_accepts_a_new_upload_in_the_same_post(self):
-        self.assertIn("proof_upload", RecordSettlementForm().fields)
+    def test_settlement_form_offers_an_upload_and_nothing_to_pick_from(self):
+        fields = RecordSettlementForm().fields
+        self.assertIn("proof_upload", fields)
+        self.assertTrue(fields["proof_upload"].required)
+        # Reusing an already-filed proof was removed: filing means uploading.
+        self.assertNotIn("proof", fields)
 
     def test_manager_can_reach_the_payment_step(self):
         seed = seed_pilot_world(

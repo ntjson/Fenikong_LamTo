@@ -190,18 +190,7 @@ class RecordSettlementForm(forms.Form):
     """
 
     event_id = forms.CharField(max_length=66, label=_("Event ID"), widget=forms.HiddenInput())
-    proof = forms.ChoiceField(choices=(), required=False, label=_("Existing transfer proof"), widget=forms.Select(attrs={"class": "input"}))
-    proof_upload = forms.FileField(required=False, label=_("Upload new transfer proof"), widget=forms.ClearableFileInput(attrs={"class": "input"}))
-
-    def __init__(self, *args, proof_choices=(), **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["proof"].choices = [("", _("Select transfer proof…")), *proof_choices]
-
-    def clean(self):
-        cleaned = super().clean()
-        if not cleaned.get("proof") and not cleaned.get("proof_upload"):
-            self.add_error("proof", _("Select existing transfer proof or upload a new one."))
-        return cleaned
+    proof_upload = forms.FileField(label=_("Upload transfer proof"), widget=forms.ClearableFileInput(attrs={"class": "input"}))
 
 
 class NotificationPreferenceForm(forms.Form):
