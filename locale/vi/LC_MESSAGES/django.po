@@ -2712,6 +2712,13 @@ msgstr "Ghi nhận thanh toán cho một đề xuất đã hoàn tất để b�
 msgid "The settlement is recorded against these frozen values."
 msgstr "Khoản thanh toán được ghi nhận theo các giá trị đã đóng băng này."
 
+msgid ""
+"The work is complete and this proposal is waiting to be paid. Filing the "
+"transfer proof settles it and anchors the evidence."
+msgstr ""
+"Công việc đã hoàn tất và đề xuất này đang chờ được thanh toán. Nộp chứng từ "
+"chuyển khoản sẽ hoàn tất thanh toán và neo bằng chứng."
+
 msgid "Recipient"
 msgstr "Người nhận"
 

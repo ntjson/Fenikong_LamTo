@@ -77,6 +77,8 @@ def _resolve_proposal_action_panel(
         if proposal.case_id:
             return "case"
         return "progress"
+    if proposal.status == Proposal.Status.COMPLETED and getattr(proposal, "settlement", None) is None:
+        return "settle"
     return None
 
 
