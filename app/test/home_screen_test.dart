@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lamto/core/error_retry.dart';
@@ -140,6 +141,17 @@ class _FakeTransparency implements TransparencyRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _BigFundTransparency extends _FakeTransparency {
+  @override
+  Future<FundSummary> fetchFundSummary() async => FundSummary(
+    (b) => b
+      ..balanceVnd = 400000000
+      ..periodDays = 30
+      ..periodInflowsVnd = 1000000000
+      ..periodOutflowsVnd = -600000000,
+  );
 }
 
 NotificationFeed _notice(int id, {DateTime? readAt}) => NotificationFeed(
@@ -670,7 +682,51 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('fund-period-stats-stacked')), findsOneWidget);
+    final inflows = tester.getTopLeft(find.textContaining('Thu (30 ngày)'));
+    final outflows = tester.getTopLeft(find.textContaining('Chi (30 ngày)'));
+    expect(outflows.dy, greaterThan(inflows.dy));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('fund period stats keep each figure on one line', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          newestUnpaidBillProvider.overrideWith((ref) async => null),
+          reportsRepositoryProvider.overrideWithValue(_FakeReports()),
+          transparencyRepositoryProvider.overrideWithValue(
+            _BigFundTransparency(),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          // The test font draws every glyph as a square roughly twice the
+          // width of the real UI font, which would make even a correct
+          // layout wrap. Halving the text restores realistic proportions
+          // for a width-sensitive test.
+          home: const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(0.5)),
+            child: Scaffold(body: HomeScreen()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    for (final label in const ['Thu (30 ngày)', 'Chi (30 ngày)']) {
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.textContaining(label),
+      );
+      expect(
+        paragraph.size.height,
+        paragraph.getMinIntrinsicHeight(double.infinity),
+        reason: '"$label" wrapped onto a second line',
+      );
+    }
   });
 }

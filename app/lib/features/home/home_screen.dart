@@ -258,39 +258,26 @@ class HomeScreen extends ConsumerWidget {
       children: [
         Text(formatVnd(fund.balanceVnd), style: amountStyle),
         const SizedBox(height: 8),
-        if (MediaQuery.textScalerOf(context).scale(1) >= 1.5)
-          Column(
-            key: const Key('fund-period-stats-stacked'),
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${l10n.homeFundInflows}: '
-                '${formatVnd(fund.periodInflowsVnd)}',
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${l10n.homeFundOutflows}: '
-                '${formatVnd(fund.periodOutflowsVnd)}',
-              ),
-            ],
-          )
-        else
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${l10n.homeFundInflows}: '
-                  '${formatVnd(fund.periodInflowsVnd)}',
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  '${l10n.homeFundOutflows}: '
-                  '${formatVnd(fund.periodOutflowsVnd)}',
-                ),
-              ),
-            ],
-          ),
+        // A figure broken across two lines reads as a different number, so
+        // each stat stays whole and the pair stacks when it no longer fits
+        // side by side. A long amount and a large text size are the same
+        // problem, and this measures the content rather than guessing at
+        // either.
+        Wrap(
+          key: const Key('fund-period-stats'),
+          spacing: 16,
+          runSpacing: 4,
+          children: [
+            Text(
+              '${l10n.homeFundInflows}: '
+              '${formatVnd(fund.periodInflowsVnd)}',
+            ),
+            Text(
+              '${l10n.homeFundOutflows}: '
+              '${formatVnd(fund.periodOutflowsVnd)}',
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         Text(
           l10n.homeFundChartCaption,
