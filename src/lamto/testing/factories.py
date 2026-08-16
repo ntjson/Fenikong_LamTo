@@ -79,7 +79,7 @@ PILOT_LOCATION_TREE: list[tuple[str, list[str]]] = [
 PILOT_SAMPLE_LOCATION = ("Tầng 1", "Thang máy A")
 PILOT_EMAIL_DOMAIN = "pilot.lamto.test"
 DEFAULT_AMOUNT_VND = 18_500_000
-DEFAULT_FUND_OPENING_VND = 100_000_000
+DEFAULT_FUND_OPENING_VND = 1_000_000_000
 
 def _temp_storage_settings(location: str) -> dict:
     return {

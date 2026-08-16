@@ -9,7 +9,12 @@ from lamto.finance.models import VerificationObservation
 from lamto.finance.proposals import publish_proposal_version
 from lamto.finance.publication import _collect_document_checks, _load_execution_chain
 from lamto.finance.selectors import ledger_entry_proof
-from lamto.testing.factories import PilotDomainDriver, new_event_id, seed_pilot_world
+from lamto.testing.factories import (
+    DEFAULT_FUND_OPENING_VND,
+    PilotDomainDriver,
+    new_event_id,
+    seed_pilot_world,
+)
 
 
 _STORAGE = tempfile.mkdtemp(prefix="lamto-settlement-boundary-")
@@ -102,4 +107,4 @@ class SettlementBoundaryTests(TestCase):
         driver, _settlement = self.flow()
         driver.publish_settlement_entry()
         self.assertEqual(driver.ledger_count(), 1)
-        self.assertEqual(driver.fund_balance(), 100_000_000 - driver._ctx["amount_vnd"])
+        self.assertEqual(driver.fund_balance(), DEFAULT_FUND_OPENING_VND - driver._ctx["amount_vnd"])

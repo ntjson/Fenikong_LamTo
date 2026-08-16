@@ -154,7 +154,7 @@ class FundSeriesTests(TestCase):
 class FundSeriesIntegrationTests(TestCase):
     def test_verified_bar_and_last_point_match_fund_balance(self):
         from lamto.finance.fund import fund_balance
-        from lamto.testing.factories import seed_pilot_world
+        from lamto.testing.factories import DEFAULT_FUND_OPENING_VND, seed_pilot_world
 
         seed = seed_pilot_world(
             building_name="Series Building", email_prefix="fser",
@@ -171,4 +171,7 @@ class FundSeriesIntegrationTests(TestCase):
             assert series[-1]["balance_vnd"] == fund_balance(
                 seed.building.pk, verified_only=True
             )
-            assert all(row["inflows_vnd"] < 999_999_999 for row in series)
+            # The verified opening balance is the only inflow the series may
+            # count; totalling them catches the unverified row wherever it
+            # lands, including the bucket the opening balance shares.
+            assert sum(row["inflows_vnd"] for row in series) == DEFAULT_FUND_OPENING_VND
