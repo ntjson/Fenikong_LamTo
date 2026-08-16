@@ -199,7 +199,15 @@ def _extract_triage(envelope):
         raise TriageValidationError(f"missing choices/message/content: {error}")
     if not _valid_string(content):
         raise TriageValidationError("provider message content is empty")
-    return request_id, json.loads(content)
+    cleaned = content.strip()
+    if cleaned.startswith("```"):
+        lines = cleaned.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        cleaned = "\n".join(lines).strip()
+    return request_id, json.loads(cleaned)
 
 
 def _process_claimed_job(job):
