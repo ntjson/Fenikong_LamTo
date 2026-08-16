@@ -75,6 +75,37 @@ class CaseWorkTests(TestCase):
         self.assertEqual(report.status, IssueReport.Status.CLOSED)
         self.assertIsNotNone(case.closed_at)
 
+    def test_start_case_work_records_when_work_started(self):
+        case, _ = self._case()
+        self.assertIsNone(case.started_at)
+        start_case_work(case, self.manager)
+        case.refresh_from_db()
+        self.assertIsNotNone(case.started_at)
+
+    def test_starting_twice_keeps_the_first_timestamp(self):
+        case, _ = self._case()
+        start_case_work(case, self.manager)
+        case.refresh_from_db()
+        first = case.started_at
+        start_case_work(case, self.manager)
+        case.refresh_from_db()
+        self.assertEqual(case.started_at, first)
+
+    def test_progress_requires_work_to_have_started(self):
+        case, _ = self._case()
+        with self.assertRaises(ValidationError):
+            publish_progress(case, self.manager, "Opened wall", "Found burst pipe")
+        case.refresh_from_db()
+        self.assertEqual(case.updates.count(), 0)
+
+    def test_completion_requires_work_to_have_started(self):
+        case, report = self._case()
+        with self.assertRaises(ValidationError):
+            complete_case_work(case, self.manager, "Replaced pipe", "Water restored")
+        case.refresh_from_db(); report.refresh_from_db()
+        self.assertIsNone(case.completed_at)
+        self.assertEqual(report.status, IssueReport.Status.IN_REVIEW)
+
     def test_progress_requires_active_uncompleted_case(self):
         case, _ = self._case(); start_case_work(case, self.manager)
         complete_case_work(case, self.manager, "Done", "Done")

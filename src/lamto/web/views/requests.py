@@ -272,6 +272,13 @@ def case_detail(request, pk):
                 messages.success(request, _("Case work started."))
             return redirect("web:case-detail", pk=case.pk)
         if action in {"publish_progress", "complete_work"}:
+            if case.started_at is None:
+                messages.error(
+                    request,
+                    _("Work has not been started on this case, so there is no "
+                      "progress to publish yet. Start work first."),
+                )
+                return redirect("web:case-detail", pk=case.pk)
             work_form = ProgressUpdateForm(request.POST)
             if work_form.is_valid():
                 try:
@@ -291,7 +298,7 @@ def case_detail(request, pk):
                     )
                     return redirect("web:case-detail", pk=case.pk)
 
-    if work_form is None:
+    if work_form is None and case.started_at is not None:
         work_form = ProgressUpdateForm()
 
     return render(

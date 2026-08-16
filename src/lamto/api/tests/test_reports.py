@@ -11,7 +11,7 @@ from knox.models import AuthToken
 from lamto.accounts.models import ResidentOccupancy
 from lamto.api.serializers import InfoReplyResultSerializer
 from lamto.documents.models import Document
-from lamto.maintenance.cases import publish_progress, request_information
+from lamto.maintenance.cases import publish_progress, request_information, start_case_work
 from lamto.maintenance.models import CaseReport, IssueReport, MaintenanceCase, TriageDecision
 from lamto.testing.factories import seed_pilot_world
 
@@ -210,6 +210,7 @@ class ReportCreateTests(TestCase):
             deadline_at=timezone.now() + timedelta(days=1),
         )
         CaseReport.objects.create(case=case, report=report, grouped_by=manager)
+        start_case_work(case, manager)
         publish_progress(case, manager, "Inspected lift", "Found worn guide")
 
         response = self.client.get(

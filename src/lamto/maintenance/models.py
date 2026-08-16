@@ -216,6 +216,7 @@ class MaintenanceCase(models.Model):
     management_queue = models.CharField(max_length=32, choices=ManagementQueue.choices)
     deadline_at = models.DateTimeField()
     active = models.BooleanField(default=True)
+    started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     closed_at = models.DateTimeField(null=True, blank=True)
     reports = models.ManyToManyField(IssueReport, through="CaseReport", related_name="maintenance_cases")

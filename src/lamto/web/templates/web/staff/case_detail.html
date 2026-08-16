@@ -132,12 +132,16 @@
         <p class="status status-verified"><span class="status-icon" aria-hidden="true">●</span> {% trans "Completed" %}</p>
         <p class="hint">{% blocktrans with ts=case.completed_at|staff_datetime %}Finished {{ ts }}. No further action is required.{% endblocktrans %}</p>
       </div>
-      {% elif work_form %}
-      <div class="workflow-section">
-        <form method="post" data-busy-on-submit aria-label="{% trans 'Start work' %}">{% csrf_token %}<input type="hidden" name="action" value="start_work"><button type="submit" class="button button-secondary">{% trans "Start work" %}</button></form>
+      {% elif not case.started_at %}
+      <div class="workflow-section workflow-primary">
+        <h2>{% trans "Start work" %}</h2>
+        <p class="consequence-note">{% trans "Progress and completion open once work has started. If this repair needs a spending proposal, create it first — starting work closes that option for good." %}</p>
+        <form method="post" data-busy-on-submit aria-label="{% trans 'Start work' %}">{% csrf_token %}<input type="hidden" name="action" value="start_work"><button type="submit" class="button button-primary">{% trans "Start work" %}</button></form>
       </div>
+      {% elif work_form %}
       <div class="workflow-section workflow-primary">
         <h2>{% trans "Publish progress" %}</h2>
+        <p class="hint">{% blocktrans with ts=case.started_at|staff_datetime %}Work started {{ ts }}.{% endblocktrans %}</p>
         <form method="post" enctype="multipart/form-data" class="stack-form" data-busy-on-submit aria-label="{% trans 'Publish progress' %}">
           {% csrf_token %}
           {{ work_form.as_p }}

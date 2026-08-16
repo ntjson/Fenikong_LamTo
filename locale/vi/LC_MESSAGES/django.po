@@ -2808,3 +2808,26 @@ msgstr "%(count)s mẫu mô phỏng"
 
 msgid "Amount must be a positive integer."
 msgstr "Số tiền phải là số nguyên dương."
+
+msgid "Work must be started on this case first."
+msgstr "Phải bắt đầu công việc cho vụ việc này trước."
+
+msgid ""
+"Work has not been started on this case, so there is no progress to publish "
+"yet. Start work first."
+msgstr ""
+"Chưa bắt đầu công việc cho vụ việc này nên chưa có tiến độ để công bố. Hãy "
+"bắt đầu công việc trước."
+
+msgid ""
+"Progress and completion open once work has started. If this repair needs a "
+"spending proposal, create it first — starting work closes that option for "
+"good."
+msgstr ""
+"Tiến độ và hoàn thành chỉ mở sau khi đã bắt đầu công việc. Nếu việc sửa chữa "
+"này cần đề xuất chi, hãy tạo trước — bắt đầu công việc sẽ đóng vĩnh viễn lựa "
+"chọn đó."
+
+#, python-format
+msgid "Work started %(ts)s."
+msgstr "Đã bắt đầu công việc %(ts)s."

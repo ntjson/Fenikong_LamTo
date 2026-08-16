@@ -29,6 +29,19 @@ def _locked_case(case):
     return case
 
 
+def _started_case(case):
+    """A case that work has actually been started on.
+
+    Progress and completion are reports *about work*, so they need work to
+    have started. Nothing else in the domain can stand in for this: a case
+    carries no other trace of having been picked up.
+    """
+    case = _locked_case(case)
+    if case.started_at is None:
+        raise ValidationError(_("Work must be started on this case first."))
+    return case
+
+
 def _append_update(case, manager, cause, result, proposal=None):
     if not (cause or "").strip() or not (result or "").strip():
         raise ValidationError(_("Progress updates need both a cause and a result."))
@@ -39,6 +52,9 @@ def _append_update(case, manager, cause, result, proposal=None):
 def start_case_work(case, manager) -> MaintenanceCase:
     case = _locked_case(case)
     membership = require_management(manager, case.building_id)
+    if case.started_at is None:
+        case.started_at = timezone.now()
+        case.save(update_fields=["started_at"])
     for report in IssueReport.objects.filter(case_reports__case=case).exclude(status__in=TERMINAL_STATUSES):
         report.status = IssueReport.Status.IN_PROGRESS
         report.save(update_fields=["status"])
@@ -52,7 +68,7 @@ def publish_progress(case=None, manager=None, cause="", result="", proposal=None
     if (case is None) == (proposal is None):
         raise ValidationError(_("Progress requires exactly one case or proposal."))
     if case is not None:
-        case = _locked_case(case)
+        case = _started_case(case)
         building_id = case.building_id
     else:
         from lamto.finance.models import Proposal
@@ -91,7 +107,7 @@ def complete_proposal_work(proposal, manager, cause, result):
 
 @transaction.atomic
 def complete_case_work(case, manager, cause, result) -> MaintenanceCase:
-    case = _locked_case(case)
+    case = _started_case(case)
     membership = require_management(manager, case.building_id)
     update = _append_update(case, manager, cause, result)
     case.completed_at = timezone.now()

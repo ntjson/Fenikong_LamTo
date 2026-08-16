@@ -37,6 +37,14 @@ The team responsible for handling a case, chosen from a fixed set. The triage
 assistant proposes one and a Management account confirms or overrides it.
 _Avoid_: Department, assigned team
 
+**Started work**:
+The moment a Management account picks a case up, recorded on the case itself.
+Progress and completion are accounts of work, so neither is accepted before it.
+It is also the last moment a spending proposal can be created: starting work
+moves the reports on, and a case whose reports have moved on is no longer a
+candidate for one.
+_Avoid_: Work status, in-progress flag, work state
+
 **Maintenance Fund**:
 The single pool of money a building spends from. A building has exactly one,
 so spending is never attributed to a chosen fund — there is nothing to choose.
